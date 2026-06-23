@@ -20,10 +20,10 @@
         </h1>
         <div class="flex gap-2">
             <button onclick="openOshiModal()" class="bg-cyan-50 text-cyan-600 border border-cyan-200 text-xs font-bold py-2 px-3 rounded-xl active:scale-95 transition-all">
-                👑 推し設定
+                推し設定
             </button>
             <button onclick="openConfigModal()" class="bg-slate-50 text-slate-600 border border-slate-200 text-xs font-bold py-2 px-3 rounded-xl active:scale-95 transition-all">
-                🏷️ 項目編集
+                項目編集
             </button>
         </div>
     </header>
@@ -165,14 +165,14 @@
         let baseYear, baseMonth, selectedDateStr;
 
         let oshis = JSON.parse(localStorage.getItem('oshi_list')) || [
-            { id: 'o1', name: '全員・グループ', color: '#06b6d4' }
+            { id: 'o1', name: 'グループ', color: '#06b6d4' }
         ];
 
         let categories = JSON.parse(localStorage.getItem('cat_list')) || [
             { id: 'c1', name: 'LIVE' },
             { id: 'c2', name: 'TV出演' },
-            { id: 'c3', name: '新曲発売' },
-            { id: 'c4', name: 'SNS・YouTube' }
+            { id: 'c3', name: '新曲リリース' },
+            { id: 'c4', name: 'YouTube' }
         ];
 
         let events = JSON.parse(localStorage.getItem('oshi_events')) || [];
