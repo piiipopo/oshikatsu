@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ぴこさんの推し活カレンダー</title>
+    <title>oshikatsu calendar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { touch-action: manipulation; }
@@ -13,9 +13,10 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased pb-24">
 
+    <!-- ヘッダー -->
     <header class="bg-white shadow-sm sticky top-0 z-30 p-4 border-b border-gray-100 flex justify-between items-center">
         <h1 class="text-lg font-extrabold text-cyan-600 flex items-center gap-1.5">
-            <span>📅</span> ぴこさんの推し活カレンダー
+            <span>📅</span> oshikatsu calendar
         </h1>
         <div class="flex gap-2">
             <button onclick="openOshiModal()" class="bg-cyan-50 text-cyan-600 border border-cyan-200 text-xs font-bold py-2 px-3 rounded-xl active:scale-95 transition-all">
@@ -27,33 +28,39 @@
         </div>
     </header>
 
+    <!-- メインコンテンツ -->
     <main class="p-4 max-w-md mx-auto space-y-4">
         
+        <!-- リマインダー / 通知エリア -->
         <section id="notification-bar" class="hidden bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-2xl p-4 shadow-md shadow-cyan-100 relative overflow-hidden">
             <div class="absolute -right-4 -bottom-4 text-white opacity-10 text-7xl font-bold">📢</div>
             <h3 class="text-xs font-bold opacity-90 mb-1 flex items-center gap-1">
                 <span class="animate-pulse">🔔</span> 本日・明日の推し事リマインダー
             </h3>
             <div id="urgent-events" class="space-y-1 text-sm font-bold">
-                </div>
+                <!-- 動的生成 -->
+            </div>
         </section>
 
+        <!-- 3ヶ月カレンダーエリア -->
         <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <!-- スクロール用の月切り替えボタン -->
             <div class="flex justify-between items-center mb-4">
-                <button onclick="prevMonth()" class="p-2 hover:bg-slate-50 rounded-xl text-gray-400 active:scale-95">&lt;</button>
-                <h2 id="calendar-title" class="text-base font-extrabold text-gray-700 font-mono">2026年 06月</h2>
-                <button onclick="nextMonth()" class="p-2 hover:bg-slate-50 rounded-xl text-gray-400 active:scale-95">&gt;</button>
+                <button onclick="shiftMonth(-1)" class="text-xs text-cyan-600 bg-cyan-50 px-3 py-1.5 rounded-lg font-bold active:scale-95 transition-all border border-cyan-100">
+                    &lt; 1ヶ月前へ
+                </button>
+                <button onclick="shiftMonth(1)" class="text-xs text-cyan-600 bg-cyan-50 px-3 py-1.5 rounded-lg font-bold active:scale-95 transition-all border border-cyan-100">
+                    1ヶ月後へ &gt;
+                </button>
             </div>
             
-            <div class="calendar-grid text-center text-[11px] font-bold text-gray-400 mb-2 border-b border-gray-50 pb-2">
-                <div class="text-red-400">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="text-blue-400">土</div>
+            <!-- カレンダー本体（3ヶ月分動的生成） -->
+            <div id="calendar-container" class="space-y-6">
             </div>
-
-            <div id="calendar-cells" class="calendar-grid gap-y-2">
-                </div>
         </section>
 
-        <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <!-- 選択日の予定リスト -->
+        <section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sticky bottom-4 z-20">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="selected-date-title" class="text-sm font-bold text-gray-600 flex items-center gap-1.5">
                     選択日の予定
@@ -62,12 +69,14 @@
                     ➕ 予定を追加
                 </button>
             </div>
-            <div id="daily-event-list" class="space-y-2">
-                </div>
+            <div id="daily-event-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                <!-- 動的生成 -->
+            </div>
         </section>
 
     </main>
 
+    <!-- モーダル：予定追加・編集 -->
     <div id="event-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl animate-in fade-in zoom-in-95 duration-150">
             <h3 id="modal-title" class="text-base font-bold text-gray-800 mb-4">予定を登録する</h3>
@@ -80,12 +89,14 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">誰の予定？（推し）</label>
                     <select id="event-oshi" required class="w-full bg-slate-50 border border-gray-200 rounded-xl p-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500">
-                        </select>
+                        <!-- 動的生成 -->
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">予定の種類（項目）</label>
                     <select id="event-category" required class="w-full bg-slate-50 border border-gray-200 rounded-xl p-3 text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500">
-                        </select>
+                        <!-- 動的生成 -->
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">タイトル</label>
@@ -106,6 +117,7 @@
         </div>
     </div>
 
+    <!-- モーダル：推し登録機能 -->
     <div id="oshi-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl max-h-[85vh] flex flex-col">
             <h3 class="text-base font-bold text-gray-800 mb-3 flex-shrink-0">👑 推しメンバー登録</h3>
@@ -123,12 +135,14 @@
             </form>
 
             <div class="overflow-y-auto flex-1 pr-1 space-y-2" id="oshi-list-container">
-                </div>
+                <!-- 動的生成 -->
+            </div>
             
             <button onclick="closeOshiModal()" class="w-full bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs mt-4 flex-shrink-0">閉じる</button>
         </div>
     </div>
 
+    <!-- モーダル：項目（カテゴリ）編集 -->
     <div id="config-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl max-h-[85vh] flex flex-col">
             <h3 class="text-base font-bold text-gray-800 mb-3 flex-shrink-0">🏷️ 予定タイプの編集</h3>
@@ -139,7 +153,8 @@
             </form>
 
             <div class="overflow-y-auto flex-1 pr-1 space-y-2" id="cat-list-container">
-                </div>
+                <!-- 動的生成 -->
+            </div>
             
             <button onclick="closeConfigModal()" class="w-full bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl text-xs mt-4 flex-shrink-0">閉じる</button>
         </div>
@@ -147,7 +162,7 @@
 
     <script>
         // --- データの初期状態と管理 ---
-        let currentYear, currentMonth, selectedDateStr;
+        let baseYear, baseMonth, selectedDateStr;
 
         let oshis = JSON.parse(localStorage.getItem('oshi_list')) || [
             { id: 'o1', name: '全員・グループ', color: '#06b6d4' }
@@ -168,11 +183,10 @@
 
         // --- 初期化 ---
         const today = new Date();
-        currentYear = today.getFullYear();
-        currentMonth = today.getMonth();
+        baseYear = today.getFullYear();
+        baseMonth = today.getMonth();
         selectedDateStr = formatDate(today);
 
-        // 通知権限の確認
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
         }
@@ -182,92 +196,103 @@
             const y = dateObj.getFullYear();
             const m = String(dateObj.getMonth() + 1).padStart(2, '0');
             const d = String(dateObj.getDate()).padStart(2, '0');
-            return `${y}-${m}-${dd}`;
+            return `${y}-${m}-${d}`;
         }
 
         // --- カレンダー描画ロジック ---
-        function renderCalendar() {
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const startDayOfWeek = firstDay.getDay();
-            const totalDays = lastDay.getDate();
-
-            document.getElementById('calendar-title').textContent = `${currentYear}年 ${String(currentMonth + 1).padStart(2, '0')}月`;
-
-            const cellsContainer = document.getElementById('calendar-cells');
-            cellsContainer.innerHTML = '';
-
-            // 空白セル
-            for (let i = 0; i < startDayOfWeek; i++) {
-                cellsContainer.innerHTML += `<div></div>`;
+        function shiftMonth(dir) {
+            baseMonth += dir;
+            if (baseMonth < 0) {
+                baseMonth = 11;
+                baseYear--;
+            } else if (baseMonth > 11) {
+                baseMonth = 0;
+                baseYear++;
             }
+            renderCalendar();
+        }
 
-            // 日付セル
-            for (let day = 1; day <= totalDays; day++) {
-                const dateObj = new Date(currentYear, currentMonth, day);
-                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                
-                const isSelected = dateStr === selectedDateStr;
-                const isToday = formatDate(new Date()) === dateStr;
+        function renderCalendar() {
+            const container = document.getElementById('calendar-container');
+            container.innerHTML = '';
 
-                // 該当日のイベントを抽出
-                const dayEvents = events.filter(e => e.date === dateStr);
-
-                // ドット表示
-                let dotsHtml = '<div class="flex justify-center gap-0.5 mt-1 h-1 overflow-hidden">';
-                dayEvents.forEach((ev, idx) => {
-                    if (idx < 3) {
-                        const oshi = oshis.find(o => o.id === ev.oshiId) || { color: '#cbd5e1' };
-                        dotsHtml += `<div class="w-1 h-1 rounded-full" style="background-color: ${oshi.color}"></div>`;
-                    }
-                });
-                dotsHtml += '</div>';
-
-                let cellClass = "p-1.5 min-h-[52px] rounded-xl flex flex-col justify-between items-center text-xs font-bold cursor-pointer transition-all active:scale-95 ";
-                if (isSelected) {
-                    cellClass += "bg-cyan-600 text-white shadow-sm shadow-cyan-100";
-                } else if (isToday) {
-                    cellClass += "bg-cyan-50 text-cyan-600 border border-cyan-200";
-                } else {
-                    const dayOfWeek = dateObj.getDay();
-                    if (dayOfWeek === 0) cellClass += "text-red-400 hover:bg-red-50/50";
-                    else if (dayOfWeek === 6) cellClass += "text-blue-400 hover:bg-blue-50/50";
-                    else cellClass += "text-gray-700 hover:bg-slate-50";
+            // 3ヶ月分をループで生成
+            for (let i = 0; i < 3; i++) {
+                let y = baseYear;
+                let m = baseMonth + i;
+                if (m > 11) {
+                    m -= 12;
+                    y++;
                 }
-
-                cellsContainer.innerHTML += `
-                    <div class="${cellClass}" onclick="selectDate('${dateStr}')">
-                        <span class="${isSelected ? 'text-white' : ''}">${day}</span>
-                        ${dotsHtml}
-                    </div>
-                `;
+                container.innerHTML += buildMonthHTML(y, m);
             }
 
             renderDailyEvents();
             renderUrgentNotifications();
         }
 
+        function buildMonthHTML(year, month) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDayOfWeek = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+
+            const titleHtml = `<h2 class="text-sm font-extrabold text-gray-600 font-mono mb-2 border-b border-slate-100 pb-1">${year}年 ${String(month + 1).padStart(2, '0')}月</h2>`;
+            
+            const headerHtml = `
+            <div class="calendar-grid text-center text-[10px] font-bold text-gray-400 mb-1">
+                <div class="text-red-400">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="text-blue-400">土</div>
+            </div>`;
+
+            let cellsHtml = `<div class="calendar-grid gap-y-1.5">`;
+            
+            for (let i = 0; i < startDayOfWeek; i++) {
+                cellsHtml += `<div></div>`;
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isSelected = dateStr === selectedDateStr;
+                const isToday = formatDate(new Date()) === dateStr;
+
+                const dayEvents = events.filter(e => e.date === dateStr);
+
+                let dotsHtml = '<div class="flex justify-center gap-0.5 mt-1 h-1 overflow-hidden">';
+                dayEvents.forEach((ev, idx) => {
+                    if (idx < 3) {
+                        const oshi = oshis.find(o => o.id === ev.oshiId) || { color: '#cbd5e1' };
+                        dotsHtml += `<div class="w-1.5 h-1.5 rounded-full" style="background-color: ${oshi.color}"></div>`;
+                    }
+                });
+                dotsHtml += '</div>';
+
+                let cellClass = "p-1.5 min-h-[44px] rounded-xl flex flex-col justify-between items-center text-xs font-bold cursor-pointer transition-all active:scale-95 ";
+                if (isSelected) {
+                    cellClass += "bg-cyan-600 text-white shadow-sm shadow-cyan-100";
+                } else if (isToday) {
+                    cellClass += "bg-cyan-50 text-cyan-600 border border-cyan-200";
+                } else {
+                    const dayOfWeek = new Date(year, month, day).getDay();
+                    if (dayOfWeek === 0) cellClass += "text-red-400 hover:bg-red-50/50";
+                    else if (dayOfWeek === 6) cellClass += "text-blue-400 hover:bg-blue-50/50";
+                    else cellClass += "text-gray-700 hover:bg-slate-50";
+                }
+
+                cellsHtml += `
+                    <div class="${cellClass}" onclick="selectDate('${dateStr}')">
+                        <span class="${isSelected ? 'text-white' : ''}">${day}</span>
+                        ${dotsHtml}
+                    </div>
+                `;
+            }
+            cellsHtml += `</div>`;
+
+            return `<div>${titleHtml}${headerHtml}${cellsHtml}</div>`;
+        }
+
         function selectDate(dateStr) {
             selectedDateStr = dateStr;
-            renderCalendar();
-        }
-
-        function prevMonth() {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar();
-        }
-
-        function nextMonth() {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            renderCalendar();
+            renderCalendar(); // 全体を再描画して選択状態を更新
         }
 
         // --- 選択日の予定一覧表示 ---
@@ -397,28 +422,34 @@
             const memo = document.getElementById('event-memo').value.trim();
 
             if (id) {
-                // 編集
                 const index = events.findIndex(e => e.id === id);
                 if (index !== -1) {
                     events[index] = { id, date, oshiId, categoryId, name, memo };
                 }
             } else {
-                // 新規
                 const newEv = { id: Date.now().toString(), date, oshiId, categoryId, name, memo };
                 events.push(newEv);
             }
 
-            // 日付順にソート
             events.sort((a, b) => new Date(a.date) - new Date(b.date));
-
             saveData('oshi_events', events);
             closeEventModal();
+            
+            // 予定を追加した日を選択状態にする
             selectedDateStr = date;
             
-            // 年月の位置を同期
-            const parts = date.split('-');
-            currentYear = parseInt(parts[0], 10);
-            currentMonth = parseInt(parts[1], 10) - 1;
+            // 入力された日付が現在表示中の3ヶ月の範囲外なら、基準月を移動させる
+            const dObj = new Date(date);
+            const inputY = dObj.getFullYear();
+            const inputM = dObj.getMonth();
+            
+            const inputAbsolute = inputY * 12 + inputM;
+            const baseAbsolute = baseYear * 12 + baseMonth;
+            
+            if (inputAbsolute < baseAbsolute || inputAbsolute > baseAbsolute + 2) {
+                baseYear = inputY;
+                baseMonth = inputM;
+            }
 
             renderCalendar();
         });
