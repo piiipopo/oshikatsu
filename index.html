@@ -143,7 +143,7 @@
                         
                         html += `<div class="p-1 min-h-[44px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-sky-200 text-white shadow-md' : 'hover:bg-sky-50'}" onclick="window.app.selectDate('${ds}')">
                                  <span class="text-[11px] font-bold">${d}</span>
-                                 ${isBday ? '<span class="text-[10px] leading-none mt-0.5">{o.name} HBD!</span>' : ''}
+                                 ${isBday ? '<span class="text-[10px] leading-none mt-0.5">🎂 ${o.name} Birthday!</span>' : ''}
                                  <div class="w-full mt-auto flex flex-col justify-end pb-0.5 mt-1">
                                     ${indicators}
                                  </div>
@@ -179,7 +179,7 @@
 
                 // 誕生日のお祝い表示
                 bdays.forEach(o => {
-                    html += `<div class="p-3 bg-yellow-50 border border-yellow-100 rounded-2xl flex items-center shadow-sm">
+                    html += `<div class="p-3 bg-blue-50 border border-blue-100 rounded-2xl flex items-center shadow-sm">
                         <div class="font-bold text-Black-500 text-sm">🎂 ${o.name} Birthday!</div>
                     </div>`;
                 });
