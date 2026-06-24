@@ -2,29 +2,37 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Oshikatsu Calendar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Zen Maru Gothic', sans-serif; background-color: #f0f9ff; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        body { font-family: 'Zen Maru Gothic', sans-serif; }
     </style>
 </head>
-<body class="pb-24">
+<body class="bg-sky-50 text-slate-700 pb-20">
 
     <header class="bg-white/90 shadow-sm sticky top-0 z-30 p-4 border-b border-sky-100 flex justify-between items-center">
         <h1 class="text-lg font-bold text-sky-600">Oshikatsu Calendar</h1>
+        <div class="flex gap-2">
+            <button onclick="window.app.openConfigModal()" class="bg-slate-100 text-slate-600 text-xs font-bold py-2 px-3 rounded-2xl">項目</button>
+            <button onclick="window.app.openOshiModal()" class="bg-sky-100 text-sky-600 text-xs font-bold py-2 px-3 rounded-2xl">推し</button>
+        </div>
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
         <section class="bg-white rounded-3xl p-4 shadow-sm">
+            <div class="flex justify-between items-center mb-4 text-xs font-bold text-sky-500">
+                <button onclick="window.app.shiftMonth(-1)">&lt; Back</button>
+                <button onclick="window.app.jumpToToday()" class="underline">Today</button>
+                <button onclick="window.app.shiftMonth(1)">Next &gt;</button>
+            </div>
             <div id="calendar-container" class="space-y-6"></div>
         </section>
 
         <section class="bg-white rounded-3xl p-4 shadow-sm">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="selected-date-title" class="text-sm font-bold text-sky-700">日付を選択してください</h3>
+            <div class="flex justify-between items-center mb-3">
+                <h3 id="selected-date-title" class="text-sm font-bold text-sky-700">日付を選択</h3>
                 <button onclick="window.app.openEventModal()" class="bg-sky-400 text-white text-xs font-bold py-2 px-4 rounded-full">＋ Add</button>
             </div>
             <div id="daily-event-list" class="space-y-3"></div>
@@ -32,71 +40,110 @@
     </main>
 
     <div id="event-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
-            <h3 class="font-bold mb-4">予定を登録</h3>
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl max-h-[80vh] overflow-y-auto">
+            <h3 id="modal-title" class="font-bold mb-4">予定を登録</h3>
             <form id="event-form" class="space-y-3">
-                <input type="date" id="e-date" required class="w-full bg-slate-50 p-3 rounded-xl text-sm">
-                <input type="time" id="e-time" class="w-full bg-slate-50 p-3 rounded-xl text-sm">
-                <input type="text" id="e-name" placeholder="予定の名前" required class="w-full bg-slate-50 p-3 rounded-xl text-sm">
-                <input type="text" id="e-loc" placeholder="場所（Googleマップ検索用）" class="w-full bg-slate-50 p-3 rounded-xl text-sm">
+                <input type="hidden" id="e-id">
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="date" id="e-start" required class="bg-slate-50 p-2 rounded-xl text-xs w-full">
+                    <input type="date" id="e-end" class="bg-slate-50 p-2 rounded-xl text-xs w-full">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="time" id="e-stime" class="bg-slate-50 p-2 rounded-xl text-xs w-full">
+                    <input type="time" id="e-etime" class="bg-slate-50 p-2 rounded-xl text-xs w-full">
+                </div>
+                <input type="text" id="e-name" placeholder="タイトル" required class="w-full bg-slate-50 p-3 rounded-xl text-sm">
+                <input type="text" id="e-loc" placeholder="場所（マップ検索用）" class="w-full bg-slate-50 p-3 rounded-xl text-sm">
+                <select id="e-repeat" class="w-full bg-slate-50 p-3 rounded-xl text-sm">
+                    <option value="none">繰り返し：なし</option>
+                    <option value="weekly">毎週</option>
+                    <option value="monthly">毎月</option>
+                </select>
                 <select id="e-oshi" class="w-full bg-slate-50 p-3 rounded-xl text-sm"></select>
+                <select id="e-cat" class="w-full bg-slate-50 p-3 rounded-xl text-sm"></select>
                 <div class="flex gap-2 mt-4">
-                    <button type="button" onclick="document.getElementById('event-modal').classList.add('hidden')" class="flex-1 bg-slate-200 py-2 rounded-xl text-sm font-bold">戻る</button>
+                    <button type="button" onclick="window.app.closeModal('event-modal')" class="flex-1 bg-slate-200 py-2 rounded-xl text-sm font-bold">戻る</button>
                     <button type="submit" class="flex-1 bg-sky-500 text-white py-2 rounded-xl text-sm font-bold">保存</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <div id="oshi-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+            <h3 class="font-bold mb-4">推しを追加</h3>
+            <form id="oshi-form" class="space-y-3">
+                <input type="text" id="new-oshi-name" placeholder="名前" required class="w-full bg-slate-50 p-3 rounded-xl text-sm">
+                <input type="color" id="new-oshi-color" class="w-full h-10 border-0">
+                <button type="submit" class="w-full bg-sky-500 text-white py-2 rounded-xl text-sm font-bold">追加</button>
+            </form>
+            <div id="oshi-list" class="mt-4 space-y-2"></div>
+            <button onclick="window.app.closeModal('oshi-modal')" class="w-full mt-4 text-xs font-bold text-slate-400">閉じる</button>
+        </div>
+    </div>
+
     <script>
         const App = {
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
-            oshis: [{id:1, name:'推し1'}, {id:2, name:'推し2'}],
-
+            oshis: JSON.parse(localStorage.getItem('oshi_list')) || [{id:1, name:'推し1', color:'#7dd3fc'}],
+            cats: JSON.parse(localStorage.getItem('cat_list')) || [{name:'LIVE'}, {name:'当落'}],
+            
             init() {
                 this.renderCalendar();
-                document.getElementById('e-oshi').innerHTML = this.oshis.map(o => `<option value="${o.name}">${o.name}</option>`).join('');
                 document.getElementById('event-form').onsubmit = (e) => {
                     e.preventDefault();
-                    const newEvent = {
-                        date: document.getElementById('e-date').value,
-                        time: document.getElementById('e-time').value,
-                        name: document.getElementById('e-name').value,
-                        loc: document.getElementById('e-loc').value,
-                        oshi: document.getElementById('e-oshi').value
-                    };
-                    this.events.push(newEvent);
+                    const id = document.getElementById('e-id').value;
+                    const ev = { id: id || Date.now().toString(), startDate: document.getElementById('e-start').value, endDate: document.getElementById('e-end').value, startTime: document.getElementById('e-stime').value, endTime: document.getElementById('e-etime').value, name: document.getElementById('e-name').value, loc: document.getElementById('e-loc').value, repeat: document.getElementById('e-repeat').value, oshi: document.getElementById('e-oshi').value, cat: document.getElementById('e-cat').value };
+                    if(id) this.events = this.events.map(e => e.id === id ? ev : e); else this.events.push(ev);
                     localStorage.setItem('oshi_events', JSON.stringify(this.events));
                     document.getElementById('event-modal').classList.add('hidden');
-                    this.selectDate(newEvent.date);
+                    this.renderCalendar();
                 };
+                document.getElementById('oshi-form').onsubmit = (e) => { e.preventDefault(); this.oshis.push({id:Date.now(), name:document.getElementById('new-oshi-name').value, color:document.getElementById('new-oshi-color').value}); localStorage.setItem('oshi_list', JSON.stringify(this.oshis)); this.renderOshiList(); };
             },
 
             renderCalendar() {
-                const cont = document.getElementById('calendar-container');
                 const now = new Date();
-                let html = `<div class="calendar-grid text-center text-xs font-bold text-slate-400"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
-                            <div class="calendar-grid text-center gap-1 mt-2">`;
-                for(let d=1; d<=30; d++){
-                    html += `<div class="p-2 rounded-lg bg-sky-50 cursor-pointer" onclick="window.app.selectDate('2026-06-${String(d).padStart(2,'0')}')">${d}</div>`;
-                }
-                cont.innerHTML = html + `</div>`;
+                let m = now.getMonth(), y = now.getFullYear();
+                document.getElementById('calendar-container').innerHTML = [0,1,2].map(i => {
+                    let curM = m+i, curY = y; if(curM>11){curM-=12; curY++}
+                    let html = `<h2 class="text-xs font-bold text-sky-500">${curY}年${curM+1}月</h2><div class="grid grid-cols-7 gap-1 mt-2 text-center text-[10px]">`;
+                    for(let d=1; d<=new Date(curY,curM+1,0).getDate(); d++){
+                        const ds = `${curY}-${String(curM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                        html += `<div class="p-2 rounded-lg bg-sky-50 cursor-pointer" onclick="window.app.selectDate('${ds}')">${d}</div>`;
+                    }
+                    return html + `</div>`;
+                }).join('');
             },
 
             selectDate(ds) {
                 document.getElementById('selected-date-title').innerText = ds;
-                document.getElementById('daily-event-list').innerHTML = this.events
-                    .filter(ev => ev.date === ds)
-                    .map(ev => `
-                        <div class="p-4 bg-sky-50 rounded-2xl border-l-4 border-sky-400">
-                            <div class="text-xs font-bold text-sky-600">${ev.time} | ${ev.oshi}</div>
-                            <div class="text-sm font-bold mt-1">${ev.name}</div>
-                            ${ev.loc ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.loc)}" target="_blank" class="text-xs text-blue-500 underline mt-1 block">📍 ${ev.loc}</a>` : ''}
-                        </div>
-                    `).join('') || '<div class="text-center text-xs text-slate-400">予定はありません</div>';
+                document.getElementById('daily-event-list').innerHTML = this.events.filter(e => e.startDate === ds).map(ev => `
+                    <div class="p-4 bg-white border border-sky-100 rounded-2xl shadow-sm cursor-pointer" onclick="window.app.editEvent('${ev.id}')">
+                        <div class="text-[10px] font-bold text-sky-500">${ev.cat} | ${ev.oshi}</div>
+                        <div class="font-bold text-sm">${ev.name}</div>
+                        <div class="text-[10px] text-slate-400">${ev.startTime || ''}</div>
+                        ${ev.loc ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.loc)}" target="_blank" class="text-[10px] text-blue-500 underline">📍 ${ev.loc}</a>` : ''}
+                    </div>
+                `).join('') || '予定なし';
             },
 
-            openEventModal() { document.getElementById('event-modal').classList.remove('hidden'); }
+            editEvent(id) {
+                const ev = this.events.find(e => e.id === id);
+                document.getElementById('e-id').value = ev.id;
+                document.getElementById('e-start').value = ev.startDate;
+                document.getElementById('e-name').value = ev.name;
+                this.openEventModal();
+            },
+
+            openEventModal() {
+                document.getElementById('e-oshi').innerHTML = this.oshis.map(o=>`<option value="${o.name}">${o.name}</option>`).join('');
+                document.getElementById('e-cat').innerHTML = this.cats.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+                document.getElementById('event-modal').classList.remove('hidden');
+            },
+            closeModal(id) { document.getElementById(id).classList.add('hidden'); },
+            openOshiModal() { this.renderOshiList(); document.getElementById('oshi-modal').classList.remove('hidden'); },
+            renderOshiList() { document.getElementById('oshi-list').innerHTML = this.oshis.map(o => `<div class="p-2 bg-slate-50 rounded-lg text-xs font-bold">${o.name}</div>`).join(''); }
         };
         window.app = App; App.init();
     </script>
