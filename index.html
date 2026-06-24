@@ -3,31 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oshikatsu Pro</title>
+    <title>Oshikatsu Calendar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Zen Maru Gothic', sans-serif; touch-action: manipulation; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        body { font-family: 'Zen Maru Gothic', sans-serif; }
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="bg-sky-50 text-slate-700 pb-24">
+<body class="bg-sky-50 text-slate-700 pb-20">
 
     <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-sky-100 flex justify-between items-center">
-        <h1 class="text-lg font-bold text-sky-600">Oshikatsu Pro</h1>
+        <h1 class="text-lg font-bold text-sky-600">Oshikatsu Calendar</h1>
         <div class="flex gap-2">
-            <button onclick="window.app.toggleFilter()" class="bg-slate-100 text-slate-600 text-xs font-bold py-2 px-3 rounded-2xl">Filter</button>
+            <button onclick="window.app.openConfigModal()" class="bg-slate-100 text-slate-600 text-xs font-bold py-2 px-3 rounded-2xl">項目</button>
             <button onclick="window.app.openOshiModal()" class="bg-sky-100 text-sky-600 text-xs font-bold py-2 px-3 rounded-2xl">推し</button>
         </div>
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
         <section class="bg-white rounded-3xl p-4 shadow-sm">
-            <div class="flex justify-between items-center mb-4 text-xs font-bold text-sky-500">
-                <button onclick="window.app.shiftMonth(-1)">&lt; Back</button>
-                <button onclick="window.app.jumpToToday()" class="underline">Today</button>
-                <button onclick="window.app.shiftMonth(1)">Next &gt;</button>
-            </div>
             <div id="calendar-container" class="space-y-6"></div>
         </section>
 
@@ -36,71 +31,84 @@
                 <h3 id="selected-date-title" class="text-sm font-bold">Events</h3>
                 <button onclick="window.app.openEventModal()" class="bg-sky-400 text-white text-xs font-bold py-2 px-4 rounded-2xl">＋ Add</button>
             </div>
-            <div id="daily-event-list" class="space-y-2"></div>
+            <div id="daily-event-list" class="space-y-3"></div>
         </section>
-        
-        <div class="text-center"><button onclick="window.app.exportData()" class="text-[10px] text-slate-400 underline">データバックアップ</button></div>
     </main>
 
-    <!-- モーダル定義 -->
     <div id="event-modal" class="fixed inset-0 bg-black/20 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
-            <h3 id="modal-title" class="font-bold mb-4">予定を登録</h3>
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl max-h-[80vh] overflow-y-auto">
+            <h3 class="font-bold mb-4">予定を登録</h3>
             <form id="event-form" class="space-y-3">
                 <input type="hidden" id="event-id">
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="date" id="event-start-date" required class="bg-slate-50 p-2 rounded-xl text-xs">
-                    <input type="date" id="event-end-date" class="bg-slate-50 p-2 rounded-xl text-xs">
+                    <input type="date" id="event-start-date" required class="bg-slate-50 p-2 rounded-xl text-xs w-full">
+                    <input type="date" id="event-end-date" class="bg-slate-50 p-2 rounded-xl text-xs w-full">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="time" id="event-start-time" class="bg-slate-50 p-2 rounded-xl text-xs w-full">
+                    <select id="event-repeat" class="bg-slate-50 p-2 rounded-xl text-xs w-full">
+                        <option value="none">繰り返しなし</option>
+                        <option value="weekly">毎週</option>
+                        <option value="monthly">毎月</option>
+                    </select>
                 </div>
                 <input type="text" id="event-name" placeholder="タイトル" required class="w-full bg-slate-50 p-3 rounded-xl text-sm">
-                <input type="text" id="event-location" placeholder="場所(URL可)" class="w-full bg-slate-50 p-3 rounded-xl text-sm">
+                <input type="text" id="event-location" placeholder="場所（Googleマップで検索されます）" class="w-full bg-slate-50 p-3 rounded-xl text-sm">
                 <select id="event-oshi" class="w-full bg-slate-50 p-3 rounded-xl text-sm"></select>
                 <select id="event-category" class="w-full bg-slate-50 p-3 rounded-xl text-sm"></select>
-                <div class="flex gap-2">
-                    <button type="button" onclick="window.app.closeEventModal()" class="flex-1 bg-slate-100 py-2 rounded-xl text-sm font-bold">戻る</button>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="window.app.closeModal('event-modal')" class="flex-1 bg-slate-100 py-2 rounded-xl text-sm font-bold">戻る</button>
                     <button type="submit" class="flex-1 bg-sky-400 text-white py-2 rounded-xl text-sm font-bold">保存</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 他モーダルは省略なしで実装可能 -->
     <script>
         (function() {
             const App = {
+                events: JSON.parse(localStorage.getItem('oshi_events')) || [],
+                oshis: JSON.parse(localStorage.getItem('oshi_list')) || [{id:'o1', name:'推し', color:'#7dd3fc'}],
+                categories: JSON.parse(localStorage.getItem('cat_list')) || [{id:'c1', name:'LIVE'}, {id:'c2', name:'TV/雑誌'}],
+                
                 init: function() {
-                    this.oshis = JSON.parse(localStorage.getItem('oshi_list')) || [{id:'o1', name:'推し', color:'#7dd3fc', birthday:''}];
-                    this.categories = JSON.parse(localStorage.getItem('cat_list')) || [{id:'c1', name:'LIVE'}, {id:'c2', name:'当落'}];
-                    this.events = JSON.parse(localStorage.getItem('oshi_events')) || [];
                     this.renderCalendar();
                 },
                 renderCalendar: function() {
-                    const container = document.getElementById('calendar-container'); container.innerHTML = '';
+                    const cont = document.getElementById('calendar-container');
+                    cont.innerHTML = '';
                     const now = new Date();
-                    for (let i = 0; i < 3; i++) {
-                        let y = now.getFullYear(), m = now.getMonth() + i;
+                    for(let i=0; i<3; i++){
+                        let y = now.getFullYear(), m = now.getMonth()+i;
                         if(m>11){m-=12; y++}
-                        let html = `<h2 class="text-xs font-bold text-sky-400 mb-2">${y}年${m+1}月</h2><div class="calendar-grid text-[8px] text-slate-300 font-bold text-center"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div><div class="calendar-grid gap-1 mt-2">`;
+                        let html = `<h2 class="text-xs font-bold text-sky-400">${y}年${m+1}月</h2><div class="grid grid-cols-7 gap-1 mt-2 text-[10px] text-center">`;
                         for(let d=1; d<=new Date(y,m+1,0).getDate(); d++){
                             const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                            html += `<div class="p-1 text-center rounded-xl cursor-pointer hover:bg-sky-100" onclick="window.app.selectDate('${ds}')">${d}</div>`;
+                            html += `<div class="p-1 rounded-xl cursor-pointer hover:bg-sky-100" onclick="window.app.selectDate('${ds}')">${d}</div>`;
                         }
-                        container.innerHTML += `<div>${html}</div>`;
+                        cont.innerHTML += `<div>${html}</div></div>`;
                     }
                 },
-                selectDate: function(ds) { this.selectedDate = ds; document.getElementById('selected-date-title').innerText = ds; this.renderDailyEvents(); },
-                openEventModal: function(id=null) { 
+                selectDate: function(ds) { 
+                    this.selectedDate = ds; 
+                    document.getElementById('selected-date-title').innerText = ds;
+                    const list = document.getElementById('daily-event-list');
+                    list.innerHTML = this.events.filter(e => e.startDate === ds).map(ev => `
+                        <div class="p-3 bg-white border border-sky-100 rounded-2xl shadow-sm">
+                            <div class="text-[10px] text-sky-500 font-bold">${ev.categoryName || ''}</div>
+                            <div class="font-bold">${ev.name}</div>
+                            ${ev.location ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}" target="_blank" class="text-[10px] text-blue-500 underline">📍 ${ev.location}</a>` : ''}
+                        </div>
+                    `).join('') || '予定なし';
+                },
+                openEventModal: function() { 
                     document.getElementById('event-oshi').innerHTML = this.oshis.map(o=>`<option value="${o.id}">${o.name}</option>`).join('');
-                    document.getElementById('event-category').innerHTML = this.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+                    document.getElementById('event-category').innerHTML = this.categories.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
                     document.getElementById('event-modal').classList.remove('hidden'); 
                 },
-                closeEventModal: function() { document.getElementById('event-modal').classList.add('hidden'); },
-                renderDailyEvents: function() {
-                    const list = document.getElementById('daily-event-list');
-                    list.innerHTML = this.events.filter(e=>e.startDate === this.selectedDate).map(ev=>`<div class="p-3 bg-white border border-sky-100 rounded-2xl shadow-sm">${ev.name}</div>`).join('') || '予定なし';
-                },
-                exportData: function() { alert(JSON.stringify(this.events)); },
-                shiftMonth: function(d) { }, jumpToToday: function() {}, openOshiModal: function() {}, openConfigModal: function() {}, toggleFilter: function() {}
+                closeModal: function(id) { document.getElementById(id).classList.add('hidden'); },
+                openOshiModal: function() { alert("推し編集画面（今回はここから実装します！）"); },
+                openConfigModal: function() { alert("項目編集画面"); }
             };
             window.app = App; App.init();
         })();
