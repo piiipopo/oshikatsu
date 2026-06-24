@@ -139,7 +139,7 @@
                         
                         html += `<div class="p-1 min-h-[44px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-sky-200 text-white shadow-md' : 'hover:bg-sky-50'}" onclick="window.app.selectDate('${ds}')">
                                  <span class="text-[11px] font-bold">${d}</span>
-                                 ${bdayOshis.map(o => `<span class="text-[8px] font-bold mt-0.5 leading-[1.1] truncate w-full text-center" style="color:${o.color}">${o.name}<br>HBD!</span>`).join('')}
+                                 ${bdayOshis.map(o => `<span class="text-[8px] font-bold mt-0.5 leading-[1.1] truncate w-full text-center" style="color:${o.color}; -webkit-text-stroke: 0.3px #94a3b8;">${o.name}<br>HBD!</span>`).join('')}
                                  <div class="w-full mt-auto flex flex-col justify-end pb-0.5 mt-1">
                                     ${indicators}
                                  </div>
