@@ -128,7 +128,7 @@
                                     ${evs.slice(0, 3).map(e => {
                                         const o = this.oshis.find(x => String(x.id) === String(e.oshiId));
                                         const isPeriod = e.startDate !== e.endDate && e.endDate;
-                                        return `<div class="line-indicator" style="background-color:${o?.color || '#ddd'}; opacity:${isPeriod ? '0.8' : '1'}"></div>`;
+                                        return `<div class="line-indicator" style="background-color:${o?.color || '#ffffbf'}; opacity:${isPeriod ? '0.8' : '1'}"></div>`;
                                     }).join('')}
                                  </div>
                                  </div>`;
