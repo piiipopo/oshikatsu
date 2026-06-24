@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Oshikatsu Calendar Pro v4.0</title>
+    <title>Oshikatsu Calendar Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
     <style>
@@ -20,7 +20,8 @@
     <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-sky-100 flex justify-between items-center">
         <h1 class="text-lg font-bold text-sky-600 flex items-center gap-2">📅 Oshikatsu Calendar</h1>
         <div class="flex gap-2">
-            <button onclick="window.app.openSettingModal()" class="bg-slate-100 text-slate-500 text-[10px] font-bold py-2 px-3 rounded-2xl scale-active">設定</button>
+            <button onclick="window.app.openSettingModal()" class="bg-slate-100 text-slate-500 text-[10px] font-bold py-2 px-3 rounded-2xl scale-active">⚙️ 設定</button>
+            <button onclick="window.app.openConfigModal()" class="bg-sky-100 text-sky-600 text-[10px] font-bold py-2 px-3 rounded-2xl scale-active">項目</button>
             <button onclick="window.app.openOshiModal()" class="bg-sky-100 text-sky-600 text-[10px] font-bold py-2 px-3 rounded-2xl scale-active">推し</button>
         </div>
     </header>
@@ -28,9 +29,9 @@
     <main class="p-4 max-w-md mx-auto space-y-4">
         <section class="bg-white rounded-3xl p-4 shadow-sm border border-sky-50">
             <div class="flex justify-between items-center mb-4 px-1">
-                <button onclick="window.app.shiftMonth(-1)" class="text-xs text-sky-400 font-bold scale-active">Back</button>
+                <button onclick="window.app.shiftMonth(-1)" class="text-xs text-sky-400 font-bold scale-active">&lt; Back</button>
                 <button onclick="window.app.jumpToToday()" class="text-xs text-sky-500 font-bold underline scale-active">Today</button>
-                <button onclick="window.app.shiftMonth(1)" class="text-xs text-sky-400 font-bold scale-active">Next</button>
+                <button onclick="window.app.shiftMonth(1)" class="text-xs text-sky-400 font-bold scale-active">Next &gt;</button>
             </div>
             <div id="calendar-container" class="space-y-8"></div>
         </section>
@@ -51,8 +52,8 @@
     <script>
     (function() {
         const App = {
-            baseYear: 0, baseMonth: 0, selectedDateStr: '', filterOshiId: null,
-            oshis: JSON.parse(localStorage.getItem('oshi_list')) || [{ id: 'o1', name: '推し', color: '#7dd3fc', birthday: '' }],
+            baseYear: 0, baseMonth: 0, selectedDateStr: '',
+            oshis: JSON.parse(localStorage.getItem('oshi_list')) || [{ id: 'o1', name: '推し1', color: '#7dd3fc', birthday: '' }],
             categories: JSON.parse(localStorage.getItem('cat_list')) || [{ id: 'c1', name: 'LIVE' }, { id: 'c2', name: '雑誌/TV' }],
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
 
@@ -69,7 +70,7 @@
             },
             parseSafeDate: function(str) {
                 if (!str) return null;
-                const parts = str.split('-'); // Safari対策: ハイフンで分割
+                const parts = str.split('-');
                 return new Date(parts[0], parts[1] - 1, parts[2]);
             },
             save: function() {
@@ -78,7 +79,7 @@
                 localStorage.setItem('oshi_events', JSON.stringify(this.events));
             },
 
-            // --- 描画ロジック ---
+            // --- カレンダー描画 ---
             renderCalendar: function() {
                 const cont = document.getElementById('calendar-container'); cont.innerHTML = '';
                 for (let i = 0; i < 3; i++) {
@@ -93,12 +94,13 @@
                     for (let d = 1; d <= last; d++) {
                         const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                         const evs = this.getEventsForDay(ds);
+                        // 誕生日の判定
                         const isBday = this.oshis.some(o => o.birthday && o.birthday.slice(5) === ds.slice(5));
                         const isSel = ds === this.selectedDateStr;
                         html += `<div class="p-1 min-h-[44px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-sky-200 text-white shadow-md' : 'hover:bg-sky-50'}" onclick="window.app.selectDate('${ds}')">
                                  <span class="text-[11px] font-bold">${d}</span>
-                                 ${isBday ? '<span class="text-[10px] leading-none">🎂</span>' : ''}
-                                 <div class="w-full mt-auto flex flex-col gap-0.5">
+                                 ${isBday ? '<span class="text-[10px] leading-none mt-0.5">🎂</span>' : ''}
+                                 <div class="w-full mt-auto flex flex-col gap-0.5 mt-1">
                                     ${evs.slice(0, 3).map(e => {
                                         const o = this.oshis.find(x => x.id === e.oshiId);
                                         const isPeriod = e.startDate !== e.endDate;
@@ -134,19 +136,18 @@
                     const o = this.oshis.find(x => x.id === ev.oshiId);
                     const c = this.categories.find(x => x.id === ev.categoryId);
                     return `<div class="p-3 bg-white border border-sky-100 rounded-2xl flex items-center gap-3 shadow-sm scale-active" onclick="window.app.openEventModal('${ev.id}')">
-                        <div class="w-2 h-10 rounded-full" style="background-color:${o?.color}"></div>
+                        <div class="w-2 h-10 rounded-full" style="background-color:${o?.color || '#ddd'}"></div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-start">
-                                <span class="text-[9px] font-bold text-sky-500">${c?.name || '無題'}</span>
+                                <span class="text-[9px] font-bold text-sky-500">${c?.name || '未分類'}</span>
                                 <span class="text-[9px] text-slate-400 font-bold">${ev.startTime || ''}${ev.endTime ? ' ~ ' + ev.endTime : ''}</span>
                             </div>
                             <div class="text-sm font-bold truncate">${ev.name}</div>
                             <div class="flex justify-between items-center mt-1">
-                                <span class="text-[10px] font-bold text-slate-400">${o?.name}</span>
+                                <span class="text-[10px] font-bold text-slate-400">${o?.name || '不明'}</span>
                                 ${ev.location ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}" target="_blank" onclick="event.stopPropagation();" class="text-[10px] text-blue-400 underline">📍Map</a>` : ''}
                             </div>
                         </div>
-                        ${ev.imageUrl ? `<img src="${ev.imageUrl}" class="w-10 h-10 rounded-xl object-cover border border-sky-50">` : ''}
                     </div>`;
                 }).join('') : '<div class="text-center text-slate-300 text-xs py-8">予定はありません</div>';
             },
@@ -159,23 +160,22 @@
             },
             closeModal: function() { document.getElementById('modal-layer').classList.add('hidden'); },
 
-            // --- 予定管理 ---
+            // --- 予定の登録・編集 ---
             openEventModal: function(id = null) {
-                const ev = this.events.find(e => e.id === id) || { name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', oshiId: this.oshis[0].id, categoryId: this.categories[0].id, repeat: 'none', location: '', imageUrl: '' };
+                const ev = this.events.find(e => e.id === id) || { name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', oshiId: this.oshis[0]?.id, categoryId: this.categories[0]?.id, repeat: 'none', location: '' };
                 this.showModal(`
                     <h3 class="font-bold mb-4 text-sky-600">${id ? '予定を編集' : '予定を登録'}</h3>
                     <form id="ev-form" class="space-y-3">
                         <div class="grid grid-cols-2 gap-2">
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">START</label><input type="date" id="ev-start" value="${ev.startDate}" required class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-sky-50"></div>
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">END</label><input type="date" id="ev-end" value="${ev.endDate || ev.startDate}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-sky-50"></div>
+                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">開始日</label><input type="date" id="ev-start" value="${ev.startDate}" required class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-sky-50"></div>
+                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">終了日</label><input type="date" id="ev-end" value="${ev.endDate || ev.startDate}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-sky-50"></div>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">TIME (IN)</label><input type="time" id="ev-stime" value="${ev.startTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-sky-50"></div>
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">TIME (OUT)</label><input type="time" id="ev-etime" value="${ev.endTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-sky-50"></div>
+                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">開始時間</label><input type="time" id="ev-stime" value="${ev.startTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-sky-50"></div>
+                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">終了時間</label><input type="time" id="ev-etime" value="${ev.endTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-sky-50"></div>
                         </div>
                         <input type="text" id="ev-name" value="${ev.name}" placeholder="タイトル" required class="w-full bg-slate-50 p-3 rounded-xl text-sm outline-none border border-sky-50">
                         <input type="text" id="ev-loc" value="${ev.location}" placeholder="場所・住所 (Map連動)" class="w-full bg-slate-50 p-3 rounded-xl text-sm outline-none border border-sky-50">
-                        <input type="text" id="ev-img" value="${ev.imageUrl}" placeholder="画像URL (任意)" class="w-full bg-slate-50 p-3 rounded-xl text-sm outline-none border border-sky-50">
                         <div class="grid grid-cols-2 gap-2">
                             <select id="ev-oshi" class="bg-slate-50 p-3 rounded-xl text-xs border border-sky-50">${this.oshis.map(o => `<option value="${o.id}" ${o.id === ev.oshiId ? 'selected' : ''}>${o.name}</option>`).join('')}</select>
                             <select id="ev-cat" class="bg-slate-50 p-3 rounded-xl text-xs border border-sky-50">${this.categories.map(c => `<option value="${c.id}" ${c.id === ev.categoryId ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
@@ -202,7 +202,6 @@
                         endTime: document.getElementById('ev-etime').value,
                         name: document.getElementById('ev-name').value,
                         location: document.getElementById('ev-loc').value,
-                        imageUrl: document.getElementById('ev-img').value,
                         oshiId: document.getElementById('ev-oshi').value,
                         categoryId: document.getElementById('ev-cat').value,
                         repeat: document.getElementById('ev-repeat').value
@@ -214,23 +213,26 @@
             },
             deleteEvent: function(id) { if (confirm('消去しますか？')) { this.events = this.events.filter(x => x.id !== id); this.save(); this.closeModal(); this.renderCalendar(); } },
 
-            // --- 推し管理 ---
+            // --- 推しの登録・編集 ---
             openOshiModal: function() {
                 this.showModal(`
                     <h3 class="font-bold mb-4 text-sky-600">推し設定</h3>
                     <form id="oshi-form" class="space-y-3 mb-4">
-                        <input type="text" id="o-name" placeholder="名前" required class="w-full bg-slate-50 p-3 rounded-xl text-sm border border-sky-50 outline-none">
-                        <div class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-sky-50">
-                            <span class="text-[10px] font-bold text-slate-400">カラー</span>
+                        <input type="text" id="o-name" placeholder="推しの名前" required class="w-full bg-slate-50 p-3 rounded-xl text-sm border border-sky-50 outline-none">
+                        <div class="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-sky-50">
+                            <span class="text-[10px] font-bold text-slate-400 ml-1">カラー</span>
                             <input type="color" id="o-color" value="#7dd3fc" class="flex-1 h-8 bg-transparent cursor-pointer">
                         </div>
-                        <input type="date" id="o-bday" class="w-full bg-slate-50 p-3 rounded-xl text-sm border border-sky-50 outline-none">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-bold text-slate-400 ml-1">誕生日 (任意・🎂アイコンが出ます)</label>
+                            <input type="date" id="o-bday" class="w-full bg-slate-50 p-3 rounded-xl text-sm border border-sky-50 outline-none">
+                        </div>
                         <button type="submit" class="w-full bg-sky-400 text-white font-bold py-3 rounded-2xl text-xs shadow-md">追加</button>
                     </form>
                     <div class="space-y-2 max-h-40 overflow-y-auto">${this.oshis.map(o => `
                         <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-sky-50">
                             <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full" style="background-color:${o.color}"></div><span class="text-xs font-bold">${o.name}</span></div>
-                            <button onclick="window.app.deleteOshi('${o.id}')" class="text-slate-300 text-xs px-2">✕</button>
+                            <button onclick="window.app.deleteOshi('${o.id}')" class="text-slate-300 text-xs px-2 font-bold">✕</button>
                         </div>`).join('')}</div>
                     <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4">閉じる</button>
                 `);
@@ -240,20 +242,20 @@
                     this.save(); this.openOshiModal();
                 };
             },
-            deleteOshi: function(id) { if (confirm('解除しますか？')) { this.oshis = this.oshis.filter(x => x.id !== id); this.save(); this.openOshiModal(); } },
+            deleteOshi: function(id) { if (confirm('この推しを解除しますか？')) { this.oshis = this.oshis.filter(x => x.id !== id); this.save(); this.openOshiModal(); } },
 
-            // --- 項目管理 ---
+            // --- 項目の登録・編集 ---
             openConfigModal: function() {
                 this.showModal(`
                     <h3 class="font-bold mb-4 text-sky-600">項目設定</h3>
                     <form id="cat-form" class="space-y-3 mb-4">
                         <input type="text" id="c-name" placeholder="項目名 (例: ラジオ)" required class="w-full bg-slate-50 p-3 rounded-xl text-sm border border-sky-50 outline-none">
-                        <button type="submit" class="w-full bg-slate-500 text-white font-bold py-3 rounded-2xl text-xs shadow-md">追加</button>
+                        <button type="submit" class="w-full bg-sky-400 text-white font-bold py-3 rounded-2xl text-xs shadow-md">追加</button>
                     </form>
                     <div class="space-y-2 max-h-40 overflow-y-auto">${this.categories.map(c => `
                         <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-sky-50">
                             <span class="text-xs font-bold">${c.name}</span>
-                            <button onclick="window.app.deleteCat('${c.id}')" class="text-slate-300 text-xs px-2">✕</button>
+                            <button onclick="window.app.deleteCat('${c.id}')" class="text-slate-300 text-xs px-2 font-bold">✕</button>
                         </div>`).join('')}</div>
                     <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4">閉じる</button>
                 `);
@@ -263,23 +265,23 @@
                     this.save(); this.openConfigModal();
                 };
             },
-            deleteCat: function(id) { if (confirm('消去しますか？')) { this.categories = this.categories.filter(x => x.id !== id); this.save(); this.openConfigModal(); } },
+            deleteCat: function(id) { if (confirm('この項目を消去しますか？')) { this.categories = this.categories.filter(x => x.id !== id); this.save(); this.openConfigModal(); } },
 
             // --- 設定 & バックアップ ---
             openSettingModal: function() {
                 this.showModal(`
                     <h3 class="font-bold mb-4 text-sky-600">アプリ設定</h3>
                     <p class="text-[10px] text-slate-400 mb-2">データの書き出し (機種変更など)</p>
-                    <textarea id="back-data" class="w-full h-24 bg-slate-50 p-2 rounded-xl text-[8px] border border-sky-50 outline-none">${JSON.stringify({oshis:this.oshis, events:this.events, cats:this.categories})}</textarea>
-                    <button onclick="window.app.copyBackup()" class="w-full bg-sky-400 text-white py-2 rounded-xl text-xs font-bold mt-1">コピーする</button>
+                    <textarea id="back-data" class="w-full h-20 bg-slate-50 p-2 rounded-xl text-[8px] border border-sky-50 outline-none">${JSON.stringify({oshis:this.oshis, events:this.events, cats:this.categories})}</textarea>
+                    <button onclick="window.app.copyBackup()" class="w-full bg-sky-400 text-white py-2 rounded-xl text-xs font-bold mt-1 shadow-sm">データをコピーする</button>
                     <hr class="my-4 border-sky-50">
-                    <p class="text-[10px] text-slate-400 mb-2">データの読み込み (バックアップから復元)</p>
-                    <textarea id="import-data" placeholder="ここにデータを貼り付け" class="w-full h-24 bg-slate-50 p-2 rounded-xl text-[8px] border border-sky-50 outline-none"></textarea>
-                    <button onclick="window.app.importBackup()" class="w-full bg-slate-700 text-white py-2 rounded-xl text-xs font-bold mt-1">読み込む</button>
+                    <p class="text-[10px] text-slate-400 mb-2">データの読み込み (復元)</p>
+                    <textarea id="import-data" placeholder="ここにデータを貼り付け" class="w-full h-20 bg-slate-50 p-2 rounded-xl text-[8px] border border-sky-50 outline-none"></textarea>
+                    <button onclick="window.app.importBackup()" class="w-full bg-slate-700 text-white py-2 rounded-xl text-xs font-bold mt-1 shadow-sm">データを読み込む</button>
                     <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4">閉じる</button>
                 `);
             },
-            copyBackup: function() { document.getElementById('back-data').select(); document.execCommand('copy'); alert('コピーしました！'); },
+            copyBackup: function() { document.getElementById('back-data').select(); document.execCommand('copy'); alert('コピーしました！メモ帳などに貼り付けて保存してください。'); },
             importBackup: function() {
                 try {
                     const data = JSON.parse(document.getElementById('import-data').value);
@@ -287,7 +289,7 @@
                     if (data.events) this.events = data.events;
                     if (data.cats) this.categories = data.cats;
                     this.save(); location.reload();
-                } catch(e) { alert('形式が正しくありません'); }
+                } catch(e) { alert('データ形式が正しくありません'); }
             },
 
             // --- 画面操作 ---
