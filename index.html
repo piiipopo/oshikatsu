@@ -18,7 +18,7 @@
 <body class="bg-sky-50 text-slate-700 antialiased pb-24">
 
     <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-sky-100 flex justify-between items-center">
-        <h1 class="text-lg font-bold text-sky-600 flex items-center gap-1.5">📅 Oshikatsu</h1>
+        <h1 class="text-lg font-bold text-sky-600 flex items-center gap-1.5"> Oshikatsu</h1>
         <div class="flex gap-1.5">
             <button onclick="window.app.requestNotif()" class="bg-slate-50 text-slate-500 text-[10px] font-bold py-2 px-2.5 rounded-xl scale-active shadow-sm border border-slate-100">🔔 通知</button>
             <button onclick="window.app.openSettingModal()" class="bg-slate-50 text-slate-500 text-[10px] font-bold py-2 px-2.5 rounded-xl scale-active shadow-sm border border-slate-100">⚙️</button>
@@ -83,7 +83,7 @@
             // --- 通知機能 ---
             requestNotif: function() {
                 if (Notification.permission === 'granted') {
-                    alert('通知はすでにONになっています🩵');
+                    alert('通知はすでにONになっています');
                 } else {
                     Notification.requestPermission().then(p => {
                         if (p === 'granted') new Notification('Oshikatsu Calendar', { body: '通知をONにしました！' });
@@ -152,7 +152,7 @@
                 // 誕生日のお祝い表示
                 bdays.forEach(o => {
                     html += `<div class="p-3 bg-pink-50 border border-pink-100 rounded-2xl flex items-center shadow-sm">
-                        <div class="font-bold text-pink-500 text-sm">🎂 ${o.name}Birthday! 🩵</div>
+                        <div class="font-bold text-pink-500 text-sm">🎂 ${o.name}Birthday! </div>
                     </div>`;
                 });
 
@@ -166,11 +166,11 @@
                         let badgeHtml = '';
                         const catName = c?.name || '未分類';
                         if (catName.includes('当落') || ev.name.includes('当落')) {
-                            badgeHtml = `<span class="bg-rose-100 text-rose-500 px-1.5 py-0.5 rounded text-[10px]">⭐︎当落発表</span>`;
+                            badgeHtml = `<span class="bg-rose-100 text-rose-500 px-1.5 py-0.5 rounded text-[10px]">🙏当落発表</span>`;
                         } else if (catName.includes('チケット') || ev.name.includes('チケット')) {
                             badgeHtml = `<span class="bg-blue-100 text-blue-500 px-1.5 py-0.5 rounded text-[10px]">🎫チケット発売日</span>`;
                         } else if (catName.includes('当選') || ev.name.includes('当選')) {
-                            badgeHtml = `<span class="bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded text-[10px]">🎉当選</span>`;
+                            badgeHtml = `<span class="bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded text-[10px]">🎯当選</span>`;
                         } else {
                             badgeHtml = `<span class="text-[9px] font-bold text-sky-500">${catName}</span>`;
                         }
