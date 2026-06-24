@@ -143,7 +143,7 @@
                         
                         html += `<div class="p-1 min-h-[44px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-sky-200 text-white shadow-md' : 'hover:bg-sky-50'}" onclick="window.app.selectDate('${ds}')">
                                  <span class="text-[11px] font-bold">${d}</span>
-                                 ${isBday ? '<span class="text-[10px] leading-none mt-0.5">${o.name} HBD!</span>' : ''}
+                                 ${isBday ? '<span class="text-[10px] leading-none mt-0.5">{o.name} HBD!</span>' : ''}
                                  <div class="w-full mt-auto flex flex-col justify-end pb-0.5 mt-1">
                                     ${indicators}
                                  </div>
