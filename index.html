@@ -3,157 +3,315 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>oshikatsu calendar</title>
+    <title>oshikatsu calendar v2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { touch-action: manipulation; }
         ::-webkit-scrollbar { display: none; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-        .scale-in { animation: scaleIn 0.2s ease-out; }
-        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .modal-bg { background-color: rgba(0, 0, 0, 0.2); }
     </style>
 </head>
-<body class="bg-sky-50/50 text-slate-700 font-sans antialiased pb-24">
+<body class="bg-sky-50 text-slate-700 font-sans antialiased pb-24">
 
     <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-sky-100 flex justify-between items-center">
         <h1 class="text-lg font-extrabold text-sky-600 tracking-tight">oshikatsu calendar</h1>
         <div class="flex gap-2">
-            <button onclick="openOshiModal()" class="bg-sky-100 text-sky-600 border border-sky-200 text-xs font-bold py-2 px-3 rounded-2xl active:scale-95 transition-all">推し</button>
-            <button onclick="openConfigModal()" class="bg-slate-100 text-slate-500 border border-slate-200 text-xs font-bold py-2 px-3 rounded-2xl active:scale-95 transition-all">項目</button>
+            <button onclick="window.app.openOshiModal()" class="bg-sky-100 text-sky-600 border border-sky-200 text-xs font-bold py-2 px-3 rounded-2xl active:scale-95 transition-all">推し</button>
+            <button onclick="window.app.openConfigModal()" class="bg-slate-100 text-slate-500 border border-slate-200 text-xs font-bold py-2 px-3 rounded-2xl active:scale-95 transition-all">項目</button>
         </div>
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
         <section class="bg-white rounded-3xl shadow-sm border border-sky-100 p-4">
             <div class="flex justify-between items-center mb-4 px-1">
-                <button onclick="shiftMonth(-1)" class="text-xs text-sky-500 bg-sky-50 px-3 py-1.5 rounded-xl font-bold border border-sky-100 active:scale-95 transition-all">&lt; Back</button>
-                <button onclick="shiftMonth(1)" class="text-xs text-sky-500 bg-sky-50 px-3 py-1.5 rounded-xl font-bold border border-sky-100 active:scale-95 transition-all">Next &gt;</button>
+                <button onclick="window.app.shiftMonth(-1)" class="text-xs text-sky-500 bg-sky-50 px-3 py-1.5 rounded-xl font-bold border border-sky-100 active:scale-95 transition-all">&lt; Back</button>
+                <button onclick="window.app.shiftMonth(1)" class="text-xs text-sky-500 bg-sky-50 px-3 py-1.5 rounded-xl font-bold border border-sky-100 active:scale-95 transition-all">Next &gt;</button>
             </div>
             <div id="calendar-container" class="space-y-8"></div>
         </section>
 
         <section class="bg-white rounded-3xl shadow-sm border border-sky-100 p-4 sticky bottom-4 z-20">
             <div class="flex justify-between items-center mb-3">
-                <h3 id="selected-date-title" class="text-sm font-bold text-slate-600 leading-none">Events</h3>
-                <button onclick="openEventModal()" class="bg-sky-300 text-white text-xs font-bold py-2 px-3 rounded-2xl shadow-sm shadow-sky-100 active:scale-95 transition-all">＋ Add</button>
+                <h3 id="selected-date-title" class="text-sm font-bold text-slate-600">Events</h3>
+                <button onclick="window.app.openEventModal()" class="bg-sky-300 text-white text-xs font-bold py-2 px-3 rounded-2xl shadow-sm shadow-sky-100 active:scale-95 transition-all">＋ Add</button>
             </div>
             <div id="daily-event-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
         </section>
     </main>
 
-    <div id="event-modal" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl scale-in">
+    <div id="event-modal" class="fixed inset-0 modal-bg backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
             <h3 id="modal-title" class="text-base font-bold text-slate-700 mb-4">予定を登録</h3>
             <form id="event-form" class="space-y-3">
                 <input type="hidden" id="event-id">
                 <div class="grid grid-cols-2 gap-2">
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 ml-2">開始日</label>
-                        <input type="date" id="event-start-date" required class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-xs font-bold text-slate-700 outline-none">
+                        <label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Start Date</label>
+                        <input type="date" id="event-start-date" required class="w-full bg-slate-50 border border-sky-50 p-2.5 rounded-2xl text-xs font-bold text-slate-700 outline-none">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 ml-2">終了日（任意）</label>
-                        <input type="date" id="event-end-date" class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-xs font-bold text-slate-700 outline-none">
+                        <label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">End Date</label>
+                        <input type="date" id="event-end-date" class="w-full bg-slate-50 border border-sky-50 p-2.5 rounded-2xl text-xs font-bold text-slate-700 outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 ml-2">開始時間</label>
-                        <input type="time" id="event-start-time" class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-xs font-bold text-slate-700 outline-none">
+                        <label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">Start Time</label>
+                        <input type="time" id="event-start-time" class="w-full bg-slate-50 border border-sky-50 p-2.5 rounded-2xl text-xs font-bold text-slate-700 outline-none">
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 ml-2">終了時間</label>
-                        <input type="time" id="event-end-time" class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-xs font-bold text-slate-700 outline-none">
+                        <label class="text-[9px] font-bold text-slate-400 ml-2 uppercase">End Time</label>
+                        <input type="time" id="event-end-time" class="w-full bg-slate-50 border border-sky-50 p-2.5 rounded-2xl text-xs font-bold text-slate-700 outline-none">
                     </div>
                 </div>
                 <select id="event-oshi" required class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-sm font-bold text-slate-700 outline-none"></select>
                 <select id="event-category" required class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-sm font-bold text-slate-700 outline-none"></select>
                 <input type="text" id="event-name" placeholder="タイトル" required class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-sm text-slate-700 outline-none">
                 
-                <div class="flex gap-2 mt-4">
-                    <button type="button" onclick="closeEventModal()" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-2xl text-sm font-bold active:scale-95 transition-all">戻る</button>
-                    <button type="button" id="delete-event-btn" onclick="deleteEvent()" class="hidden flex-1 bg-rose-50 text-rose-400 py-3 rounded-2xl text-sm font-bold active:scale-95 transition-all">削除</button>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="window.app.closeEventModal()" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-2xl text-sm font-bold active:scale-95 transition-all">戻る</button>
+                    <button type="button" id="delete-event-btn" onclick="window.app.deleteEvent()" class="hidden flex-1 bg-rose-50 text-rose-400 py-3 rounded-2xl text-sm font-bold active:scale-95 transition-all">削除</button>
                     <button type="submit" class="flex-1 bg-sky-300 text-white py-3 rounded-2xl text-sm font-bold shadow-sm active:scale-95 transition-all">保存</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="oshi-modal" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl scale-in">
+    <div id="oshi-modal" class="fixed inset-0 modal-bg backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
             <h3 class="text-base font-bold text-slate-700 mb-4 font-bold">推し設定</h3>
             <form id="oshi-form" class="space-y-3 mb-4">
-                <input type="text" id="new-oshi-name" placeholder="推しの名前" required class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-xs outline-none">
-                <div class="flex items-center gap-2 bg-slate-50 border border-sky-50 p-2 rounded-2xl">
-                    <span class="text-[10px] font-bold text-slate-400 ml-2">テーマカラー</span>
-                    <input type="color" id="new-oshi-color" value="#7dd3fc" class="flex-1 h-8 border-none outline-none bg-transparent cursor-pointer rounded-lg overflow-hidden">
-                </div>
+                <input type="text" id="new-oshi-name" placeholder="名前" required class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-xs outline-none">
+                <input type="color" id="new-oshi-color" value="#7dd3fc" class="w-full h-10 border-none outline-none bg-transparent cursor-pointer rounded-2xl">
                 <button type="submit" class="w-full bg-sky-300 text-white font-bold py-3 rounded-2xl text-xs active:scale-95 transition-all">推しを追加</button>
             </form>
             <div id="oshi-list-container" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
-            <button onclick="closeOshiModal()" class="w-full bg-slate-50 text-slate-500 font-bold py-3 rounded-2xl text-xs mt-4 transition-all">閉じる</button>
+            <button onclick="window.app.closeOshiModal()" class="w-full bg-slate-50 text-slate-500 font-bold py-3 rounded-2xl text-xs mt-4">閉じる</button>
         </div>
     </div>
 
-    <div id="config-modal" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl scale-in">
+    <div id="config-modal" class="fixed inset-0 modal-bg backdrop-blur-sm z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl">
             <h3 class="text-base font-bold text-slate-700 mb-4 font-bold">項目設定</h3>
             <form id="cat-form" class="space-y-3 mb-4">
-                <input type="text" id="new-cat-name" placeholder="新しい項目名（例：ラジオ）" required class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-xs outline-none">
+                <input type="text" id="new-cat-name" placeholder="項目名" required class="w-full bg-slate-50 border border-sky-50 p-3 rounded-2xl text-xs outline-none">
                 <button type="submit" class="w-full bg-slate-400 text-white font-bold py-3 rounded-2xl text-xs active:scale-95 transition-all">項目を追加</button>
             </form>
             <div id="cat-list-container" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
-            <button onclick="closeConfigModal()" class="w-full bg-slate-50 text-slate-500 font-bold py-3 rounded-2xl text-xs mt-4 transition-all">閉じる</button>
+            <button onclick="window.app.closeConfigModal()" class="w-full bg-slate-50 text-slate-500 font-bold py-3 rounded-2xl text-xs mt-4">閉じる</button>
         </div>
     </div>
 
     <script>
-        // --- データの初期化 ---
-        let baseYear, baseMonth, selectedDateStr;
-        let oshis = JSON.parse(localStorage.getItem('oshi_list')) || [{ id: 'o1', name: '推し', color: '#7dd3fc' }];
-        let categories = JSON.parse(localStorage.getItem('cat_list')) || [{ id: 'c1', name: 'LIVE' }, { id: 'c2', name: '当落発表' }];
-        let events = JSON.parse(localStorage.getItem('oshi_events')) || [];
+        // --- 🌸 アプリの全ロジック（Safari対応・安全設計） ---
+        (function() {
+            const App = {
+                baseYear: 0,
+                baseMonth: 0,
+                selectedDateStr: '',
+                oshis: [],
+                categories: [],
+                events: [],
 
-        window.onload = function() {
-            const now = new Date();
-            baseYear = now.getFullYear();
-            baseMonth = now.getMonth();
-            selectedDateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-            renderCalendar();
-        };
+                init: function() {
+                    try {
+                        this.oshis = JSON.parse(localStorage.getItem('oshi_list')) || [{ id: 'o1', name: '推し', color: '#7dd3fc' }];
+                        this.categories = JSON.parse(localStorage.getItem('cat_list')) || [{ id: 'c1', name: 'LIVE' }, { id: 'c2', name: '当落発表' }];
+                        this.events = JSON.parse(localStorage.getItem('oshi_events')) || [];
 
-        // --- 共通ユーティリティ ---
-        function formatDate(d) {
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        }
+                        const now = new Date();
+                        this.baseYear = now.getFullYear();
+                        this.baseMonth = now.getMonth();
+                        this.selectedDateStr = this.safeDateStr(now);
 
-        function getEventsForDay(dateStr) {
-            const d = new Date(dateStr.replace(/-/g, '/'));
-            return events.filter(e => {
-                const start = new Date(e.startDate.replace(/-/g, '/'));
-                const end = new Date((e.endDate || e.startDate).replace(/-/g, '/'));
-                return d >= start && d <= end;
-            });
-        }
+                        this.renderCalendar();
+                        this.bindEvents();
+                    } catch (e) {
+                        console.error("Initialization error", e);
+                        localStorage.clear(); // 致命的な場合はリセット
+                    }
+                },
 
-        // --- カレンダー描画 ---
-        function renderCalendar() {
-            const container = document.getElementById('calendar-container'); 
-            container.innerHTML = '';
-            for (let i = 0; i < 3; i++) {
-                let y = baseYear;
-                let m = baseMonth + i;
-                if(m > 11){ m -= 12; y++; }
-                const first = new Date(y, m, 1).getDay();
-                const last = new Date(y, m+1, 0).getDate();
-                let html = `<h2 class="text-xs font-bold text-sky-400 mb-2 px-1">${y}年 ${m+1}月</h2>
-                           <div class="calendar-grid mb-2 text-[8px] text-slate-300 font-bold text-center uppercase">
-                           <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
-                           <div class="calendar-grid gap-1">`;
-                for(let k=0; k<first; k++) html += `<div></div>`;
-                for(let d=1; d<=last; d++){
-                    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-                    const evs = getEventsForDay(ds);
-                    const isSel = ds === selectedDateStr;
-                    html += `<div class="p-1 min-h-[42px] rounded-2xl flex flex-col justify-center items-center text-xs font-extrabold cursor-pointer transition-all ${isSel ? 'bg-sky-200 text-white shadow-md' : 'text-slate-500 hover:bg-sky-50'}" onclick="selectDate('${ds}')">
-                             ${d}
+                safeDateStr: function(d) {
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                },
+
+                parseSafeDate: function(str) {
+                    if (!str) return null;
+                    const parts = str.split('-');
+                    return new Date(parts[0], parts[1] - 1, parts[2]);
+                },
+
+                getEventsForDay: function(dateStr) {
+                    const currentD = this.parseSafeDate(dateStr);
+                    return this.events.filter(e => {
+                        const start = this.parseSafeDate(e.startDate);
+                        const end = this.parseSafeDate(e.endDate || e.startDate);
+                        return currentD >= start && currentD <= end;
+                    });
+                },
+
+                renderCalendar: function() {
+                    const container = document.getElementById('calendar-container');
+                    container.innerHTML = '';
+
+                    for (let i = 0; i < 3; i++) {
+                        let y = this.baseYear;
+                        let m = this.baseMonth + i;
+                        if (m > 11) { m -= 12; y++; }
+
+                        const firstDay = new Date(y, m, 1).getDay();
+                        const lastDate = new Date(y, m + 1, 0).getDate();
+
+                        let html = `<h2 class="text-xs font-bold text-sky-400 mb-2 px-1 tracking-widest">${y}年 ${m + 1}月</h2>
+                                   <div class="calendar-grid mb-2 text-[8px] text-slate-300 font-bold text-center uppercase tracking-tighter">
+                                   <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+                                   <div class="calendar-grid gap-1">`;
+
+                        for (let k = 0; k < firstDay; k++) html += `<div></div>`;
+                        for (let d = 1; d <= lastDate; d++) {
+                            const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                            const evs = this.getEventsForDay(ds);
+                            const isSel = ds === this.selectedDateStr;
+
+                            html += `<div class="p-1 min-h-[42px] rounded-2xl flex flex-col justify-center items-center text-xs font-extrabold cursor-pointer transition-all ${isSel ? 'bg-sky-200 text-white shadow-md' : 'text-slate-500 hover:bg-sky-50'}" onclick="window.app.selectDate('${ds}')">
+                                     ${d}<div class="flex gap-0.5 mt-1 h-1">${evs.slice(0, 3).map(e => `<div class="w-1.5 h-1.5 rounded-full" style="background-color:${this.oshis.find(o => o.id === e.oshiId)?.color || '#ddd'}"></div>`).join('')}</div></div>`;
+                        }
+                        container.innerHTML += `<div>${html}</div></div>`;
+                    }
+                    this.renderDailyEvents();
+                },
+
+                renderDailyEvents: function() {
+                    const list = document.getElementById('daily-event-list');
+                    const evs = this.getEventsForDay(this.selectedDateStr);
+                    list.innerHTML = evs.length ? evs.map(ev => {
+                        const oshi = this.oshis.find(o => o.id === ev.oshiId) || { name: '推し', color: '#ddd' };
+                        const cat = this.categories.find(c => c.id === ev.categoryId);
+                        const isBadge = cat && cat.name.includes('当落');
+                        const time = (ev.startTime || ev.endTime) ? `<span class="text-[9px] text-slate-400 font-bold ml-auto">${ev.startTime || ''}${ev.endTime ? ' ~ ' + ev.endTime : ''}</span>` : '';
+                        
+                        return `<div class="p-3 bg-sky-50/50 rounded-2xl flex items-center gap-3 border border-sky-100 cursor-pointer active:bg-sky-100" onclick="window.app.openEventModal('${ev.id}')">
+                            <div class="w-1.5 h-8 rounded-full" style="background-color:${oshi.color}"></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-[11px] font-bold text-sky-600 truncate">
+                                    ${isBadge ? '<span class="bg-white border border-sky-200 px-1.5 py-0.5 rounded mr-1 text-[9px]">★当落発表</span>' : ''}${ev.name}
+                                </div>
+                                <div class="flex items-center mt-0.5">
+                                    <span class="text-[10px] font-bold text-slate-500">${oshi.name}</span>
+                                    ${time}
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('') : '<div class="text-center text-slate-400 text-[10px] py-6">予定はありません</div>';
+                    
+                    document.getElementById('selected-date-title').textContent = this.selectedDateStr.replace(/-/g, '/');
+                },
+
+                selectDate: function(s) { this.selectedDateStr = s; this.renderCalendar(); },
+                shiftMonth: function(dir) { this.baseMonth += dir; if (this.baseMonth < 0) { this.baseMonth = 11; this.baseYear--; } else if (this.baseMonth > 11) { this.baseMonth = 0; this.baseYear++; } this.renderCalendar(); },
+
+                openEventModal: function(id = null) {
+                    const ev = this.events.find(e => e.id === id);
+                    document.getElementById('modal-title').innerText = id ? '予定を編集' : '予定を登録';
+                    document.getElementById('delete-event-btn').classList.toggle('hidden', !id);
+                    document.getElementById('event-id').value = id || '';
+                    document.getElementById('event-start-date').value = ev ? ev.startDate : this.selectedDateStr;
+                    document.getElementById('event-end-date').value = ev ? (ev.endDate || '') : '';
+                    document.getElementById('event-start-time').value = ev ? (ev.startTime || '') : '';
+                    document.getElementById('event-end-time').value = ev ? (ev.endTime || '') : '';
+                    document.getElementById('event-name').value = ev ? ev.name : '';
+                    
+                    document.getElementById('event-oshi').innerHTML = this.oshis.map(o => `<option value="${o.id}" ${ev?.oshiId === o.id ? 'selected' : ''}>${o.name}</option>`).join('');
+                    document.getElementById('event-category').innerHTML = this.categories.map(c => `<option value="${c.id}" ${ev?.categoryId === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
+                    document.getElementById('event-modal').classList.remove('hidden');
+                },
+
+                closeEventModal: function() { document.getElementById('event-modal').classList.add('hidden'); },
+
+                deleteEvent: function() {
+                    const id = document.getElementById('event-id').value;
+                    if (confirm('この予定を削除しますか？')) {
+                        this.events = this.events.filter(e => e.id !== id);
+                        localStorage.setItem('oshi_events', JSON.stringify(this.events));
+                        this.closeEventModal(); this.renderCalendar();
+                    }
+                },
+
+                openOshiModal: function() { this.renderOshiList(); document.getElementById('oshi-modal').classList.remove('hidden'); },
+                closeOshiModal: function() { document.getElementById('oshi-modal').classList.add('hidden'); this.renderCalendar(); },
+                renderOshiList: function() {
+                    document.getElementById('oshi-list-container').innerHTML = this.oshis.map(o => `
+                        <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-sky-50">
+                            <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full" style="background-color:${o.color}"></div><span class="text-[11px] font-bold">${o.name}</span></div>
+                            ${o.id !== 'o1' ? `<button onclick="window.app.deleteOshi('${o.id}')" class="text-slate-300 px-2">✕</button>` : '<span class="text-[9px] text-slate-300 px-2 font-bold">固定</span>'}
+                        </div>`).join('');
+                },
+                deleteOshi: function(id) { if(confirm('解除しますか？')) { this.oshis = this.oshis.filter(o=>o.id!==id); localStorage.setItem('oshi_list', JSON.stringify(this.oshis)); this.renderOshiList(); } },
+
+                openConfigModal: function() { this.renderCatList(); document.getElementById('config-modal').classList.remove('hidden'); },
+                closeConfigModal: function() { document.getElementById('config-modal').classList.add('hidden'); this.renderCalendar(); },
+                renderCatList: function() {
+                    document.getElementById('cat-list-container').innerHTML = this.categories.map(c => `
+                        <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-sky-50">
+                            <span class="text-[11px] font-bold">${c.name}</span>
+                            <button onclick="window.app.deleteCat('${c.id}')" class="text-slate-300 px-2">✕</button>
+                        </div>`).join('');
+                },
+                deleteCat: function(id) { if(confirm('削除しますか？')) { this.categories = this.categories.filter(c=>c.id!==id); localStorage.setItem('cat_list', JSON.stringify(this.categories)); this.renderCatList(); } },
+
+                bindEvents: function() {
+                    document.getElementById('event-form').onsubmit = (e) => {
+                        e.preventDefault();
+                        const id = document.getElementById('event-id').value;
+                        const newEv = {
+                            id: id || Date.now().toString(),
+                            startDate: document.getElementById('event-start-date').value,
+                            endDate: document.getElementById('event-end-date').value || document.getElementById('event-start-date').value,
+                            startTime: document.getElementById('event-start-time').value,
+                            endTime: document.getElementById('event-end-time').value,
+                            oshiId: document.getElementById('event-oshi').value,
+                            categoryId: document.getElementById('event-category').value,
+                            name: document.getElementById('event-name').value
+                        };
+                        if (id) this.events = this.events.map(ev => ev.id === id ? newEv : ev);
+                        else this.events.push(newEv);
+                        localStorage.setItem('oshi_events', JSON.stringify(this.events));
+                        this.closeEventModal(); this.renderCalendar();
+                    };
+
+                    document.getElementById('oshi-form').onsubmit = (e) => {
+                        e.preventDefault();
+                        const name = document.getElementById('new-oshi-name').value.trim();
+                        const color = document.getElementById('new-oshi-color').value;
+                        if (!name) return;
+                        this.oshis.push({ id: 'o' + Date.now(), name, color });
+                        localStorage.setItem('oshi_list', JSON.stringify(this.oshis));
+                        document.getElementById('new-oshi-name').value = '';
+                        this.renderOshiList();
+                    };
+
+                    document.getElementById('cat-form').onsubmit = (e) => {
+                        e.preventDefault();
+                        const name = document.getElementById('new-cat-name').value.trim();
+                        if (!name) return;
+                        this.categories.push({ id: 'c' + Date.now(), name });
+                        localStorage.setItem('cat_list', JSON.stringify(this.categories));
+                        document.getElementById('new-cat-name').value = '';
+                        this.renderCatList();
+                    };
+                }
+            };
+
+            window.app = App;
+            document.addEventListener('DOMContentLoaded', () => App.init());
+        })();
+    </script>
+</body>
+</html>
+
+夜
