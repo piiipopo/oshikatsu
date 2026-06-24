@@ -137,7 +137,7 @@
                             }).join('');
                         }
 
-                 // 誕生日の判定
+      // 誕生日の判定
 const bdayOshis = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5));
 const isSel = ds === this.selectedDateStr;
 html += `<div class="p-1 min-h-[44px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-sky-200 text-white shadow-md' : 'hover:bg-sky-50'}" onclick="window.app.selectDate('${ds}')">
