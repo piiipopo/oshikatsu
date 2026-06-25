@@ -185,10 +185,10 @@
 
             requestNotif: function() {
                 if (!('Notification' in window)) {
-                    alert('通知機能が使えないブラウザです🥹\nSafariの共有マークから「ホーム画面に追加」をお試しください！');
+                    alert('通知機能が使えないブラウザです🥹\nSafariの共有マークから「ホーム画面に追加」をお試しください！🩵');
                     return;
                 }
-                if (Notification.permission === 'granted') alert('通知はすでにONになっています🙆‍♀️');
+                if (Notification.permission === 'granted') alert('通知はすでにONになっています🩵');
                 else Notification.requestPermission().then(p => { if (p === 'granted') new Notification('Oshikatsu Calendar', { body: '通知をONにしました！' }); });
             },
 
@@ -489,7 +489,7 @@
             closeModal: function() { document.getElementById('modal-layer').classList.add('hidden'); },
 
             openMonthPicker: function() {
-                let html = `<h3 class="font-bold mb-4 text-slate-700">年月をジャンプ</h3><div class="grid grid-cols-2 gap-2 mb-4">`;
+                let html = `<h3 class="font-bold mb-4 text-slate-700">年月をジャンプ🚀</h3><div class="grid grid-cols-2 gap-2 mb-4">`;
                 html += `<select id="jump-year" class="bg-slate-50 p-3 rounded-xl text-sm font-bold text-center">`;
                 for(let y = 2020; y <= 2030; y++) html += `<option value="${y}" ${y === this.baseYear ? 'selected' : ''}>${y}年</option>`;
                 html += `</select><select id="jump-month" class="bg-slate-50 p-3 rounded-xl text-sm font-bold text-center">`;
