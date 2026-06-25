@@ -351,7 +351,7 @@
                                         // ✨ 隙間ゼロ・長さ完全統一の究極計算式（6px拡張でギャップを埋める！）
                                         let shapeClass = '';
                                         if (roundLeft && roundRight) {
-    shapeClass = 'w-full rounded';
+    shapeClass = 'w-full rounded relative z-10';
 }';
                                         } else if (roundLeft && !roundRight) {
                                             shapeClass = 'w-[calc(100%+6px)] mr-[-6px] rounded-l relative z-20';
