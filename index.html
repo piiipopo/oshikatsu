@@ -43,11 +43,14 @@
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
+    <!-- ヘッダー -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
+        <!-- タイトル編集機能 -->
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
         </h1>
         
+        <!-- 絵文字アイコンだけになったスッキリボタン -->
         <div class="flex gap-1.5 hide-in-shot">
             <button onclick="window.app.requestNotif()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🔔</button>
             <button onclick="window.app.toggleScreenshotMode()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">📸</button>
@@ -58,18 +61,22 @@
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
+        <!-- カウントダウンエリア -->
         <div id="countdown-container"></div>
 
+        <!-- 推しフィルター ＆ 予定一覧ボタン -->
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
         </div>
 
+        <!-- カレンダーエリア -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
                 
                 <div class="flex items-center gap-2">
+                    <!-- 年月ジャンプボタン -->
                     <h2 onclick="window.app.openMonthPicker()" class="text-sm font-extrabold text-slate-600 tracking-widest cursor-pointer scale-active flex items-center gap-1 px-3 py-1 bg-white rounded-full shadow-sm">
                         <span id="calendar-title-year"></span>年 <span id="calendar-title-month"></span>月 <span class="text-[8px] text-slate-300 hide-in-shot">▼</span>
                     </h2>
@@ -81,6 +88,7 @@
             <div id="calendar-container" class="space-y-8"></div>
         </section>
 
+        <!-- 予定リストエリア -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="selected-date-title" class="text-sm font-bold text-slate-500">Events</h3>
@@ -89,10 +97,12 @@
         </section>
     </main>
 
+    <!-- 押しやすい位置にずっと固定された「＋」ボタン (推し色連動) -->
     <button id="fab-button" onclick="window.app.openEventModal()" class="fixed bottom-10 right-6 w-14 h-14 bg-slate-700 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl font-bold z-40 scale-active hide-in-shot transition-all duration-400">
         <span class="mb-1">＋</span>
     </button>
 
+    <!-- モーダル層 -->
     <div id="modal-layer" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
         <div id="modal-content" class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl overflow-y-auto max-h-[90vh]"></div>
     </div>
@@ -247,7 +257,6 @@
                 cont.innerHTML = html;
             },
 
-            // ✨ カレンダー描画（グリッド固定・お誕生日ハミ出し・ゼリー帯左寄せ＆段ズレ防止）
             renderCalendar: function() {
                 const cont = document.getElementById('calendar-container'); 
                 cont.innerHTML = '';
@@ -287,7 +296,6 @@
                         const slots = [ [], [], [], [], [], [], [] ]; 
                         let uniqueEvs = new Map();
                         
-                        // 1. その週のイベントを重複なしで収集
                         for (let wd = 0; wd < 7; wd++) {
                             if (weekDays[wd] !== null) {
                                 const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(weekDays[wd]).padStart(2, '0')}`;
@@ -295,7 +303,6 @@
                             }
                         }
                         
-                        // 2. 期間が長いイベント順にソート（段ズレ防止の要）
                         const sortedEvs = Array.from(uniqueEvs.values()).sort((a, b) => {
                             const aStart = this.parseSafeDate(a.startDate).getTime(); 
                             const bStart = this.parseSafeDate(b.startDate).getTime();
@@ -306,7 +313,6 @@
 
                         let maxRowInWeek = -1; 
 
-                        // 3. イベントを空いている行（スロット）に配置
                         sortedEvs.forEach(ev => {
                             let startWd = 0; let endWd = 6;
                             for (let wd = 0; wd < 7; wd++) { 
@@ -343,14 +349,13 @@
                                 const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                                 const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
                                 
-                                // ✨ お誕生日がある日はゼリー帯を2つまで（maxRow=1）に制限
-                                const maxVisibleRows = bdays.length > 0 ? 1 : 2; 
+                                // ✨ 【お誕生日リミッター】お誕生日がある日はゼリー帯を「1つ」まで（maxRow=0）に制限！
+                                const maxVisibleRows = bdays.length > 0 ? 0 : 2; 
 
                                 let indicators = '';
                                 for (let r = 0; r <= Math.min(maxRowInWeek, 2); r++) {
                                     const e = slots[wd][r];
                                     if (!e || r > maxVisibleRows) {
-                                        // 予定がない、または制限を超えた行は透明なスペーサーで高さを維持
                                         indicators += `<div class="h-[10px] mb-[2px]"></div>`;
                                     } else {
                                         const o = this.oshis.find(x => String(x.id) === String(e.oshiId)); 
@@ -360,7 +365,6 @@
                                         const roundLeft = ds === e.startDate || wd === 0 || isSingle;
                                         const roundRight = ds === (e.endDate || e.startDate) || wd === 6 || isSingle;
 
-                                        // ✨ 隙間貫通・左寄せ・長さ完全統一のゼリー帯デザイン
                                         let shapeClass = '';
                                         if (roundLeft && roundRight) {
                                             shapeClass = 'w-[90%] ml-[2px] rounded relative z-10'; 
@@ -387,7 +391,6 @@
                                 
                                 const isSel = ds === this.selectedDateStr;
                                 
-                                // ✨ 縦幅を広げ（min-h-[76px]）、お誕生日テキストを重ならない位置に配置
                                 html += `<div class="day-cell p-1 min-h-[76px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" onclick="window.app.selectDate('${ds}')">
                                          <span class="text-[11px] font-bold mb-0.5 relative z-10">${d}</span>
                                          <div class="uchiwa-container flex flex-col gap-[1px] items-center justify-center">
@@ -434,7 +437,6 @@
                 
                 let html = '';
 
-                // ✨ 誕生からの日数計算
                 bdays.forEach(o => {
                     const color = o.color || '#f472b6';
                     let daysText = '';
@@ -457,7 +459,6 @@
                         const o = this.oshis.find(x => String(x.id) === String(ev.oshiId));
                         const c = this.categories.find(x => String(x.id) === String(ev.categoryId));
                         
-                        // ✨ 臨場感バッジ
                         let badgeHtml = '';
                         const catName = c?.name || '未分類';
                         if (catName.includes('当落') || ev.name.includes('当落')) {
@@ -506,7 +507,6 @@
                 document.getElementById('modal-layer').classList.add('hidden'); 
             },
 
-            // ✨ 年月ジャンプモーダル（フル復旧）
             openMonthPicker: function() {
                 let html = `
                     <h3 class="font-bold mb-4 text-slate-700">年月をジャンプ🚀</h3>
@@ -535,7 +535,6 @@
                 this.renderCalendar();
             },
 
-            // ✨ 予定一覧モーダル（フル復旧）
             openEventListModal: function() {
                 let filteredEvs = this.events;
                 if(this.activeOshiFilter !== 'all') {
@@ -570,7 +569,6 @@
                 this.showModal(html);
             },
 
-            // ✨ 予定追加・編集モーダル（フル復旧）
             openEventModal: function(id = null) {
                 const ev = this.events.find(e => String(e.id) === String(id)) || { 
                     name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
@@ -661,7 +659,6 @@
                 } 
             },
 
-            // ✨ 推し設定モーダル（フル復旧）
             openOshiModal: function() {
                 let html = `
                     <h3 class="font-bold mb-4 text-slate-700">推し設定</h3>
@@ -724,7 +721,6 @@
                 } 
             },
 
-            // ✨ 項目設定モーダル（フル復旧）
             openConfigModal: function() {
                 let html = `
                     <h3 class="font-bold mb-4 text-slate-700">項目設定</h3>
@@ -765,7 +761,6 @@
                 } 
             },
 
-            // ✨ 設定＆バックアップモーダル（フル復旧）
             openSettingModal: function() {
                 this.showModal(`
                     <h3 class="font-bold mb-4 text-slate-700">アプリ設定</h3>
@@ -800,7 +795,6 @@
                 }
             },
 
-            // --- 画面操作 ---
             selectDate: function(ds) { 
                 this.selectedDateStr = ds; 
                 this.renderCalendar(); 
