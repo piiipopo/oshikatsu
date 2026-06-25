@@ -276,7 +276,7 @@
                             return aStart - bStart; 
                         });
 
-                        let maxRowInWeek = -2; 
+                        let maxRowInWeek = -1; 
 
                         sortedEvs.forEach(ev => {
                             let startWd = 0; let endWd = 6;
@@ -305,7 +305,7 @@
                                 row++;
                             }
 
-                            if (row < 2) {
+                            if (row < 3) {
                                 if (row > maxRowInWeek) maxRowInWeek = row;
                                 for (let wd = startWd; wd <= endWd; wd++) {
                                     const d = weekDays[wd];
@@ -328,7 +328,7 @@
                                 const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                                 let indicators = '';
                                 
-                                for (let r = 0; r < 3; r++) {
+                                for (let r = 0; r <= Math.min(maxRowInWeek, 2); r++) {
                                     const e = slots[wd][r];
                                     if (!e) {
                                         indicators += `<div class="h-[10px] mb-[2px]"></div>`; 
@@ -351,14 +351,13 @@
                                         // ✨ 隙間ゼロ・長さ完全統一の究極計算式（6px拡張でギャップを埋める！）
                                         let shapeClass = '';
                                         if (roundLeft && roundRight) {
-    shapeClass = 'w-full rounded relative z-10';
-}';
+                                            shapeClass = 'w-[92%] mx-auto rounded relative z-10'; // 単発は少し内側に
                                         } else if (roundLeft && !roundRight) {
-                                            shapeClass = 'w-[calc(100%+2px)] mr-[-2px] rounded-l relative z-20';
+                                            shapeClass = 'w-[calc(100%+6px)] mr-[-6px] rounded-l relative z-20';
                                         } else if (!roundLeft && roundRight) {
-                                            shapeClass = 'w-[calc(100%+2px)] ml-[-2px] rounded-l relative z-20';
+                                            shapeClass = 'w-[calc(100%+6px)] ml-[-6px] rounded-r relative z-10';
                                         } else {
-                                            shapeClass = 'w-[calc(100%+4px)] ml-[-2px] mr-[-2px] relative z-20';
+                                            shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-20';
                                         }
 
                                         const showLabel = roundLeft;
@@ -366,15 +365,10 @@
                                         if (showLabel) {
                                             const shortName = e.name.length > 6 ? e.name.slice(0, 6) + '…' : e.name;
                                             innerHtml = `<div class="h-full w-[3px] shrink-0" style="background-color: ${color};"></div>
-                                                         <span class="text-[5.5px]
-font-bold
-text-slate-700
-ml-1
-overflow-hidden
-whitespace-nowrap
-text-ellipsis
-flex-1
-text-left">
+                                                         <span class="text-[5.5px] font-bold text-slate-700 ml-1 truncate leading-none pt-[0.5px] pr-1 flex-1 min-w-0 text-left">${shortName}</span>`;
+                                        }
+
+                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center overflow-hidden box-border" style="background-color: ${color}33;">
                                                           ${innerHtml}
                                                        </div>`;
                                     }
@@ -383,7 +377,7 @@ text-left">
                                 const bdayOshis = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
                                 const isSel = ds === this.selectedDateStr;
                                 
-                                html += `<div class="p-1 h-[72px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" onclick="window.app.selectDate('${ds}')">
+                                html += `<div class="p-1 min-h-[52px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" onclick="window.app.selectDate('${ds}')">
                                          <span class="text-[11px] font-bold">${d}</span>
                                          ${bdayOshis.map(o => `<span class="text-[9px] font-extrabold mt-0.5 leading-[1.1] truncate w-full text-center z-10" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">${o.name}<br>HBD!</span>`).join('')}
                                          <div class="w-full mt-auto flex flex-col justify-end pb-0.5 mt-1">
