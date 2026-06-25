@@ -25,16 +25,8 @@
         .scale-active:active { transform: scale(0.96); transition: transform 0.1s; }
         .shot-mode .hide-in-shot { display: none !important; }
         
-        /* 🎀 お誕生日うちわ文字：枠を無視してハミ出す＆クリックを完全に貫通させる */
+        /* 🎀 お誕生日うちわ文字：枠を無視してハミ出す */
         .day-cell { position: relative; overflow: visible; }
-        .uchiwa-container {
-            position: absolute;
-            top: 22px; /* 日付のすぐ下に配置 */
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 20;
-            pointer-events: none; /* 下にあるセルのクリックを絶対に邪魔しない */
-        }
         .uchiwa-text { 
             white-space: nowrap; 
             display: inline-block;
@@ -50,7 +42,6 @@
             📅 <span id="app-title-text"></span>
         </h1>
         
-        <!-- 絵文字アイコンだけになったスッキリボタン -->
         <div class="flex gap-1.5 hide-in-shot">
             <button onclick="window.app.requestNotif()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🔔</button>
             <button onclick="window.app.toggleScreenshotMode()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">📸</button>
@@ -76,7 +67,6 @@
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
                 
                 <div class="flex items-center gap-2">
-                    <!-- 年月ジャンプボタン -->
                     <h2 onclick="window.app.openMonthPicker()" class="text-sm font-extrabold text-slate-600 tracking-widest cursor-pointer scale-active flex items-center gap-1 px-3 py-1 bg-white rounded-full shadow-sm">
                         <span id="calendar-title-year"></span>年 <span id="calendar-title-month"></span>月 <span class="text-[8px] text-slate-300 hide-in-shot">▼</span>
                     </h2>
@@ -257,6 +247,7 @@
                 cont.innerHTML = html;
             },
 
+            // ✨ 最強カレンダー描画システム ✨
             renderCalendar: function() {
                 const cont = document.getElementById('calendar-container'); 
                 cont.innerHTML = '';
@@ -311,8 +302,6 @@
                             return (bEnd - bStart) !== (aEnd - aStart) ? (bEnd - bStart) - (aEnd - aStart) : aStart - bStart;
                         });
 
-                        let maxRowInWeek = -1; 
-
                         sortedEvs.forEach(ev => {
                             let startWd = 0; let endWd = 6;
                             for (let wd = 0; wd < 7; wd++) { 
@@ -331,7 +320,6 @@
                             }
                             
                             if (row < 3) { 
-                                if (row > maxRowInWeek) maxRowInWeek = row; 
                                 for (let wd = startWd; wd <= endWd; wd++) { 
                                     if (weekDays[wd] !== null && this.getEventsForDay(`${y}-${String(m + 1).padStart(2, '0')}-${String(weekDays[wd]).padStart(2, '0')}`).some(e => e.id === ev.id)) {
                                         slots[wd][row] = ev; 
@@ -349,38 +337,36 @@
                                 const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                                 const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
                                 
-                                // ✨ 【お誕生日リミッター】お誕生日の日はゼリー帯を「1つ」まで（maxRow=0）に確実に制限！
+                                // ✨ 【お誕生日リミッター】お誕生日の日は「0番目（1つ）」までしか表示しない！
                                 const maxVisibleRows = bdays.length > 0 ? 0 : 2; 
 
                                 let indicators = '';
-                                for (let r = 0; r <= Math.min(maxRowInWeek, 2); r++) {
+                                // ✨ 常に 0, 1, 2 の 3ループを回して高さを完全固定！
+                                for (let r = 0; r <= 2; r++) {
                                     const e = slots[wd][r];
                                     
-                                    // ✨ もし制限を超えたり空だったりしたら透明なスペーサーを置く（高さを固定して段ズレを防ぐため）
+                                    // 予定がない、または制限を超えた場合は「透明なスペーサー」を置いて高さを揃える
                                     if (!e || r > maxVisibleRows) {
-                                        indicators += `<div class="h-[10px] mb-[2px]"></div>`;
+                                        indicators += `<div class="h-[10px] mb-[2px] w-full invisible"></div>`;
                                     } else {
                                         const o = this.oshis.find(x => String(x.id) === String(e.oshiId)); 
                                         const color = o?.color || '#cbd5e1';
                                         
-                                        const isSingle = e.startDate === (e.endDate || e.startDate);
+                                        // 繰り返し予定も「単発」として丸く表示させる
+                                        const isSingle = (e.startDate === (e.endDate || e.startDate)) || (e.repeat !== 'none');
                                         const roundLeft = ds === e.startDate || wd === 0 || isSingle;
                                         const roundRight = ds === (e.endDate || e.startDate) || wd === 6 || isSingle;
 
-                                        // ✨ 隙間ゼロ・重なりゼロの究極の数式！
-                                        // day-cell の padding 4px + gap 4px + padding 4px = 12pxの空間を完璧に橋渡しします。
+                                        // ✨ 隙間ゼロ・ズレゼロの究極の数式！
                                         let shapeClass = '';
                                         if (roundLeft && roundRight) {
-                                            shapeClass = 'w-[calc(100%-4px)] mx-[2px] rounded relative z-10'; 
+                                            shapeClass = 'w-[calc(100%-4px)] ml-[2px] rounded relative z-10'; 
                                         } else if (roundLeft && !roundRight) {
-                                            // 右側へ6px延長して空中の中央で待つ
-                                            shapeClass = 'w-[calc(100%+4px)] ml-[2px] mr-[-6px] rounded-l relative z-10'; 
+                                            shapeClass = 'w-full ml-[2px] rounded-l relative z-30'; // スタート位置
                                         } else if (!roundLeft && roundRight) {
-                                            // 左側へ6px延長して空中の中央で待つ
-                                            shapeClass = 'w-[calc(100%+4px)] ml-[-6px] mr-[2px] rounded-r relative z-10';
+                                            shapeClass = 'w-full ml-[-2px] rounded-r relative z-10'; // ゴール位置
                                         } else {
-                                            // 左右両方へ6px延長して空中の中央で待つ
-                                            shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-10'; 
+                                            shapeClass = 'w-[calc(100%+4px)] ml-[-2px] relative z-20'; // 中間
                                         }
 
                                         let innerHtml = '';
@@ -393,7 +379,7 @@
                                                          <span class="text-[6.5px] font-bold text-slate-700 ml-1 leading-none pt-[0.5px] pr-1 flex-1 text-left whitespace-nowrap overflow-hidden">${shortName}</span>`;
                                         }
 
-                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border" style="background-color: ${color}33;">
+                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border overflow-hidden" style="background-color: ${color}33;">
                                                           ${innerHtml}
                                                        </div>`;
                                     }
@@ -401,16 +387,20 @@
                                 
                                 const isSel = ds === this.selectedDateStr;
                                 
-                                // ✨ 縦幅を広げ（min-h-[76px]）、インジケーターエリアを固定高（h-[36px]）にして上にズレる現象を解消！
-                                html += `<div class="day-cell p-1 min-h-[76px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" onclick="window.app.selectDate('${ds}')">
-                                         <span class="text-xs font-bold mb-0.5 relative z-10">${d}</span>
-                                         <div class="uchiwa-container flex flex-col gap-[1px] items-center justify-center">
+                                // ✨ セルの高さを「80px」に広げ、お誕生日テキストの被りを完全に回避！
+                                html += `<div class="day-cell relative p-1 h-[80px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" onclick="window.app.selectDate('${ds}')">
+                                         <span class="text-xs font-bold relative z-10">${d}</span>
+                                         
+                                         <!-- ✨ お誕生日テキスト（絶対位置で配置） -->
+                                         <div class="absolute top-[18px] w-full flex flex-col gap-[1px] items-center justify-center pointer-events-none z-20">
                                             ${bdays.map(o => `<div class="flex flex-col items-center leading-none">
-                                                <span class="uchiwa-text text-[10px] font-extrabold" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">${o.name}</span>
+                                                <span class="text-[10px] font-extrabold whitespace-nowrap" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">${o.name}</span>
                                                 <span class="text-[8px] font-extrabold" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">HBD</span>
                                             </div>`).join('')}
                                          </div>
-                                         <div class="w-full mt-auto h-[36px] flex flex-col justify-start pb-0.5 mt-2 relative z-10">
+                                         
+                                         <!-- ✨ ゼリー帯エリア（一番下に絶対位置で固定し、上にズレるのを防ぐ！） -->
+                                         <div class="absolute bottom-1 left-0 w-full flex flex-col z-10">
                                             ${indicators}
                                          </div>
                                          </div>`;
