@@ -164,8 +164,8 @@ let indicators = evs.slice(0, 3).map(e => {
 
     let innerHtml = '';
     if (showLabel) {
-        // ✨文字数を最大8文字に制限する魔法！(超えたら「…」をつける)
-        const shortName = e.name.length > 8 ? e.name.slice(0, 8) + '…' : e.name;
+        // ✨文字数を最大5文字に制限する魔法！(超えたら「…」をつける)
+        const shortName = e.name.length > 5 ? e.name.slice(0, 5) + '…' : e.name;
         innerHtml = `<div class="h-full w-[3px] shrink-0" style="background-color: ${color};"></div>
                      <span class="text-[7px] font-bold text-slate-700 ml-1 truncate leading-none pt-[1px] pr-1 flex-1 min-w-0">${shortName}</span>`;
     }
