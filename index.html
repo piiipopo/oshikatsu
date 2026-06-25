@@ -351,7 +351,8 @@
                                         // ✨ 隙間ゼロ・長さ完全統一の究極計算式（6px拡張でギャップを埋める！）
                                         let shapeClass = '';
                                         if (roundLeft && roundRight) {
-                                            shapeClass = 'w-[92%] mx-auto rounded relative z-10'; // 単発は少し内側に
+    shapeClass = 'w-full rounded';
+}';
                                         } else if (roundLeft && !roundRight) {
                                             shapeClass = 'w-[calc(100%+6px)] mr-[-6px] rounded-l relative z-20';
                                         } else if (!roundLeft && roundRight) {
@@ -365,10 +366,15 @@
                                         if (showLabel) {
                                             const shortName = e.name.length > 6 ? e.name.slice(0, 6) + '…' : e.name;
                                             innerHtml = `<div class="h-full w-[3px] shrink-0" style="background-color: ${color};"></div>
-                                                         <span class="text-[5.5px] font-bold text-slate-700 ml-1 truncate leading-none pt-[0.5px] pr-1 flex-1 min-w-0 text-left">${shortName}</span>`;
-                                        }
-
-                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center overflow-hidden box-border" style="background-color: ${color}33;">
+                                                         <span class="text-[5.5px]
+font-bold
+text-slate-700
+ml-1
+overflow-hidden
+whitespace-nowrap
+text-ellipsis
+flex-1
+text-left">
                                                           ${innerHtml}
                                                        </div>`;
                                     }
