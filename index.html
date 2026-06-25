@@ -128,50 +128,53 @@
                         const evs = this.getEventsForDay(ds);
                         
                         // TimeTree風の「繋がる」ゼリー帯！
-                        let indicators = evs.slice(0, 3).map(e => {
-                            const o = this.oshis.find(x => String(x.id) === String(e.oshiId));
-                            const color = o?.color || '#cbd5e1';
+let indicators = evs.slice(0, 3).map(e => {
+    const o = this.oshis.find(x => String(x.id) === String(e.oshiId));
+    const color = o?.color || '#cbd5e1';
 
-                            const startD = e.startDate;
-                            const endD = e.endDate || e.startDate;
-                            const isRepeat = e.repeat !== 'none';
-                            const isSingle = startD === endD || isRepeat; // 繰り返しの場合は単発として表示
-                            const isStart = ds === startD;
-                            const isEnd = ds === endD;
-                            
-                            const dayOfWeek = new Date(y, m, d).getDay();
-                            const isSun = dayOfWeek === 0;
-                            const isSat = dayOfWeek === 6;
+    const startD = e.startDate;
+    const endD = e.endDate || e.startDate;
+    const isRepeat = e.repeat !== 'none';
+    const isSingle = startD === endD || isRepeat; // 繰り返しの場合は単発として表示
+    const isStart = ds === startD;
+    const isEnd = ds === endD;
+    
+    const dayOfWeek = new Date(y, m, d).getDay();
+    const isSun = dayOfWeek === 0;
+    const isSat = dayOfWeek === 6;
 
-                            // 帯の端っこを丸くするかどうかの判定
-                            const roundLeft = isStart || isSun || isSingle;
-                            const roundRight = isEnd || isSat || isSingle;
+    // 帯の端っこを丸くするかどうかの判定
+    const roundLeft = isStart || isSun || isSingle;
+    const roundRight = isEnd || isSat || isSingle;
 
-                            // マスの隙間(12px)を埋めて繋げる魔法のクラス設定
-                            let shapeClass = '';
-                            if (roundLeft && roundRight) {
-                                shapeClass = isSingle ? 'w-[92%] mx-auto rounded' : 'w-full rounded relative z-10';
-                            } else if (roundLeft && !roundRight) {
-                                shapeClass = 'w-[calc(100%+12px)] mr-[-12px] rounded-l relative z-20';
-                            } else if (!roundLeft && roundRight) {
-                                shapeClass = 'w-full rounded-r relative z-10';
-                            } else { // どっちも丸めない（完全な中間地点）
-                                shapeClass = 'w-[calc(100%+12px)] mr-[-12px] relative z-20';
-                            }
+    // マスの隙間(12px)を埋めて繋げる魔法のクラス設定
+    let shapeClass = '';
+    if (roundLeft && roundRight) {
+        shapeClass = isSingle ? 'w-[92%] mx-auto rounded' : 'w-full rounded relative z-10';
+    } else if (roundLeft && !roundRight) {
+        shapeClass = 'w-[calc(100%+12px)] mr-[-12px] rounded-l relative z-20';
+    } else if (!roundLeft && roundRight) {
+        shapeClass = 'w-full rounded-r relative z-10';
+    } else { // どっちも丸めない（完全な中間地点）
+        shapeClass = 'w-[calc(100%+12px)] mr-[-12px] relative z-20';
+    }
 
-                            // 左端の濃い線とテキストは「開始日」か「日曜日」だけ表示
-                            const showLabel = roundLeft;
+    // 左端の濃い線とテキストは「開始日」か「日曜日」だけ表示
+    const showLabel = roundLeft;
 
-                            let innerHtml = '';
-                            if (showLabel) {
-                                innerHtml = `<div class="h-full w-[3px] shrink-0" style="background-color: ${color};"></div>
-                                             <span class="text-[7px] font-bold text-slate-700 ml-1 truncate leading-none pt-[1px] pr-1">${e.name}</span>`;
-                            }
+    let innerHtml = '';
+    if (showLabel) {
+        // ✨文字数を最大8文字に制限する魔法！(超えたら「…」をつける)
+        const shortName = e.name.length > 8 ? e.name.slice(0, 8) + '…' : e.name;
+        innerHtml = `<div class="h-full w-[3px] shrink-0" style="background-color: ${color};"></div>
+                     <span class="text-[7px] font-bold text-slate-700 ml-1 truncate leading-none pt-[1px] pr-1 flex-1 min-w-0">${shortName}</span>`;
+    }
 
-                            return `<div class="${shapeClass} h-[14px] flex items-center overflow-hidden" style="background-color: ${color}4D;">
-                                        ${innerHtml}
-                                    </div>`;
-                        }).join('');
+    return `<div class="${shapeClass} h-[14px] flex items-center overflow-hidden" style="background-color: ${color}4D;">
+                ${innerHtml}
+            </div>`;
+}).join('');
+
 
                         // 誕生日の判定（ファンサうちわ風改行・白縁0.5px / メンカラ縁1px / 文字サイズ9px）
                         const bdayOshis = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5));
