@@ -17,7 +17,7 @@
 <body class="bg-sky-50 text-slate-700 antialiased pb-24">
 
     <header class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-sky-100 flex justify-between items-center">
-        <h1 class="text-lg font-bold text-sky-600 flex items-center gap-1.5">Oshikatsu</h1>
+        <h1 class="text-lg font-bold text-sky-600 flex items-center gap-1.5">Oshikatsu calendar</h1>
         <div class="flex gap-1.5">
             <button onclick="window.app.requestNotif()" class="bg-slate-50 text-slate-500 text-[10px] font-bold py-2 px-2.5 rounded-xl scale-active shadow-sm border border-slate-100">🔔</button>
             <button onclick="window.app.openSettingModal()" class="bg-slate-50 text-slate-500 text-[10px] font-bold py-2 px-2.5 rounded-xl scale-active shadow-sm border border-slate-100">⚙️</button>
@@ -82,7 +82,7 @@
             // --- 通知機能 ---
             requestNotif: function() {
                 if (!('Notification' in window)) {
-                    alert('今のブラウザでは通知機能が使えないみたいです🥹\nSafariの下にある「共有マーク」から「ホーム画面に追加」をすると使えるようになることがあります！🩵');
+                    alert('今のブラウザでは通知機能が使えないみたいです🥹\nSafariの下にある「共有マーク」から「ホーム画面に追加」をすると使えるようになることがあります！');
                     return;
                 }
                 if (Notification.permission === 'granted') {
@@ -115,25 +115,22 @@
                         const evs = this.getEventsForDay(ds);
                         
                         // TimeTree風の文字入りゼリー帯！
-let indicators = evs.slice(0, 3).map(e => {
-    const o = this.oshis.find(x => String(x.id) === String(e.oshiId));
-    const color = o?.color || '#cbd5e1';
-    
-    return `<div class="w-[96%] mx-auto h-[14px] mb-[2px] rounded flex items-center overflow-hidden" style="background-color: ${color}4D;">
-                <div class="h-full w-1 shrink-0" style="background-color: ${color};"></div>
-                <span class="text-[7.5px] font-bold text-slate-700 ml-1 truncate leading-none pt-[1px]">${e.name}</span>
-            </div>`;
-}).join('');
+                        let indicators = evs.slice(0, 3).map(e => {
+                            const o = this.oshis.find(x => String(x.id) === String(e.oshiId));
+                            const color = o?.color || '#cbd5e1';
+                            return `<div class="w-[96%] mx-auto h-[14px] mb-[2px] rounded flex items-center overflow-hidden" style="background-color: ${color}4D;">
+                                        <div class="h-full w-1 shrink-0" style="background-color: ${color};"></div>
+                                        <span class="text-[7.5px] font-bold text-slate-700 ml-1 truncate leading-none pt-[1px]">${e.name}</span>
+                                    </div>`;
+                        }).join('');
 
-                        }
-
-                        // 誕生日の判定（フィルタリングして改行表示）
+                        // 誕生日の判定（ファンサうちわ風改行・白縁0.5px / メンカラ縁1px / 文字サイズ9px）
                         const bdayOshis = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5));
                         const isSel = ds === this.selectedDateStr;
                         
-                        html += `<div class="p-1 min-h-[44px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-sky-200 text-white shadow-md' : 'hover:bg-sky-50'}" onclick="window.app.selectDate('${ds}')">
+                        html += `<div class="p-1 min-h-[52px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-sky-200 text-white shadow-md' : 'hover:bg-sky-50'}" onclick="window.app.selectDate('${ds}')">
                                  <span class="text-[11px] font-bold">${d}</span>
-                                 ${bdayOshis.map(o => `<span class="text-[12px] font-bold mt-0.5 leading-[1.1] truncate w-full text-center" style="color:#334155; text-shadow: 0.8px 0.8px 0 #fff, -0.8px -0.8px 0 #fff, 0.8px -0.8px 0 #fff, -0.8px 0.8px 0 #fff, 0px 0.8px 0 #fff, 0px -0.8px 0 #fff, 0.8px 0px 0 #fff, -0.8px 0px 0 #fff, 2px 2px 0 ${o.color}, -2px -2px 0 ${o.color}, 2px -2px 0 ${o.color}, -2px 2px 0 ${o.color}, 0px 2px 0 ${o.color}, 0px -2px 0 ${o.color}, 2px 0px 0 ${o.color}, -2px 0px 0 ${o.color};">${o.name}<br>HBD</span>`).join('')}
+                                 ${bdayOshis.map(o => `<span class="text-[9px] font-bold mt-0.5 leading-[1.1] truncate w-full text-center" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">${o.name}<br>HBD</span>`).join('')}
                                  <div class="w-full mt-auto flex flex-col justify-end pb-0.5 mt-1">
                                     ${indicators}
                                  </div>
