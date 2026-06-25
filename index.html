@@ -250,10 +250,10 @@
                                         const showLabel = roundLeft;
                                         let innerHtml = '';
                                         if (showLabel) {
-                                            const shortName = e.name.length > 8 ? e.name.slice(0, 8) + '…' : e.name;
-                                            // 帯の高さを12pxにスリム化！文字も7pxでスッキリ
+                                            const shortName = e.name.length > 5 ? e.name.slice(0, 5) + '…' : e.name;
+                                            // 帯の高さを12pxにスリム化！文字も5pxでスッキリ
                                             innerHtml = `<div class="h-full w-[3px] shrink-0" style="background-color: ${color};"></div>
-                                                         <span class="text-[7px] font-bold text-slate-700 ml-1 truncate leading-none pt-[1px] pr-1 flex-1 min-w-0">${shortName}</span>`;
+                                                         <span class="text-[5px] font-bold text-slate-700 ml-1 truncate leading-none pt-[1px] pr-1 flex-1 min-w-0">${shortName}</span>`;
                                         }
 
                                         indicators += `<div class="${shapeClass} h-[12px] mb-[2px] flex items-center overflow-hidden box-border" style="background-color: ${color}4D;">
