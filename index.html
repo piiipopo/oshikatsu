@@ -239,11 +239,11 @@
                                         if (roundLeft && roundRight) {
                                             shapeClass = isSingle ? 'w-[94%] mx-auto rounded' : 'w-full rounded relative z-10';
                                         } else if (roundLeft && !roundRight) {
-                                            shapeClass = 'w-[calc(100%+12px)] mr-[-12px] rounded-l relative z-20';
+                                            shapeClass = 'w-[calc(100%+6px)] mr-[-6px] rounded-l relative z-20';
                                         } else if (!roundLeft && roundRight) {
-                                            shapeClass = 'w-[calc(100%+12px)] ml-[-12px] rounded-r relative z-10';
+                                            shapeClass = 'w-[calc(100%+6px)] ml-[-6px] rounded-r relative z-10';
                                         } else {
-                                            shapeClass = 'w-[calc(100%+24px)] ml-[-12px] mr-[-12px] relative z-20';
+                                            shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-20';
                                         }
 
                                         // 文字と左端の濃い線を表示するのは、予定の開始日か日曜日のみ
