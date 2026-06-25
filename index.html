@@ -350,7 +350,7 @@
                                 const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
                                 
                                 // ✨ 【お誕生日リミッター】お誕生日がある日はゼリー帯を「1つ」まで（maxRow=0）に制限！
-                                const maxVisibleRows = bdays.length > 0 ? 0 : 2; 
+                                const maxVisibleRows = bdays.length > 0 ? 0 : 1; 
 
                                 let indicators = '';
                                 for (let r = 0; r <= Math.min(maxRowInWeek, 2); r++) {
