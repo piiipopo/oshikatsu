@@ -349,8 +349,8 @@
                                 const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                                 const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
                                 
-                                // ✨ 【お誕生日リミッター】お誕生日がある日はゼリー帯を「1つ」まで（maxRow=0）に制限！
-                                const maxVisibleRows = bdays.length > 0 ? 0 : 1; 
+                                // ✨ お誕生日がある日はゼリー帯を「1つ」まで（maxRow=0）に制限
+                                const maxVisibleRows = bdays.length > 0 ? 0 : 2; 
 
                                 let indicators = '';
                                 for (let r = 0; r <= Math.min(maxRowInWeek, 2); r++) {
@@ -365,26 +365,29 @@
                                         const roundLeft = ds === e.startDate || wd === 0 || isSingle;
                                         const roundRight = ds === (e.endDate || e.startDate) || wd === 6 || isSingle;
 
+                                        // ✨ 隙間ゼロ・重なりゼロの完璧な形を計算
                                         let shapeClass = '';
-if (roundLeft && roundRight) {
-    shapeClass = 'w-[calc(100%-4px)] mx-[2px] rounded relative z-10'; 
-} else if (roundLeft && !roundRight) {
-    shapeClass = 'w-full ml-[2px] mr-[-2px] rounded-l relative z-20';
-} else if (!roundLeft && roundRight) {
-    shapeClass = 'w-full ml-[-2px] mr-[2px] rounded-r relative z-10';
-} else {
-    shapeClass = 'w-[calc(100%+4px)] ml-[-2px] mr-[-2px] relative z-20';
-}
-
+                                        if (roundLeft && roundRight) {
+                                            shapeClass = 'w-[calc(100%-4px)] mx-[2px] rounded relative z-20'; 
+                                        } else if (roundLeft && !roundRight) {
+                                            shapeClass = 'w-full ml-[2px] mr-[-2px] rounded-l relative z-30'; // スタート位置を手前に
+                                        } else if (!roundLeft && roundRight) {
+                                            shapeClass = 'w-full ml-[-2px] mr-[2px] rounded-r relative z-10';
+                                        } else {
+                                            shapeClass = 'w-[calc(100%+4px)] ml-[-2px] mr-[-2px] relative z-10'; // 中間は文字の下へ
+                                        }
 
                                         let innerHtml = '';
                                         if (roundLeft) {
-                                            const shortName = e.name.length > 6 ? e.name.slice(0, 6) + '…' : e.name;
+                                            // ✨ 単発は6文字、連続は12文字で出し分け
+                                            const maxLength = isSingle ? 6 : 12;
+                                            const shortName = e.name.length > maxLength ? e.name.slice(0, maxLength) + '…' : e.name;
+                                            // ✨ 文字サイズを6.5pxにアップし、overflow-hiddenを外してはみ出しを許可
                                             innerHtml = `<div class="h-full w-[2px] shrink-0" style="background-color: ${color};"></div>
-                                                         <span class="text-[6.5px] font-bold text-slate-700 ml-1 truncate leading-none pt-[0.5px] pr-1 flex-1 min-w-0 text-left">${shortName}</span>`;
+                                                         <span class="text-[6.5px] font-bold text-slate-700 ml-1 leading-none pt-[0.5px] pr-1 flex-1 text-left whitespace-nowrap">${shortName}</span>`;
                                         }
 
-                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center overflow-hidden box-border" style="background-color: ${color}33;">
+                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border" style="background-color: ${color}33;">
                                                           ${innerHtml}
                                                        </div>`;
                                     }
@@ -392,12 +395,13 @@ if (roundLeft && roundRight) {
                                 
                                 const isSel = ds === this.selectedDateStr;
                                 
+                                // ✨ 全体的なフォント調整（日付をtext-xs(12px)に、名前をtext-[10px]に、HBDをtext-[8px]に）
                                 html += `<div class="day-cell p-1 min-h-[76px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" onclick="window.app.selectDate('${ds}')">
-                                         <span class="text-[12px] font-bold mb-0.5 relative z-10">${d}</span>
+                                         <span class="text-xs font-bold mb-0.5 relative z-10">${d}</span>
                                          <div class="uchiwa-container flex flex-col gap-[1px] items-center justify-center">
                                             ${bdays.map(o => `<div class="flex flex-col items-center leading-none">
                                                 <span class="uchiwa-text text-[10px] font-extrabold" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">${o.name}</span>
-                                                <span class="text-[7px] font-extrabold" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">HBD</span>
+                                                <span class="text-[8px] font-extrabold" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">HBD</span>
                                             </div>`).join('')}
                                          </div>
                                          <div class="w-full mt-auto flex flex-col justify-end pb-0.5 mt-2 relative z-10">
