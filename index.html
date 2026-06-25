@@ -305,7 +305,7 @@
                                 row++;
                             }
 
-                            if (row < 3) {
+                            if (row < 2) {
                                 if (row > maxRowInWeek) maxRowInWeek = row;
                                 for (let wd = startWd; wd <= endWd; wd++) {
                                     const d = weekDays[wd];
@@ -354,11 +354,11 @@
     shapeClass = 'w-full rounded relative z-10';
 }';
                                         } else if (roundLeft && !roundRight) {
-                                            shapeClass = 'w-[calc(100%+6px)] mr-[-6px] rounded-l relative z-20';
+                                            shapeClass = 'w-[calc(100%+2px)] mr-[-2px] rounded-l relative z-20';
                                         } else if (!roundLeft && roundRight) {
-                                            shapeClass = 'w-[calc(100%+6px)] ml-[-6px] rounded-r relative z-10';
+                                            shapeClass = 'w-[calc(100%+2px)] ml-[-2px] rounded-l relative z-20';
                                         } else {
-                                            shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-20';
+                                            shapeClass = 'w-[calc(100%+4px)] ml-[-2px] mr-[-2px] relative z-20';
                                         }
 
                                         const showLabel = roundLeft;
