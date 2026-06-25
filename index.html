@@ -7,10 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'M PLUS Rounded 1c', sans-serif; touch-action: manipulation; transition: background-color 0.4s ease; }
+        body { 
+            font-family: 'M PLUS Rounded 1c', sans-serif; 
+            touch-action: manipulation;
+            transition: background-color 0.4s ease;
+        }
         ::-webkit-scrollbar { display: none; }
         
-        /* 枠固定の神設定：minmax(0, 1fr)で絶対に横幅を均等に保つ */
+        /* ✨ 枠の完全固定：minmax(0, 1fr)で絶対に横幅を均等に保つ */
         .calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, minmax(0, 1fr)); 
@@ -21,36 +25,38 @@
         .scale-active:active { transform: scale(0.96); transition: transform 0.1s; }
         .shot-mode .hide-in-shot { display: none !important; }
         
-        /* 枠を突き破るけどクリックは通す設定 */
-        .uchiwa-container {
-            position: relative;
-            z-index: 10;
-            pointer-events: none; /* クリックを一切邪魔しない */
-        }
-        .uchiwa-text {
-            display: block;
+        /* 🎀 はみ出し表示用の設定 */
+        .day-cell { position: relative; overflow: visible; }
+        .bday-label {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
             white-space: nowrap;
-            overflow: visible;
+            z-index: 20;
+            pointer-events: none;
         }
     </style>
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
-        <h1 onclick="window.app.editTitle()" class="text-lg font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
+        <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
         </h1>
+        
         <div class="flex gap-2 hide-in-shot">
-            <button onclick="window.app.requestNotif()" class="w-9 h-9 bg-white/80 text-lg rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🔔</button>
-            <button onclick="window.app.toggleScreenshotMode()" class="w-9 h-9 bg-white/80 text-lg rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">📸</button>
-            <button onclick="window.app.openSettingModal()" class="w-9 h-9 bg-white/80 text-lg rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">⚙️</button>
-            <button onclick="window.app.openConfigModal()" class="w-9 h-9 bg-white/80 text-lg rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🏷️</button>
-            <button onclick="window.app.openOshiModal()" class="w-9 h-9 bg-white/80 text-lg rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🩵</button>
+            <button onclick="window.app.requestNotif()" class="w-8 h-8 bg-white/80 text-sm rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🔔</button>
+            <button onclick="window.app.toggleScreenshotMode()" class="w-8 h-8 bg-white/80 text-sm rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">📸</button>
+            <button onclick="window.app.openSettingModal()" class="w-8 h-8 bg-white/80 text-sm rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">⚙️</button>
+            <button onclick="window.app.openConfigModal()" class="w-8 h-8 bg-white/80 text-sm rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🏷️</button>
+            <button onclick="window.app.openOshiModal()" class="w-8 h-8 bg-white/80 text-sm rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🩵</button>
         </div>
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
         <div id="countdown-container"></div>
+
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
@@ -59,12 +65,14 @@
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
+                
                 <div class="flex items-center gap-2">
                     <h2 onclick="window.app.openMonthPicker()" class="text-sm font-extrabold text-slate-600 tracking-widest cursor-pointer scale-active flex items-center gap-1 px-3 py-1 bg-white rounded-full shadow-sm">
                         <span id="calendar-title-year"></span>年 <span id="calendar-title-month"></span>月 <span class="text-[8px] text-slate-300 hide-in-shot">▼</span>
                     </h2>
                     <button onclick="window.app.jumpToToday()" class="text-[10px] bg-sky-50 text-sky-500 font-bold px-2 py-1 rounded-full scale-active hide-in-shot border border-sky-100">今日</button>
                 </div>
+
                 <button onclick="window.app.shiftMonth(1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">Next ></button>
             </div>
             <div id="calendar-container" class="space-y-8"></div>
@@ -78,7 +86,7 @@
         </section>
     </main>
 
-    <button id="fab-button" onclick="window.app.openEventModal()" class="fixed bottom-10 right-6 w-14 h-14 bg-slate-700 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl font-bold z-40 scale-active hide-in-shot transition-all duration-400">
+    <button id="fab-button" onclick="window.app.openEventModal()" class="fixed bottom-8 right-6 w-14 h-14 bg-sky-400 text-white rounded-full shadow-lg flex items-center justify-center text-3xl font-bold z-40 scale-active hide-in-shot transition-colors duration-400">
         <span class="mb-1">＋</span>
     </button>
 
@@ -101,12 +109,50 @@
                 document.getElementById('app-title-text').textContent = this.appTitle;
                 this.sortEvents(); this.applyTheme(); this.renderFilter(); this.renderCountdowns(); this.renderCalendar();
             },
+
+            editTitle: function() {
+                const t = prompt('カレンダーの名前を入力してください', this.appTitle);
+                if(t && t.trim() !== '') { this.appTitle = t.trim(); localStorage.setItem('oshi_title', this.appTitle); document.getElementById('app-title-text').textContent = this.appTitle; }
+            },
+
             safeDateStr: function(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; },
             parseSafeDate: function(str) { if (!str) return null; const parts = str.split('-'); return new Date(parts[0], parts[1] - 1, parts[2]); },
-            sortEvents: function() { this.events.sort((a, b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.startDate)); },
+            sortEvents: function() { this.events.sort((a, b) => { const aStart = this.parseSafeDate(a.startDate)?.getTime() || 0; const bStart = this.parseSafeDate(b.startDate)?.getTime() || 0; return aStart - bStart; }); },
             save: function() { this.sortEvents(); localStorage.setItem('oshi_list', JSON.stringify(this.oshis)); localStorage.setItem('cat_list', JSON.stringify(this.categories)); localStorage.setItem('oshi_events', JSON.stringify(this.events)); },
-            
-            // --- 描画ロジック ---
+
+            applyTheme: function() {
+                let bgColor = '#f0f9ff'; let headerColor = 'rgba(255, 255, 255, 0.9)'; let fabColor = '#38bdf8';
+                if (this.activeOshiFilter !== 'all') {
+                    const o = this.oshis.find(x => String(x.id) === String(this.activeOshiFilter));
+                    if (o) { bgColor = o.color + '1A'; headerColor = o.color + '0D'; fabColor = o.color; }
+                }
+                document.getElementById('app-body').style.backgroundColor = bgColor;
+                document.getElementById('main-header').style.backgroundColor = headerColor;
+                document.getElementById('fab-button').style.backgroundColor = fabColor;
+            },
+
+            toggleScreenshotMode: function() { document.body.classList.add('shot-mode'); const toast = document.createElement('div'); toast.id = 'shot-toast'; toast.className = 'fixed inset-0 z-[100] flex items-end justify-center pb-12 pointer-events-none transition-all'; toast.innerHTML = `<div class="bg-slate-800/80 text-white text-xs font-bold px-5 py-3 rounded-full pointer-events-auto cursor-pointer shadow-lg backdrop-blur-sm" onclick="window.app.exitScreenshotMode()">📸 撮影モード中 (タップで元に戻る)</div>`; document.body.appendChild(toast); },
+            exitScreenshotMode: function() { document.body.classList.remove('shot-mode'); const toast = document.getElementById('shot-toast'); if(toast) toast.remove(); },
+
+            renderFilter: function() {
+                const cont = document.getElementById('oshi-filter-container');
+                let html = `<button onclick="window.app.setFilter('all')" class="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${this.activeOshiFilter === 'all' ? 'bg-slate-700 text-white shadow-md' : 'bg-white text-slate-400 border border-slate-100'}">すべて</button>`;
+                this.oshis.forEach(o => { const isActive = String(this.activeOshiFilter) === String(o.id); html += `<button onclick="window.app.setFilter('${o.id}')" class="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${isActive ? 'text-white shadow-md' : 'bg-white text-slate-400 border border-slate-100'}" style="${isActive ? `background-color:${o.color}` : ''}"><div class="w-2 h-2 rounded-full" style="background-color:${o.color}"></div>${o.name}</button>`; });
+                cont.innerHTML = html;
+            },
+            setFilter: function(id) { this.activeOshiFilter = id; this.applyTheme(); this.renderFilter(); this.renderCountdowns(); this.renderCalendar(); },
+
+            requestNotif: function() { if (!('Notification' in window)) alert('非対応ブラウザです'); else Notification.requestPermission().then(p => { if (p === 'granted') new Notification('Oshikatsu', { body: 'ON!' }); }); },
+
+            renderCountdowns: function() {
+                const cont = document.getElementById('countdown-container'); const today = new Date(); today.setHours(0,0,0,0);
+                const countdownEvs = this.events.filter(e => e.isCountdown && (this.activeOshiFilter === 'all' || String(e.oshiId) === String(this.activeOshiFilter))).sort((a,b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.startDate));
+                if(countdownEvs.length === 0) { cont.innerHTML = ''; return; }
+                let html = `<div class="flex gap-2 overflow-x-auto pb-2 hide-in-shot px-1">`;
+                countdownEvs.forEach(e => { const d = this.parseSafeDate(e.startDate); const diffDays = Math.ceil((d - today) / (1000 * 60 * 60 * 24)); const o = this.oshis.find(x => x.id == e.oshiId); html += `<div class="shrink-0 bg-white/90 border border-white shadow-sm rounded-2xl py-2.5 px-4 flex items-center gap-3 cursor-pointer" onclick="window.app.selectDate('${e.startDate}')"><div class="text-[10px] font-bold">${e.name}まで</div><div class="text-sm font-extrabold" style="color:${o?.color||'#0ea5e9'}">${diffDays===0?'本日🎉':`あと${diffDays}日`}</div></div>`; });
+                cont.innerHTML = html + `</div>`;
+            },
+
             renderCalendar: function() {
                 const cont = document.getElementById('calendar-container'); cont.innerHTML = '';
                 for (let i = 0; i < 3; i++) {
@@ -125,14 +171,13 @@
                             if (d === null) { html += `<div></div>`; }
                             else {
                                 const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                                const bdayOshis = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
-                                const isSel = ds === this.selectedDateStr;
-                                html += `<div class="p-1 min-h-[52px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" onclick="window.app.selectDate('${ds}')">
+                                const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
+                                html += `<div class="day-cell p-1 min-h-[52px] rounded-2xl flex flex-col items-center cursor-pointer ${ds === this.selectedDateStr ? 'bg-slate-700 text-white' : 'hover:bg-white/50'}" onclick="window.app.selectDate('${ds}')">
                                          <span class="text-[11px] font-bold mb-0.5">${d}</span>
-                                         <div class="uchiwa-container flex flex-col gap-0 items-center justify-center">
-                                            ${bdayOshis.map(o => `<span class="uchiwa-text text-[9px] font-extrabold leading-[1.0]" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 1px 1px 0 ${o.color};">${o.name}<br>HBD</span>`).join('')}
+                                         <div class="bday-label flex flex-col items-center">
+                                            ${bdays.map(o => `<span class="text-[9px] font-extrabold leading-[1.0]" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 1px 1px 0 ${o.color};">${o.name}<br>HBD</span>`).join('')}
                                          </div>
-                                         <div class="w-full mt-auto pt-1 flex flex-col gap-0.5">${this.renderIndicators(ds)}</div>
+                                         <div class="w-full mt-auto pt-1 flex flex-col gap-0.5">${this.getEventsForDay(ds).map(e => { const o=this.oshis.find(x=>x.id==e.oshiId); return `<div class="h-[8px] w-full rounded" style="background-color:${o?.color||'#cbd5e1'}"></div>`}).join('')}</div>
                                          </div>`;
                             }
                         }
@@ -142,54 +187,33 @@
                 }
                 this.renderDailyEvents();
             },
-            renderIndicators: function(ds) { return this.getEventsForDay(ds).map(e => { const o = this.oshis.find(x => String(x.id) === String(e.oshiId)); return `<div class="h-[8px] w-full rounded" style="background-color:${o?.color || '#cbd5e1'}"></div>`; }).join(''); },
-            
-            // --- 既存機能の完全復活 ---
-            renderFilter: function() { const cont = document.getElementById('oshi-filter-container'); let html = `<button onclick="window.app.setFilter('all')" class="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold ${this.activeOshiFilter === 'all' ? 'bg-slate-700 text-white' : 'bg-white text-slate-400 border'}">すべて</button>`; this.oshis.forEach(o => { const isActive = String(this.activeOshiFilter) === String(o.id); html += `<button onclick="window.app.setFilter('${o.id}')" class="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold ${isActive ? 'text-white' : 'bg-white text-slate-400 border'}" style="${isActive ? `background-color:${o.color}` : ''}">${o.name}</button>`; }); cont.innerHTML = html; },
-            setFilter: function(id) { this.activeOshiFilter = id; this.applyTheme(); this.renderFilter(); this.renderCountdowns(); this.renderCalendar(); },
-            applyTheme: function() { let c = '#334155'; if (this.activeOshiFilter !== 'all') { const o = this.oshis.find(x => String(x.id) === String(this.activeOshiFilter)); if (o) c = o.color; } document.getElementById('app-body').style.backgroundColor = c + '1A'; document.getElementById('main-header').style.backgroundColor = c + '0D'; document.getElementById('fab-button').style.backgroundColor = c; },
-            renderCountdowns: function() {
-                const cont = document.getElementById('countdown-container'); const today = new Date(); today.setHours(0,0,0,0);
-                const countdownEvs = this.events.filter(e => e.isCountdown && (this.activeOshiFilter === 'all' || String(e.oshiId) === String(e.oshiId))).sort((a,b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.startDate));
-                if(countdownEvs.length === 0) { cont.innerHTML = ''; return; }
-                let html = `<div class="flex gap-2 overflow-x-auto pb-2 hide-in-shot px-1">`;
-                countdownEvs.forEach(e => { const d = this.parseSafeDate(e.startDate); const diffDays = Math.ceil((d - today) / (1000 * 60 * 60 * 24)); html += `<div class="shrink-0 bg-white shadow-sm rounded-2xl py-2 px-3 flex items-center gap-2 cursor-pointer" onclick="window.app.selectDate('${e.startDate}')"><div class="text-[10px] font-bold">${e.name}まで</div><div class="text-sm font-extrabold text-sky-500">${diffDays}日</div></div>`; });
-                cont.innerHTML = html + `</div>`;
-            },
+            getEventsForDay: function(ds) { const cur = this.parseSafeDate(ds); return this.events.filter(e => cur >= this.parseSafeDate(e.startDate) && cur <= this.parseSafeDate(e.endDate || e.startDate)); },
             renderDailyEvents: function() {
-                const list = document.getElementById('daily-event-list');
-                const evs = this.getEventsForDay(this.selectedDateStr);
+                const list = document.getElementById('daily-event-list'); const evs = this.getEventsForDay(this.selectedDateStr);
                 const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === this.selectedDateStr.slice(5));
                 document.getElementById('selected-date-title').textContent = this.selectedDateStr.replace(/-/g, '/');
-                let html = bdays.map(o => `<div class="p-3 rounded-2xl border bg-pink-50 text-pink-700 font-bold text-sm">🎂 ${o.name} Birthday!</div>`).join('');
-                html += evs.map(ev => `<div class="p-3 bg-white rounded-2xl border text-sm font-bold shadow-sm cursor-pointer" onclick="window.app.openEventModal('${ev.id}')">${ev.name}</div>`).join('');
+                let html = bdays.map(o => { const diff = Math.floor((new Date(this.selectedDateStr) - new Date(o.birthday))/(1000*60*60*24)); return `<div class="p-3 rounded-2xl border text-sm font-extrabold" style="background-color:${o.color}1A; border-color:${o.color}33">🎂 ${o.name} Birthday! (誕生から ${diff} 日)</div>`}).join('');
+                html += evs.map(ev => { const o=this.oshis.find(x=>x.id==ev.oshiId); const c=this.categories.find(x=>x.id==ev.categoryId); return `<div class="p-3 bg-white rounded-2xl border flex items-center gap-3 shadow-sm" onclick="window.app.openEventModal('${ev.id}')"><div class="w-2 h-8 rounded-full" style="background-color:${o?.color||'#ddd'}"></div><div class="flex-1"><div class="text-[9px] font-bold text-slate-400">${c?.name||''}</div><div class="text-sm font-extrabold">${ev.name}</div></div></div>` }).join('');
                 list.innerHTML = html || '<div class="text-center text-slate-300 text-xs py-8">予定はありません</div>';
             },
-            getEventsForDay: function(ds) { const curD = this.parseSafeDate(ds); return this.events.filter(e => { const s = this.parseSafeDate(e.startDate); const end = this.parseSafeDate(e.endDate || e.startDate); return curD >= s && curD <= end; }); },
-            selectDate: function(ds) { this.selectedDateStr = ds; this.renderCalendar(); },
-            
-            // --- モーダル・編集機能 ---
-            showModal: function(html) { const m = document.getElementById('modal-layer'); m.classList.remove('hidden'); document.getElementById('modal-content').innerHTML = html; },
-            closeModal: function() { document.getElementById('modal-layer').classList.add('hidden'); },
+
+            // --- モーダル・編集 ---
             openEventModal: function(id = null) {
-                const ev = this.events.find(e => e.id === id) || { id: 'ev'+Date.now(), name: '', startDate: this.selectedDateStr, oshiId: this.oshis[0].id, isCountdown: false };
-                this.showModal(`<h3 class="font-bold mb-4">${id?'編集':'予定を追加'}</h3><form id="ev-form" class="space-y-3"><input type="text" id="ev-name" value="${ev.name}" placeholder="タイトル" required class="w-full p-3 rounded-xl border font-bold"><input type="date" id="ev-start" value="${ev.startDate}" class="w-full p-3 rounded-xl border font-bold"><select id="ev-oshi" class="w-full p-3 rounded-xl border font-bold">${this.oshis.map(o => `<option value="${o.id}" ${o.id===ev.oshiId?'selected':''}>${o.name}</option>`).join('')}</select><label class="flex items-center gap-2"><input type="checkbox" id="ev-count" ${ev.isCountdown?'checked':''}> カウントダウン</label><div class="flex gap-2"><button type="submit" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl">保存</button>${id?`<button type="button" onclick="window.app.deleteEvent('${id}')" class="flex-1 bg-red-100 text-red-600 py-3 rounded-2xl">削除</button>`:''}</div></form>`);
-                document.getElementById('ev-form').onsubmit = (e) => { e.preventDefault(); const newEv = { id: ev.id, name: document.getElementById('ev-name').value, startDate: document.getElementById('ev-start').value, oshiId: document.getElementById('ev-oshi').value, isCountdown: document.getElementById('ev-count').checked }; if(this.events.find(x=>x.id===ev.id)) this.events = this.events.map(x=>x.id===ev.id?newEv:x); else this.events.push(newEv); this.save(); this.closeModal(); this.renderCalendar(); this.renderCountdowns(); };
+                const ev = this.events.find(e => e.id === id) || { id: 'ev'+Date.now(), name: '', startDate: this.selectedDateStr, oshiId: this.oshis[0].id, isCountdown: false, location: '', url: '', memo: '' };
+                this.showModal(`<h3 class="font-bold mb-4">${id?'予定を編集':'予定を追加'}</h3><form id="ev-form" class="space-y-3"><input type="text" id="ev-name" value="${ev.name}" placeholder="タイトル" required class="w-full p-3 rounded-xl border font-bold"><div class="grid grid-cols-2 gap-2"><input type="date" id="ev-start" value="${ev.startDate}" class="p-3 rounded-xl border font-bold"><input type="date" id="ev-end" value="${ev.endDate||''}" class="p-3 rounded-xl border font-bold"></div><select id="ev-oshi" class="w-full p-3 rounded-xl border font-bold">${this.oshis.map(o => `<option value="${o.id}" ${o.id===ev.oshiId?'selected':''}>${o.name}</option>`).join('')}</select><label class="flex items-center gap-2"><input type="checkbox" id="ev-count" ${ev.isCountdown?'checked':''}> カウントダウン表示</label><input type="text" id="ev-loc" value="${ev.location}" placeholder="場所" class="w-full p-3 rounded-xl border font-bold"><input type="url" id="ev-url" value="${ev.url||''}" placeholder="URL" class="w-full p-3 rounded-xl border font-bold"><textarea id="ev-memo" placeholder="メモ" class="w-full p-3 rounded-xl border font-bold h-16">${ev.memo||''}</textarea><button type="submit" class="w-full bg-slate-700 text-white py-3 rounded-2xl">保存</button></form>`);
+                document.getElementById('ev-form').onsubmit = (e) => { e.preventDefault(); const newEv = { id: ev.id, name: document.getElementById('ev-name').value, startDate: document.getElementById('ev-start').value, endDate: document.getElementById('ev-end').value, oshiId: document.getElementById('ev-oshi').value, isCountdown: document.getElementById('ev-count').checked, location: document.getElementById('ev-loc').value, url: document.getElementById('ev-url').value, memo: document.getElementById('ev-memo').value }; if(this.events.find(x=>x.id===ev.id)) this.events = this.events.map(x=>x.id===ev.id?newEv:x); else this.events.push(newEv); this.save(); this.closeModal(); this.renderCalendar(); this.renderCountdowns(); };
             },
-            deleteEvent: function(id) { this.events = this.events.filter(x=>x.id!==id); this.save(); this.closeModal(); this.renderCalendar(); this.renderCountdowns(); },
-            openEventListModal: function() { this.showModal(`<h3 class="font-bold mb-4">予定一覧</h3><div class="space-y-2">${this.events.map(e => `<div class="p-2 border rounded-lg" onclick="window.app.openEventModal('${e.id}')">${e.name}</div>`).join('')}</div>`); },
-            openOshiModal: function() { this.showModal(`<h3 class="font-bold mb-4">推し追加</h3><form id="oshi-form" class="space-y-3"><input type="text" id="o-name" placeholder="名前" required class="w-full p-3 rounded-xl border"><input type="color" id="o-color" value="#7dd3fc" class="w-full"><input type="date" id="o-bday" class="w-full p-3 rounded-xl border"><button type="submit" class="w-full bg-slate-700 text-white py-3 rounded-2xl">追加</button></form>`); document.getElementById('oshi-form').onsubmit = (e) => { e.preventDefault(); this.oshis.push({ id:'o'+Date.now(), name:document.getElementById('o-name').value, color:document.getElementById('o-color').value, birthday:document.getElementById('o-bday').value }); this.save(); this.closeModal(); this.renderFilter(); this.renderCalendar(); }; },
-            openConfigModal: function() { this.showModal(`<h3 class="font-bold mb-4">設定</h3><button onclick="window.app.copyData()" class="w-full p-3 bg-sky-100 rounded-xl">データコピー</button>`); },
+            showModal: function(html) { document.getElementById('modal-layer').classList.remove('hidden'); document.getElementById('modal-content').innerHTML = html; },
+            closeModal: function() { document.getElementById('modal-layer').classList.add('hidden'); },
+            openOshiModal: function() { this.showModal(`<h3 class="font-bold mb-4">推し設定</h3><form id="oshi-form" class="space-y-3"><input type="text" id="o-name" required placeholder="名前" class="w-full p-3 rounded-xl border"><input type="color" id="o-color" class="w-full h-10"><input type="date" id="o-bday" class="w-full p-3 rounded-xl border"><button type="submit" class="w-full bg-slate-700 text-white py-3 rounded-2xl">追加</button></form><div class="max-h-40 overflow-y-auto mt-4">${this.oshis.map(o => `<div class="flex items-center justify-between p-2 border-b">${o.name}<button onclick="window.app.deleteOshi('${o.id}')" class="text-xs">✕</button></div>`).join('')}</div>`); document.getElementById('oshi-form').onsubmit = (e) => { e.preventDefault(); this.oshis.push({id:'o'+Date.now(), name:document.getElementById('o-name').value, color:document.getElementById('o-color').value, birthday:document.getElementById('o-bday').value}); this.save(); this.renderFilter(); this.closeModal(); this.renderCalendar(); }; },
+            deleteOshi: function(id) { this.oshis = this.oshis.filter(x=>x.id!==id); this.save(); this.renderFilter(); this.openOshiModal(); },
+            openConfigModal: function() { this.showModal(`<h3 class="font-bold mb-4">項目設定</h3><button onclick="window.app.copyData()" class="w-full p-3 bg-sky-100 rounded-xl">データコピー</button>`); },
             copyData: function() { navigator.clipboard.writeText(JSON.stringify({oshis:this.oshis, events:this.events})); alert('コピーしました'); },
-            openSettingModal: function() { this.showModal(`<h3 class="font-bold mb-4">設定</h3><p class="text-xs">データ管理用</p><button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl">閉じる</button>`); },
-            
-            // --- その他ユーティリティ ---
-            editTitle: function() { const t = prompt('タイトル', this.appTitle); if(t) { this.appTitle=t; localStorage.setItem('oshi_title', t); document.getElementById('app-title-text').textContent=t; } },
+            openSettingModal: function() { this.showModal(`<h3 class="font-bold mb-4">設定</h3><button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl">閉じる</button>`); },
+            shiftMonth: function(d) { this.baseMonth += d; if(this.baseMonth<0){this.baseMonth=11; this.baseYear--} else if(this.baseMonth>11){this.baseMonth=0; this.baseYear++} this.renderCalendar(); },
+            jumpToToday: function() { const n=new Date(); this.baseYear=n.getFullYear(); this.baseMonth=n.getMonth(); this.selectedDateStr=this.safeDateStr(n); this.renderCalendar(); },
             openMonthPicker: function() { alert('年月ジャンプ'); },
-            requestNotif: function() { alert('通知機能'); },
-            toggleScreenshotMode: function() { document.body.classList.toggle('shot-mode'); },
-            shiftMonth: function(d) { this.baseMonth += d; if(this.baseMonth<0){this.baseMonth=11; this.baseYear--;} else if(this.baseMonth>11){this.baseMonth=0; this.baseYear++;} this.renderCalendar(); },
-            jumpToToday: function() { const n = new Date(); this.baseYear=n.getFullYear(); this.baseMonth=n.getMonth(); this.selectedDateStr=this.safeDateStr(n); this.renderCalendar(); }
+            openEventListModal: function() { alert('一覧表示'); }
         };
         window.app = App; window.onload = () => App.init();
     })();
