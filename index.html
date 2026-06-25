@@ -5,20 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Oshikatsu Calendar</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- ✨ アプリ全体を可愛い M PLUS Rounded 1c に完全統一 ✨ -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
         body { 
             font-family: 'M PLUS Rounded 1c', sans-serif; 
             touch-action: manipulation;
-            transition: background-color 0.4s ease; /* 着せ替えのふわっとアニメーション */
+            transition: background-color 0.4s ease;
         }
         ::-webkit-scrollbar { display: none; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
         .modal-overlay { background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); }
         .scale-active:active { transform: scale(0.96); transition: transform 0.1s; }
-        
-        /* 📸 スクショモード用の魔法 */
         .shot-mode .hide-in-shot { display: none !important; }
     </style>
 </head>
@@ -28,7 +25,8 @@
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 class="text-lg font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90">Oshikatsu calendar</h1>
         <div class="flex gap-1.5 hide-in-shot">
-            <!-- ✨ 新機能: スクショモードボタン 📸 -->
+            <!-- 通知＆スクショボタンを両立！ -->
+            <button onclick="window.app.requestNotif()" class="bg-slate-50 text-slate-500 text-[10px] font-bold py-2 px-2.5 rounded-xl scale-active shadow-sm border border-slate-100">🔔</button>
             <button onclick="window.app.toggleScreenshotMode()" class="bg-slate-50 text-slate-500 text-[10px] font-bold py-2 px-2.5 rounded-xl scale-active shadow-sm border border-slate-100">📸</button>
             <button onclick="window.app.openSettingModal()" class="bg-slate-50 text-slate-500 text-[10px] font-bold py-2 px-2.5 rounded-xl scale-active shadow-sm border border-slate-100">⚙️</button>
             <button onclick="window.app.openConfigModal()" class="bg-white/80 text-sky-600 text-[10px] font-bold py-2 px-2.5 rounded-xl scale-active shadow-sm">🏷️</button>
@@ -37,10 +35,10 @@
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
-        <!-- ✨ 新機能: ワクワクのカウントダウンエリア ⏳ -->
+        <!-- カウントダウンエリア -->
         <div id="countdown-container"></div>
 
-        <!-- 推しフィルター ＆ ✨新機能: 予定一覧ボタン 📋 -->
+        <!-- 推しフィルター ＆ 予定一覧ボタン -->
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
@@ -50,10 +48,15 @@
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
-                <!-- ✨ 新機能: 年月ジャンプボタン 🚀 -->
-                <h2 onclick="window.app.openMonthPicker()" class="text-sm font-extrabold text-slate-600 tracking-widest cursor-pointer scale-active flex items-center gap-1 px-3 py-1 bg-white rounded-full shadow-sm">
-                    <span id="calendar-title-year"></span>年 <span id="calendar-title-month"></span>月 <span class="text-[8px] text-slate-300 hide-in-shot">▼</span>
-                </h2>
+                
+                <div class="flex items-center gap-2">
+                    <h2 onclick="window.app.openMonthPicker()" class="text-sm font-extrabold text-slate-600 tracking-widest cursor-pointer scale-active flex items-center gap-1 px-3 py-1 bg-white rounded-full shadow-sm">
+                        <span id="calendar-title-year"></span>年 <span id="calendar-title-month"></span>月 <span class="text-[8px] text-slate-300 hide-in-shot">▼</span>
+                    </h2>
+                    <!-- 今日ボタン復活！ -->
+                    <button onclick="window.app.jumpToToday()" class="text-[10px] bg-sky-50 text-sky-500 font-bold px-2 py-1 rounded-full scale-active hide-in-shot border border-sky-100">今日</button>
+                </div>
+
                 <button onclick="window.app.shiftMonth(1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">Next ></button>
             </div>
             <div id="calendar-container" class="space-y-8"></div>
@@ -94,7 +97,6 @@
                 this.renderCalendar();
             },
 
-            // --- ユーティリティ ---
             safeDateStr: function(d) {
                 return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             },
@@ -120,22 +122,20 @@
                 localStorage.setItem('oshi_events', JSON.stringify(this.events));
             },
 
-            // --- ✨ 新機能: 推し色着せ替えテーマ 🎨 ---
             applyTheme: function() {
-                let bgColor = '#f0f9ff'; // デフォルト (sky-50)
+                let bgColor = '#f0f9ff'; 
                 let headerColor = 'rgba(255, 255, 255, 0.9)';
                 if (this.activeOshiFilter !== 'all') {
                     const o = this.oshis.find(x => String(x.id) === String(this.activeOshiFilter));
                     if (o) {
-                        bgColor = o.color + '1A'; // 透明度10%でふんわり染める
-                        headerColor = o.color + '0D'; // ヘッダーは透明度5%
+                        bgColor = o.color + '1A'; 
+                        headerColor = o.color + '0D'; 
                     }
                 }
                 document.getElementById('app-body').style.backgroundColor = bgColor;
                 document.getElementById('main-header').style.backgroundColor = headerColor;
             },
 
-            // --- ✨ 新機能: スクショモード 📸 ---
             toggleScreenshotMode: function() {
                 document.body.classList.add('shot-mode');
                 const toast = document.createElement('div');
@@ -150,7 +150,6 @@
                 if(toast) toast.remove();
             },
 
-            // --- フィルター機能 ---
             renderFilter: function() {
                 const cont = document.getElementById('oshi-filter-container');
                 let html = `<button onclick="window.app.setFilter('all')" class="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${this.activeOshiFilter === 'all' ? 'bg-slate-700 text-white shadow-md' : 'bg-white text-slate-400 border border-slate-100'}">すべて</button>`;
@@ -171,7 +170,24 @@
                 this.renderCalendar();
             },
 
-            // --- ✨ 新機能: カウントダウン ⏳ ---
+            requestNotif: function() {
+                if (!('Notification' in window)) {
+                    alert('今のブラウザでは通知機能が使えないみたいです🥹\nSafariの下にある「共有マーク」から「ホーム画面に追加」をすると使えるようになることがあります！');
+                    return;
+                }
+                if (Notification.permission === 'granted') {
+                    alert('通知はすでにONになっています🙆‍♀️');
+                } else {
+                    Notification.requestPermission().then(p => {
+                        if (p === 'granted') {
+                            new Notification('Oshikatsu Calendar', { body: '通知をONにしました！' });
+                        } else {
+                            alert('通知が許可されませんでした🙅‍♀️');
+                        }
+                    });
+                }
+            },
+
             renderCountdowns: function() {
                 const cont = document.getElementById('countdown-container');
                 const today = new Date(); today.setHours(0,0,0,0);
@@ -201,7 +217,6 @@
                 cont.innerHTML = html;
             },
 
-            // --- カレンダー描画 ---
             renderCalendar: function() {
                 const cont = document.getElementById('calendar-container'); cont.innerHTML = '';
                 
@@ -215,7 +230,7 @@
                         document.getElementById('calendar-title-month').textContent = m + 1;
                     }
                     
-                    let html = `<div class="calendar-grid text-[8px] text-slate-300 font-bold text-center uppercase mb-2 ${i>0 ? 'mt-8' : ''}">
+                    let html = `<div class="calendar-grid gap-x-1 text-[8px] text-slate-300 font-bold text-center uppercase mb-2 ${i>0 ? 'mt-8' : ''}">
                                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>`;
                     
                     let weeks = [];
@@ -329,28 +344,26 @@
                                         const roundLeft = isStart || isSun || isSingle;
                                         const roundRight = isEnd || isSat || isSingle;
 
-                                        // ✨ 魔法の計算式: 長さ完全統一 ＆ ピシッと左寄せ
+                                        // ✨ 魔法の計算式完全版：4pxの隙間に対してミリ単位で揃える
                                         let shapeClass = '';
                                         if (roundLeft && roundRight) {
-                                            shapeClass = 'w-[calc(100%-4px)] mx-[2px] rounded relative z-10'; // 単発も長さを固定
+                                            shapeClass = 'w-[calc(100%-4px)] mx-[2px] rounded relative z-10'; 
                                         } else if (roundLeft && !roundRight) {
-                                            shapeClass = 'w-[calc(100%+4px)] ml-[2px] mr-[-6px] rounded-l relative z-20';
+                                            shapeClass = 'w-full ml-[2px] mr-[-2px] rounded-l relative z-20';
                                         } else if (!roundLeft && roundRight) {
-                                            shapeClass = 'w-[calc(100%+4px)] ml-[-6px] mr-[2px] rounded-r relative z-10';
+                                            shapeClass = 'w-full ml-[-2px] mr-[2px] rounded-r relative z-10';
                                         } else {
-                                            shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-20';
+                                            shapeClass = 'w-[calc(100%+4px)] ml-[-2px] mr-[-2px] relative z-20';
                                         }
 
                                         const showLabel = roundLeft;
                                         let innerHtml = '';
                                         if (showLabel) {
-                                            // ✨ 文字サイズ5.5px・最大6文字に制限
                                             const shortName = e.name.length > 6 ? e.name.slice(0, 6) + '…' : e.name;
                                             innerHtml = `<div class="h-full w-[3px] shrink-0" style="background-color: ${color};"></div>
                                                          <span class="text-[5.5px] font-bold text-slate-700 ml-1 truncate leading-none pt-[0.5px] pr-1 flex-1 min-w-0 text-left">${shortName}</span>`;
                                         }
 
-                                        // justify-start で中身を完全に左揃え
                                         indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center overflow-hidden box-border" style="background-color: ${color}33;">
                                                           ${innerHtml}
                                                        </div>`;
@@ -402,9 +415,11 @@
                 
                 let html = '';
 
+                // ✨ 推しメンカラのお誕生日枠にアップデート！
                 bdays.forEach(o => {
-                    html += `<div class="p-3 bg-pink-50 border border-pink-100 rounded-2xl flex items-center shadow-sm">
-                        <div class="font-bold text-pink-500 text-sm">🎂 ${o.name} Birthday!</div>
+                    const color = o.color || '#f472b6';
+                    html += `<div class="p-3 rounded-2xl flex items-center shadow-sm border" style="background-color: ${color}1A; border-color: ${color}33;">
+                        <div class="font-bold text-slate-700 text-sm flex items-center gap-2">🎂 ${o.name} Birthday!</div>
                     </div>`;
                 });
 
@@ -425,7 +440,6 @@
                             badgeHtml = `<span class="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">${catName}</span>`;
                         }
 
-                        // ✨ 新機能: メモ＆URLの表示対応
                         return `<div class="p-3 bg-white/90 border border-white rounded-2xl flex items-start gap-3 shadow-sm scale-active" onclick="window.app.openEventModal('${ev.id}')">
                             <div class="w-2 h-10 rounded-full shrink-0 mt-0.5" style="background-color:${o?.color || '#ddd'}"></div>
                             <div class="flex-1 min-w-0">
@@ -453,7 +467,6 @@
                 list.innerHTML = html;
             },
 
-            // --- モーダル制御 ---
             showModal: function(html) {
                 const layer = document.getElementById('modal-layer');
                 document.getElementById('modal-content').innerHTML = html;
@@ -461,9 +474,8 @@
             },
             closeModal: function() { document.getElementById('modal-layer').classList.add('hidden'); },
 
-            // --- ✨ 新機能: 年月ジャンプモーダル 🚀 ---
             openMonthPicker: function() {
-                let html = `<h3 class="font-bold mb-4 text-slate-700">年月をジャンプ🚀</h3><div class="grid grid-cols-2 gap-2 mb-4">`;
+                let html = `<h3 class="font-bold mb-4 text-slate-700">年月をジャンプ</h3><div class="grid grid-cols-2 gap-2 mb-4">`;
                 html += `<select id="jump-year" class="bg-slate-50 p-3 rounded-xl text-sm font-bold text-center">`;
                 for(let y = 2020; y <= 2030; y++) html += `<option value="${y}" ${y === this.baseYear ? 'selected' : ''}>${y}年</option>`;
                 html += `</select><select id="jump-month" class="bg-slate-50 p-3 rounded-xl text-sm font-bold text-center">`;
@@ -480,7 +492,6 @@
                 this.renderCalendar();
             },
 
-            // --- ✨ 新機能: 予定一覧＆一発編集モーダル 📋 ---
             openEventListModal: function() {
                 let filteredEvs = this.events;
                 if(this.activeOshiFilter !== 'all') {
@@ -508,7 +519,6 @@
                 this.showModal(html);
             },
 
-            // --- 予定の登録・編集 ---
             openEventModal: function(id = null) {
                 const ev = this.events.find(e => String(e.id) === String(id)) || { name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', oshiId: this.oshis[0]?.id, categoryId: this.categories[0]?.id, repeat: 'none', location: '', isCountdown: false, memo: '', url: '' };
                 this.showModal(`
@@ -528,7 +538,6 @@
                             <select id="ev-cat" class="bg-slate-50 p-3 rounded-xl text-xs border border-slate-100 font-bold">${this.categories.map(c => `<option value="${c.id}" ${String(c.id) === String(ev.categoryId) ? 'selected' : ''}>${c.name}</option>`).join('')}</select>
                         </div>
                         
-                        <!-- ✨ 新機能: カウントダウン＆詳細入力 -->
                         <label class="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 cursor-pointer transition-colors hover:bg-sky-50">
                             <input type="checkbox" id="ev-count" ${ev.isCountdown ? 'checked' : ''} class="w-4 h-4 text-sky-400 rounded">
                             <span class="text-xs font-bold text-slate-600">⏳ トップにカウントダウンを表示</span>
@@ -574,7 +583,6 @@
             },
             deleteEvent: function(id) { if (confirm('予定を削除しますか？')) { this.events = this.events.filter(x => String(x.id) !== String(id)); this.save(); this.closeModal(); this.renderCountdowns(); this.renderCalendar(); } },
 
-            // --- 推しの登録・編集 ---
             openOshiModal: function() {
                 this.showModal(`
                     <h3 class="font-bold mb-4 text-slate-700">推し設定</h3>
@@ -605,7 +613,6 @@
             },
             deleteOshi: function(id) { if (confirm('この推しを解除しますか？')) { this.oshis = this.oshis.filter(x => String(x.id) !== String(id)); this.save(); this.activeOshiFilter='all'; this.applyTheme(); this.renderFilter(); this.openOshiModal(); this.renderCountdowns(); this.renderCalendar(); } },
 
-            // --- 項目の登録・編集 ---
             openConfigModal: function() {
                 this.showModal(`
                     <h3 class="font-bold mb-4 text-slate-700">項目設定</h3>
@@ -628,7 +635,6 @@
             },
             deleteCat: function(id) { if (confirm('この項目を消去しますか？')) { this.categories = this.categories.filter(x => String(x.id) !== String(id)); this.save(); this.openConfigModal(); this.renderCalendar(); } },
 
-            // --- 設定 & バックアップ ---
             openSettingModal: function() {
                 this.showModal(`
                     <h3 class="font-bold mb-4 text-slate-700">アプリ設定</h3>
@@ -653,7 +659,6 @@
                 } catch(e) { alert('データ形式が正しくありません'); }
             },
 
-            // --- 画面操作 ---
             selectDate: function(ds) { this.selectedDateStr = ds; this.renderCalendar(); },
             shiftMonth: function(dir) { this.baseMonth += dir; if (this.baseMonth < 0) { this.baseMonth = 11; this.baseYear--; } else if (this.baseMonth > 11) { this.baseMonth = 0; this.baseYear++; } this.renderCalendar(); },
             jumpToToday: function() { const now = new Date(); this.baseYear = now.getFullYear(); this.baseMonth = now.getMonth(); this.selectedDateStr = this.safeDateStr(now); this.renderCalendar(); }
