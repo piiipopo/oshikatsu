@@ -6,6 +6,8 @@
     <title>Oshikatsu Calendar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         body { 
             font-family: 'M PLUS Rounded 1c', sans-serif; 
@@ -25,11 +27,24 @@
         .shot-mode .hide-in-shot { display: none !important; }
         
         .day-cell { position: relative; overflow: visible; }
+
+        /* ✨ ペンライトピンのアニメーションと光のエフェクト */
+        .penlight-icon { transition: all 0.3s; }
+        .penlight-glow {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+            0% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 4px var(--glow-color); }
+            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 14px var(--glow-color), 0 0 20px var(--glow-color); }
+            100% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 4px var(--glow-color); }
+        }
     </style>
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
-    <!-- ヘッダー -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
@@ -38,6 +53,7 @@
         <div class="flex gap-1.5 hide-in-shot">
             <button onclick="window.app.toggleScreenshotMode()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">📸</button>
             <button onclick="window.app.openSettingModal()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">⚙️</button>
+            <button onclick="window.app.openMapModal()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">📍</button>
             <button onclick="window.app.openAlbumModal()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center relative overflow-hidden group">
                 <div class="absolute inset-0 bg-sky-100 opacity-0 transition-opacity"></div>
                 <span class="relative z-10 group-active:scale-90 transition-transform">🩵</span>
@@ -46,16 +62,13 @@
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
-        <!-- カウントダウン -->
         <div id="countdown-container"></div>
 
-        <!-- 推しフィルター ＆ 予定一覧 -->
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
         </div>
 
-        <!-- カレンダー本体 -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
@@ -70,7 +83,6 @@
             <div id="calendar-container" class="space-y-8"></div>
         </section>
 
-        <!-- Eventsリスト -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="selected-date-title" class="text-sm font-bold text-slate-500">Events</h3>
@@ -96,6 +108,7 @@
             categories: JSON.parse(localStorage.getItem('cat_list')) || [{ id: 'c1', name: 'LIVE' }, { id: 'c2', name: 'チケット発売日' }, { id: 'c3', name: '当落発表' }],
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
             holidays: {},
+            mapInstance: null, // 地図オブジェクト用
             
             getLightColor: function(hex) {
                 if(!hex) return '#f1f5f9';
@@ -538,8 +551,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- ✨ メモ欄だけを「ヒラギノ（iPhone標準ゴシック）」に指定しました！ -->
-                                ${o.favoriteWork ? `<div class="mt-2 bg-slate-50 p-2.5 rounded-lg text-xs text-slate-700 border-l-4 leading-relaxed tracking-wide font-sans" style="border-color:${color}; font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Helvetica Neue', Arial, sans-serif;">🎬 ${o.favoriteWork.replace(/\n/g, '<br>')}</div>` : ''}
+                                ${o.favoriteWork ? `<div class="mt-2 bg-slate-50 p-2.5 rounded-lg text-xs text-slate-700 border-l-4 leading-relaxed tracking-wide text-center" style="border-color:${color}; font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;">🎬 ${o.favoriteWork.replace(/\n/g, '<br>')}</div>` : ''}
                             </div>
                         </div>
                     `;
@@ -554,6 +566,178 @@
                 `;
                 
                 this.showModal(html);
+            },
+
+            // ✨ 【Step 4：推し活聖地マップ】モーダルの実装
+            openMapModal: function() {
+                let html = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-extrabold text-slate-700 flex items-center gap-1.5">📍 推し活聖地マップ</h3>
+                    </div>
+                    
+                    <div id="map-container" class="w-full h-80 rounded-2xl border border-slate-200 shadow-inner z-10"></div>
+                    
+                    <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
+                `;
+                this.showModal(html);
+                
+                // モーダルが画面に表示された直後に地図をレンダリングする
+                setTimeout(() => { this.initMap(); }, 200);
+            },
+
+            // ✨ 地図の初期化とペンライトピンのプロット
+            initMap: function() {
+                // 日本の中心付近（名古屋あたり）を初期位置にする
+                this.mapInstance = L.map('map-container').setView([35.5, 137.5], 5);
+                
+                // 可愛いデザインの無料地図タイル（OpenStreetMap）を読み込む
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(this.mapInstance);
+
+                // マップピンがONになっている予定を地図にプロットしていく
+                this.events.forEach(ev => {
+                    if (ev.isMapPin && ev.lat && ev.lng) {
+                        const o = this.oshis.find(x => String(x.id) === String(ev.oshiId));
+                        const color = o?.color || '#3b82f6';
+                        
+                        // 🔦 メンカラで光り輝くペンライトピンのHTMLを作る
+                        const penlightHTML = `
+                            <div class="flex flex-col items-center penlight-icon">
+                                <span class="text-xl -mb-1 filter drop-shadow" style="user-select:none;">🔦</span>
+                                <div class="penlight-glow" style="--glow-color: ${color}; background-color: ${color};"></div>
+                            </div>
+                        `;
+                        
+                        const customIcon = L.divIcon({
+                            html: penlightHTML,
+                            className: 'custom-div-icon',
+                            iconSize: [30, 42],
+                            iconAnchor: [15, 30]
+                        });
+
+                        // ユーザーの要望通り「イベント名」と「日付」だけをシンプルにポップアップに！
+                        const popupContent = `
+                            <div class="text-center font-bold p-1">
+                                <div class="text-xs text-slate-700">${ev.name}</div>
+                                <div class="text-[9px] text-slate-400 mt-0.5">${ev.startDate.replace(/-/g, '/')}</div>
+                            </div>
+                        `;
+
+                        L.marker([ev.lat, ev.lng], { icon: customIcon })
+                         .addTo(this.mapInstance)
+                         .bindPopup(popupContent);
+                    }
+                });
+            },
+
+            // ✨ 【Step 3】予定フォームのパワーアップ（チェックボックス＆自動ジオコーディング）
+            openEventModal: function(id = null) {
+                const ev = this.events.find(e => String(e.id) === String(id)) || { 
+                    name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
+                    oshiId: this.oshis[0]?.id, categoryId: this.categories[0]?.id, repeat: 'none', 
+                    location: '', isCountdown: false, memo: '', url: '', isMapPin: false, lat: null, lng: null
+                };
+                
+                let html = `
+                    <h3 class="font-bold mb-4 text-slate-700">${id ? '予定を編集' : '予定を追加'}</h3>
+                    <form id="ev-form" class="space-y-3">
+                        <input type="text" id="ev-name" value="${ev.name}" placeholder="タイトル" required class="w-full bg-slate-50 p-3 rounded-xl text-sm outline-none border border-slate-100 font-bold">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">開始日</label><input type="date" id="ev-start" value="${ev.startDate}" required class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
+                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">終了日(任意)</label><input type="date" id="ev-end" value="${ev.endDate || ''}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">開始時間</label><input type="time" id="ev-stime" value="${ev.startTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
+                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">終了時間</label><input type="time" id="ev-etime" value="${ev.endTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="ev-oshi" class="bg-slate-50 p-3 rounded-xl text-xs border border-slate-100 font-bold">
+                                ${this.oshis.map(o => `<option value="${o.id}" ${String(o.id) === String(ev.oshiId) ? 'selected' : ''}>${o.name}</option>`).join('')}
+                            </select>
+                            <select id="ev-cat" class="bg-slate-50 p-3 rounded-xl text-xs border border-slate-100 font-bold">
+                                ${this.categories.map(c => `<option value="${c.id}" ${String(c.id) === String(ev.categoryId) ? 'selected' : ''}>${c.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        
+                        <div class="flex flex-col gap-1.5">
+                            <label class="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 cursor-pointer hover:bg-sky-50">
+                                <input type="checkbox" id="ev-count" ${ev.isCountdown ? 'checked' : ''} class="w-4 h-4 text-sky-400 rounded">
+                                <span class="text-xs font-bold text-slate-600">⏳ トップにカウントダウンを表示</span>
+                            </label>
+                            
+                            <label class="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 cursor-pointer hover:bg-sky-50">
+                                <input type="checkbox" id="ev-mappin" ${ev.isMapPin ? 'checked' : ''} class="w-4 h-4 text-sky-400 rounded">
+                                <span class="text-xs font-bold text-slate-600">📍 マップにペンライトピンを立てる</span>
+                            </label>
+                        </div>
+
+                        <input type="text" id="ev-loc" value="${ev.location}" placeholder="📍 場所・住所 (例: 横浜アリーナ / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                        <input type="url" id="ev-url" value="${ev.url || ''}" placeholder="🔗 URL (動画やチケット等 / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                        <textarea id="ev-memo" placeholder="📝 思い出メモ・座席番号など (任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold h-16">${ev.memo || ''}</textarea>
+                        <select id="ev-repeat" class="w-full bg-slate-50 p-3 rounded-xl text-xs border border-slate-100 font-bold">
+                            <option value="none" ${ev.repeat === 'none' ? 'selected' : ''}>繰り返しなし</option>
+                            <option value="weekly" ${ev.repeat === 'weekly' ? 'selected' : ''}>毎週</option>
+                            <option value="monthly" ${ev.repeat === 'monthly' ? 'selected' : ''}>毎月</option>
+                        </select>
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" onclick="window.app.closeModal()" class="flex-1 bg-slate-100 py-3 rounded-2xl text-xs font-bold text-slate-500">戻る</button>
+                            ${id ? `<button type="button" onclick="window.app.deleteEvent('${id}')" class="flex-1 bg-rose-50 text-rose-500 py-3 rounded-2xl text-xs font-bold">削除</button>` : ''}
+                            <button type="submit" id="ev-submit-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl text-xs font-bold shadow-md">保存する</button>
+                        </div>
+                    </form>
+                `;
+                this.showModal(html);
+
+                document.getElementById('ev-form').onsubmit = async (e) => {
+                    e.preventDefault();
+                    document.getElementById('ev-submit-btn').textContent = '住所を探しています...⏳';
+                    document.getElementById('ev-submit-btn').disabled = true;
+
+                    const loc = document.getElementById('ev-loc').value.trim();
+                    const isMapPin = document.getElementById('ev-mappin').checked;
+                    
+                    let latitude = ev.lat;
+                    let longitude = ev.lng;
+
+                    // ピンがONで、場所が入力されていて、かつ場所が新しく変更された場合はジオコーディングを行う
+                    if (isMapPin && loc && (loc !== ev.location || !latitude)) {
+                        try {
+                            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (data && data.length > 0) {
+                                    latitude = parseFloat(data[0].lat);
+                                    longitude = parseFloat(data[0].lon);
+                                }
+                            }
+                        } catch (err) { console.log('位置情報検索エラー'); }
+                    }
+
+                    const newEv = {
+                        id: id || 'ev' + Date.now(),
+                        startDate: document.getElementById('ev-start').value,
+                        endDate: document.getElementById('ev-end').value,
+                        startTime: document.getElementById('ev-stime').value,
+                        endTime: document.getElementById('ev-etime').value,
+                        name: document.getElementById('ev-name').value,
+                        location: loc,
+                        oshiId: document.getElementById('ev-oshi').value,
+                        categoryId: document.getElementById('ev-cat').value,
+                        repeat: document.getElementById('ev-repeat').value,
+                        isCountdown: document.getElementById('ev-count').checked,
+                        isMapPin: isMapPin,
+                        lat: latitude,
+                        lng: longitude,
+                        url: document.getElementById('ev-url').value,
+                        memo: document.getElementById('ev-memo').value
+                    };
+                    
+                    if (id) window.app.events = window.app.events.map(x => String(x.id) === String(id) ? newEv : x);
+                    else window.app.events.push(newEv);
+                    
+                    window.app.save(); window.app.closeModal(); window.app.renderCountdowns(); window.app.renderCalendar();
+                };
             },
 
             openMonthPicker: function() {
@@ -595,76 +779,6 @@
                 this.showModal(html);
             },
 
-            openEventModal: function(id = null) {
-                const ev = this.events.find(e => String(e.id) === String(id)) || { 
-                    name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
-                    oshiId: this.oshis[0]?.id, categoryId: this.categories[0]?.id, repeat: 'none', 
-                    location: '', isCountdown: false, memo: '', url: '' 
-                };
-                
-                let html = `
-                    <h3 class="font-bold mb-4 text-slate-700">${id ? '予定を編集' : '予定を追加'}</h3>
-                    <form id="ev-form" class="space-y-3">
-                        <input type="text" id="ev-name" value="${ev.name}" placeholder="タイトル" required class="w-full bg-slate-50 p-3 rounded-xl text-sm outline-none border border-slate-100 font-bold">
-                        <div class="grid grid-cols-2 gap-2">
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">開始日</label><input type="date" id="ev-start" value="${ev.startDate}" required class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">終了日(任意)</label><input type="date" id="ev-end" value="${ev.endDate || ''}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">開始時間</label><input type="time" id="ev-stime" value="${ev.startTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">終了時間</label><input type="time" id="ev-etime" value="${ev.endTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <select id="ev-oshi" class="bg-slate-50 p-3 rounded-xl text-xs border border-slate-100 font-bold">
-                                ${this.oshis.map(o => `<option value="${o.id}" ${String(o.id) === String(ev.oshiId) ? 'selected' : ''}>${o.name}</option>`).join('')}
-                            </select>
-                            <select id="ev-cat" class="bg-slate-50 p-3 rounded-xl text-xs border border-slate-100 font-bold">
-                                ${this.categories.map(c => `<option value="${c.id}" ${String(c.id) === String(ev.categoryId) ? 'selected' : ''}>${c.name}</option>`).join('')}
-                            </select>
-                        </div>
-                        <label class="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 cursor-pointer hover:bg-sky-50">
-                            <input type="checkbox" id="ev-count" ${ev.isCountdown ? 'checked' : ''} class="w-4 h-4 text-sky-400 rounded">
-                            <span class="text-xs font-bold text-slate-600">⏳ トップにカウントダウンを表示</span>
-                        </label>
-                        <input type="text" id="ev-loc" value="${ev.location}" placeholder="📍 場所・住所 (Map連動 / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
-                        <input type="url" id="ev-url" value="${ev.url || ''}" placeholder="🔗 URL (動画やチケット等 / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
-                        <textarea id="ev-memo" placeholder="📝 思い出メモ・座席番号など (任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold h-16">${ev.memo || ''}</textarea>
-                        <select id="ev-repeat" class="w-full bg-slate-50 p-3 rounded-xl text-xs border border-slate-100 font-bold">
-                            <option value="none" ${ev.repeat === 'none' ? 'selected' : ''}>繰り返しなし</option>
-                            <option value="weekly" ${ev.repeat === 'weekly' ? 'selected' : ''}>毎週</option>
-                            <option value="monthly" ${ev.repeat === 'monthly' ? 'selected' : ''}>毎月</option>
-                        </select>
-                        <div class="flex gap-2 pt-2">
-                            <button type="button" onclick="window.app.closeModal()" class="flex-1 bg-slate-100 py-3 rounded-2xl text-xs font-bold text-slate-500">戻る</button>
-                            ${id ? `<button type="button" onclick="window.app.deleteEvent('${id}')" class="flex-1 bg-rose-50 text-rose-500 py-3 rounded-2xl text-xs font-bold">削除</button>` : ''}
-                            <button type="submit" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl text-xs font-bold shadow-md">保存する</button>
-                        </div>
-                    </form>
-                `;
-                this.showModal(html);
-
-                document.getElementById('ev-form').onsubmit = (e) => {
-                    e.preventDefault();
-                    const newEv = {
-                        id: id || 'ev' + Date.now(),
-                        startDate: document.getElementById('ev-start').value,
-                        endDate: document.getElementById('ev-end').value,
-                        startTime: document.getElementById('ev-stime').value,
-                        endTime: document.getElementById('ev-etime').value,
-                        name: document.getElementById('ev-name').value,
-                        location: document.getElementById('ev-loc').value,
-                        oshiId: document.getElementById('ev-oshi').value,
-                        categoryId: document.getElementById('ev-cat').value,
-                        repeat: document.getElementById('ev-repeat').value,
-                        isCountdown: document.getElementById('ev-count').checked,
-                        url: document.getElementById('ev-url').value,
-                        memo: document.getElementById('ev-memo').value
-                    };
-                    if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
-                    else this.events.push(newEv);
-                    this.save(); this.closeModal(); this.renderCountdowns(); this.renderCalendar();
-                };
-            },
             deleteEvent: function(id) { 
                 if (confirm('予定を削除しますか？')) { 
                     this.events = this.events.filter(x => String(x.id) !== String(id)); 
@@ -891,19 +1005,6 @@
                 this.save();
                 this.renderFilter();
                 this.openOshiModal();
-            },
-
-            deleteOshi: function(id) { 
-                if (confirm('この推しを消去しますか？（予定も表示されなくなります）')) { 
-                    this.oshis = this.oshis.filter(x => String(x.id) !== String(id)); 
-                    this.save(); 
-                    this.activeOshiFilter = 'all'; 
-                    this.applyTheme(); 
-                    this.renderFilter(); 
-                    this.openOshiModal(); 
-                    this.renderCountdowns(); 
-                    this.renderCalendar(); 
-                } 
             },
 
             openConfigModal: function() {
