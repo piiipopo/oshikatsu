@@ -721,53 +721,53 @@
                 this.showModal(html);
 
                 document.getElementById('ev-form').onsubmit = async (e) => {
-                    e.preventDefault();
-                    document.getElementById('ev-submit-btn').textContent = '住所を探しています...⏳';
-                    document.getElementById('ev-submit-btn').disabled = true;
+    e.preventDefault();
+    document.getElementById('ev-submit-btn').textContent = '住所を探しています...⏳';
+    document.getElementById('ev-submit-btn').disabled = true;
 
-                    const loc = document.getElementById('ev-loc').value.trim();
-                    const isMapPin = document.getElementById('ev-mappin').checked;
-                    
-                    let latitude = ev.lat;
-                    let longitude = ev.lng;
+    const loc = document.getElementById('ev-loc').value.trim();
+    const isMapPin = document.getElementById('ev-mappin').checked;
+    
+    let latitude = ev.lat;
+    let longitude = ev.lng;
 
-                    if (isMapPin && loc && (loc !== ev.location || !latitude)) {
-                        try {
-                            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
-                            if (res.ok) {
-                                const data = await res.json();
-                                if (data && data.length > 0) {
-                                    latitude = parseFloat(data[0].lat);
-                                    longitude = parseFloat(data[0].lon);
-                                }
-                            }
-                        } catch (err) { console.log('位置情報検索エラー'); }
-                    }
+    if (isMapPin && loc && (loc !== ev.location || !latitude)) {
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    latitude = parseFloat(data[0].lat);
+                    longitude = parseFloat(data[0].lon);
+                }
+            }
+        } catch (err) { console.log('位置情報検索エラー'); }
+    }
 
-                    const newEv = {
-                        id: id || 'ev' + Date.now(),
-                        startDate: document.getElementById('ev-start').value,
-                        endDate: document.getElementById('ev-end').value,
-                        startTime: document.getElementById('ev-stime').value,
-                        endTime: document.getElementById('ev-etime').value,
-                        name: document.getElementById('ev-name').value,
-                        location: loc,
-                        oshiId: document.getElementById('ev-oshi').value,
-                        categoryId: document.getElementById('ev-cat').value,
-                        repeat: document.getElementById('ev-repeat').value,
-                        isCountdown: document.getElementById('ev-count').checked,
-                        isMapPin: isMapPin,
-                        lat: latitude,
-                        lng: longitude,
-                        url: document.getElementById('ev-url').value,
-                        memo: document.getElementById('ev-memo').value
-                    };
-                    
-                    if (id) window.app.events = window.app.events.map(x => String(x.id) === String(id) ? newEv : x);
-                    else window.app.events.push(newEv);
-                    
-                    window.app.save(); window.app.closeModal(); window.app.renderCountdowns(); window.app.renderCalendar();
-                };
+    const newEv = {
+        id: ev.id || 'ev' + Date.now(),
+        startDate: document.getElementById('ev-start').value,
+        endDate: document.getElementById('ev-end').value,
+        startTime: document.getElementById('ev-stime').value,
+        endTime: document.getElementById('ev-etime').value,
+        name: document.getElementById('ev-name').value,
+        location: loc,
+        oshiId: document.getElementById('ev-oshi').value,
+        categoryId: document.getElementById('ev-cat').value,
+        repeat: document.getElementById('ev-repeat').value,
+        isCountdown: document.getElementById('ev-count').checked,
+        isMapPin: isMapPin,
+        lat: latitude,
+        lng: longitude,
+        url: document.getElementById('ev-url').value,
+        memo: document.getElementById('ev-memo').value
+    };
+    
+    if (ev.id) window.app.events = window.app.events.map(x => String(x.id) === String(ev.id) ? newEv : x);
+    else window.app.events.push(newEv);
+    
+    window.app.save(); window.app.closeModal(); window.app.renderCountdowns(); window.app.renderCalendar();
+};
             },
 
             openMonthPicker: function() {
