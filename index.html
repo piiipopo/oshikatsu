@@ -25,8 +25,16 @@
         .scale-active:active { transform: scale(0.96); transition: transform 0.1s; }
         .shot-mode .hide-in-shot { display: none !important; }
         
-        /* 🎀 お誕生日うちわ文字：枠を無視してハミ出す */
+        /* 🎀 お誕生日うちわ文字：枠を無視してハミ出す＆クリックを完全に貫通させる */
         .day-cell { position: relative; overflow: visible; }
+        .uchiwa-container {
+            position: absolute;
+            top: 22px; /* 日付のすぐ下に配置 */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            pointer-events: none; /* 下にあるセルのクリックを絶対に邪魔しない */
+        }
         .uchiwa-text { 
             white-space: nowrap; 
             display: inline-block;
@@ -42,6 +50,7 @@
             📅 <span id="app-title-text"></span>
         </h1>
         
+        <!-- 絵文字アイコンだけになったスッキリボタン -->
         <div class="flex gap-1.5 hide-in-shot">
             <button onclick="window.app.requestNotif()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🔔</button>
             <button onclick="window.app.toggleScreenshotMode()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">📸</button>
@@ -67,6 +76,7 @@
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
                 
                 <div class="flex items-center gap-2">
+                    <!-- 年月ジャンプボタン -->
                     <h2 onclick="window.app.openMonthPicker()" class="text-sm font-extrabold text-slate-600 tracking-widest cursor-pointer scale-active flex items-center gap-1 px-3 py-1 bg-white rounded-full shadow-sm">
                         <span id="calendar-title-year"></span>年 <span id="calendar-title-month"></span>月 <span class="text-[8px] text-slate-300 hide-in-shot">▼</span>
                     </h2>
@@ -105,6 +115,7 @@
             oshis: JSON.parse(localStorage.getItem('oshi_list')) || [{ id: 'o1', name: '推し', color: '#7dd3fc', birthday: '' }],
             categories: JSON.parse(localStorage.getItem('cat_list')) || [{ id: 'c1', name: 'LIVE' }, { id: 'c2', name: 'チケット発売日' }, { id: 'c3', name: '当落発表' }],
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
+            holidays: {}, // ✨ 祝日データを保存する箱
 
             init: function() {
                 const now = new Date(); 
@@ -117,7 +128,24 @@
                 this.applyTheme(); 
                 this.renderFilter(); 
                 this.renderCountdowns(); 
+                
+                // ✨ 起動時に祝日データを自動取得！
+                this.fetchHolidays();
                 this.renderCalendar();
+            },
+
+            // ✨ 日本の祝日APIからデータを取得する機能
+            fetchHolidays: async function() {
+                try {
+                    const response = await fetch('https://holidays-jp.github.io/api/v1/date.json');
+                    if (response.ok) {
+                        this.holidays = await response.json();
+                        this.renderCalendar(); // データを取得できたらカレンダーを再描画
+                        this.renderDailyEvents();
+                    }
+                } catch (error) {
+                    console.log('祝日データの取得に失敗しました');
+                }
             },
 
             safeDateStr: function(d) { 
@@ -247,7 +275,6 @@
                 cont.innerHTML = html;
             },
 
-            // ✨ 最強カレンダー描画システム ✨
             renderCalendar: function() {
                 const cont = document.getElementById('calendar-container'); 
                 cont.innerHTML = '';
@@ -262,7 +289,7 @@
                     }
                     
                     let html = `<div class="calendar-grid gap-x-1 text-[8px] text-slate-300 font-bold text-center uppercase mb-2 ${i>0 ? 'mt-8' : ''}">
-                        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                        <div class="text-rose-400">Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div class="text-blue-400">Sat</div>
                     </div>`;
                     
                     let weeks = []; 
@@ -337,44 +364,37 @@
                                 const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                                 const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
                                 
-                                // ✨ 【お誕生日リミッター】お誕生日の日は「0番目（1つ）」までしか表示しない！
                                 const maxVisibleRows = bdays.length > 0 ? 0 : 2; 
 
                                 let indicators = '';
-                                // ✨ 常に 0, 1, 2 の 3ループを回して高さを完全固定！
                                 for (let r = 0; r <= 2; r++) {
                                     const e = slots[wd][r];
                                     
-                                    // 予定がない、または制限を超えた場合は「透明なスペーサー」を置いて高さを揃える
                                     if (!e || r > maxVisibleRows) {
                                         indicators += `<div class="h-[10px] mb-[2px] w-full invisible"></div>`;
                                     } else {
                                         const o = this.oshis.find(x => String(x.id) === String(e.oshiId)); 
                                         const color = o?.color || '#cbd5e1';
                                         
-                                        // 繰り返し予定も「単発」として丸く表示させる
                                         const isSingle = (e.startDate === (e.endDate || e.startDate)) || (e.repeat !== 'none');
                                         const roundLeft = ds === e.startDate || wd === 0 || isSingle;
                                         const roundRight = ds === (e.endDate || e.startDate) || wd === 6 || isSingle;
 
-                                        // ✨ 隙間ゼロ・ズレゼロの究極の数式！
                                         let shapeClass = '';
                                         if (roundLeft && roundRight) {
                                             shapeClass = 'w-[calc(100%-4px)] ml-[2px] rounded relative z-10'; 
                                         } else if (roundLeft && !roundRight) {
-                                            shapeClass = 'w-full ml-[2px] rounded-l relative z-30'; // スタート位置
+                                            shapeClass = 'w-[calc(100%+4px)] ml-[2px] mr-[-6px] rounded-l relative z-10'; 
                                         } else if (!roundLeft && roundRight) {
-                                            shapeClass = 'w-full ml-[-2px] rounded-r relative z-10'; // ゴール位置
+                                            shapeClass = 'w-[calc(100%+4px)] ml-[-6px] mr-[2px] rounded-r relative z-10';
                                         } else {
-                                            shapeClass = 'w-[calc(100%+4px)] ml-[-2px] relative z-20'; // 中間
+                                            shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-10'; 
                                         }
 
                                         let innerHtml = '';
                                         if (roundLeft) {
-                                            // ✨ 単発は6文字、連続は12文字で出し分け
                                             const maxLength = isSingle ? 6 : 12;
                                             const shortName = e.name.length > maxLength ? e.name.slice(0, maxLength) + '…' : e.name;
-                                            // ✨ 文字サイズを6.5pxにアップし、overflow-hiddenでハミ出しを完全ブロック
                                             innerHtml = `<div class="h-full w-[2px] shrink-0" style="background-color: ${color};"></div>
                                                          <span class="text-[6.5px] font-bold text-slate-700 ml-1 leading-none pt-[0.5px] pr-1 flex-1 text-left whitespace-nowrap overflow-hidden">${shortName}</span>`;
                                         }
@@ -387,11 +407,20 @@
                                 
                                 const isSel = ds === this.selectedDateStr;
                                 
-                                // ✨ セルの高さを「80px」に広げ、お誕生日テキストの被りを完全に回避！
+                                // ✨ 土日祝日の文字色を判定
+                                const isHoliday = this.holidays[ds];
+                                let dayColorClass = 'text-slate-700'; // 平日（通常）
+                                if (wd === 0 || isHoliday) {
+                                    dayColorClass = 'text-rose-500'; // 日曜・祝日は赤色
+                                } else if (wd === 6) {
+                                    dayColorClass = 'text-blue-500'; // 土曜は青色
+                                }
+                                
                                 html += `<div class="day-cell relative p-1 h-[80px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" onclick="window.app.selectDate('${ds}')">
-                                         <span class="text-xs font-bold relative z-10">${d}</span>
                                          
-                                         <!-- ✨ お誕生日テキスト（絶対位置で配置） -->
+                                         <!-- ✨ 色付きの日付 -->
+                                         <span class="text-xs font-bold relative z-10 ${isSel ? 'text-white' : dayColorClass}">${d}</span>
+                                         
                                          <div class="absolute top-[18px] w-full flex flex-col gap-[1px] items-center justify-center pointer-events-none z-20">
                                             ${bdays.map(o => `<div class="flex flex-col items-center leading-none">
                                                 <span class="text-[10px] font-extrabold whitespace-nowrap" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">${o.name}</span>
@@ -399,7 +428,6 @@
                                             </div>`).join('')}
                                          </div>
                                          
-                                         <!-- ✨ ゼリー帯エリア（一番下に絶対位置で固定し、上にズレるのを防ぐ！） -->
                                          <div class="absolute bottom-1 left-0 w-full flex flex-col z-10">
                                             ${indicators}
                                          </div>
@@ -438,6 +466,14 @@
                 
                 let html = '';
 
+                // ✨ 祝日名の表示
+                const holidayName = this.holidays[this.selectedDateStr];
+                if (holidayName) {
+                    html += `<div class="p-3 rounded-2xl flex items-center shadow-sm border bg-rose-50 border-rose-100 mb-2">
+                        <div class="font-extrabold text-rose-500 text-sm flex items-baseline">🎌 ${holidayName}</div>
+                    </div>`;
+                }
+
                 bdays.forEach(o => {
                     const color = o.color || '#f472b6';
                     let daysText = '';
@@ -450,7 +486,7 @@
                             daysText = `<span class="text-[10px] font-extrabold opacity-60 ml-2">(誕生から ${diffDays} 日)</span>`;
                         }
                     }
-                    html += `<div class="p-3 rounded-2xl flex items-center shadow-sm border" style="background-color: ${color}1A; border-color: ${color}33;">
+                    html += `<div class="p-3 rounded-2xl flex items-center shadow-sm border mb-2" style="background-color: ${color}1A; border-color: ${color}33;">
                         <div class="font-extrabold text-slate-700 text-sm flex items-baseline">🎂 ${o.name} Birthday! ${daysText}</div>
                     </div>`;
                 });
@@ -495,7 +531,9 @@
                     }).join('');
                 }
 
-                if (!html && bdays.length === 0) html = '<div class="text-center text-slate-300 text-xs py-8">予定はありません</div>';
+                if (!html && bdays.length === 0 && !holidayName) {
+                    html = '<div class="text-center text-slate-300 text-xs py-8">予定はありません</div>';
+                }
                 list.innerHTML = html;
             },
 
