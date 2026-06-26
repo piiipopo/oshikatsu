@@ -375,7 +375,6 @@
                                         if (roundLeft) {
                                             const maxLength = isSingle ? 6 : 12;
                                             const shortName = e.name.length > maxLength ? e.name.slice(0, maxLength) + '…' : e.name;
-                                            // ✨ 修正ポイント：テキストを「絶対配置(absolute)」にして壁をすり抜けさせました！
                                             innerHtml = `<div class="h-full w-[2px] shrink-0 rounded-l relative z-20" style="background-color: ${color};"></div>
                                                          <span class="absolute left-[6px] text-[6.5px] font-bold text-slate-700 leading-none pt-[0.5px] whitespace-nowrap z-50 pointer-events-none">${shortName}</span>`;
                                         }
@@ -406,7 +405,10 @@
                                          </div>`;
                             }
                         }
-                        html += `</div></div>`;
+                        // ✨【修正箇所】ここの「閉じカッコ」を復活させました！！！
+                        html += `</div>`; 
+                    }
+                    html += `</div>`; 
                     cont.innerHTML += `<div>${html}</div>`;
                 }
                 this.renderDailyEvents();
