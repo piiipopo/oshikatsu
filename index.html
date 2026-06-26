@@ -38,6 +38,7 @@
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
+    <!-- ヘッダー -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
@@ -53,13 +54,16 @@
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
+        <!-- カウントダウン -->
         <div id="countdown-container"></div>
 
+        <!-- 推しフィルター ＆ 予定一覧 -->
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
         </div>
 
+        <!-- カレンダー本体 -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
@@ -74,6 +78,7 @@
             <div id="calendar-container" class="space-y-8"></div>
         </section>
 
+        <!-- Eventsリスト -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="selected-date-title" class="text-sm font-bold text-slate-500">Events</h3>
@@ -100,7 +105,6 @@
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
             holidays: {},
             
-            // ✨ 推しの原色を「透けないパステルカラー」に変換する魔法の数式！
             getLightColor: function(hex) {
                 if(!hex) return '#f1f5f9';
                 hex = hex.replace('#', '');
@@ -108,7 +112,6 @@
                 let r = parseInt(hex.substring(0, 2), 16);
                 let g = parseInt(hex.substring(2, 4), 16);
                 let b = parseInt(hex.substring(4, 6), 16);
-                // 白を85%混ぜて、透明度ではなく「実体の色」を薄くする
                 r = Math.round(r + (255 - r) * 0.85);
                 g = Math.round(g + (255 - g) * 0.85);
                 b = Math.round(b + (255 - b) * 0.85);
@@ -367,15 +370,16 @@
                                             shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-20'; 
                                         }
 
+                                        const solidLightColor = this.getLightColor(color);
                                         let innerHtml = '';
                                         if (roundLeft) {
                                             const maxLength = isSingle ? 6 : 12;
                                             const shortName = e.name.length > maxLength ? e.name.slice(0, maxLength) + '…' : e.name;
-                                            innerHtml = `<div class="h-full w-[2px] shrink-0 rounded-l" style="background-color: ${color};"></div>
-                                                         <span class="text-[6.5px] font-bold text-slate-700 ml-1 leading-none pt-[0.5px] pr-1 flex-1 text-left whitespace-nowrap relative z-50">${shortName}</span>`;
+                                            // ✨ 修正ポイント：テキストを「絶対配置(absolute)」にして壁をすり抜けさせました！
+                                            innerHtml = `<div class="h-full w-[2px] shrink-0 rounded-l relative z-20" style="background-color: ${color};"></div>
+                                                         <span class="absolute left-[6px] text-[6.5px] font-bold text-slate-700 leading-none pt-[0.5px] whitespace-nowrap z-50 pointer-events-none">${shortName}</span>`;
                                         }
 
-                                        const solidLightColor = this.getLightColor(color);
                                         indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border" style="background-color: ${solidLightColor};">
                                                           ${innerHtml}
                                                        </div>`;
@@ -402,9 +406,7 @@
                                          </div>`;
                             }
                         }
-                        html += `</div>`; // 👈👈👈【原因判明！】前回ここの「閉じカッコ」を1つ削ってしまっていました😭
-                    }
-                    html += `</div>`;
+                        html += `</div></div>`;
                     cont.innerHTML += `<div>${html}</div>`;
                 }
                 this.renderDailyEvents();
@@ -618,7 +620,6 @@
                 } 
             },
 
-            // ✨ 【Step 1】推し設定のパワーアップ！！
             openOshiModal: function() {
                 let html = `
                     <h3 class="font-bold mb-4 text-slate-700">🩵 推しの設定・編集</h3>
@@ -709,13 +710,12 @@
                     
                     this.save(); 
                     this.renderFilter(); 
-                    this.openOshiModal(); // フォームをリセットして再描画
+                    this.openOshiModal(); 
                     this.renderCountdowns(); 
                     this.renderCalendar();
                 };
             },
 
-            // ✨ 画像を安全なサイズに圧縮する処理（重くならないように300pxに自動リサイズ）
             handleImageUpload: function(event) {
                 const file = event.target.files[0];
                 if(!file) return;
@@ -742,7 +742,6 @@
                 reader.readAsDataURL(file);
             },
 
-            // ✨ 編集モードへ切り替え
             editOshi: function(id) {
                 const o = this.oshis.find(x => String(x.id) === String(id));
                 if(!o) return;
@@ -770,7 +769,6 @@
 
             cancelEditOshi: function() { this.openOshiModal(); },
 
-            // ✨ 並び替え処理
             moveOshi: function(index, dir) {
                 if(index + dir < 0 || index + dir >= this.oshis.length) return;
                 const temp = this.oshis[index];
