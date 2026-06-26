@@ -28,7 +28,7 @@
         
         .day-cell { position: relative; overflow: visible; }
 
-        /* ✨ ぷっくりハートペンライトの魔法のアニメーション */
+        /* ✨ ペンライトのアニメーション */
         .penlight-wrapper {
             animation: float-pulse 2s infinite ease-in-out;
             transform-origin: bottom center;
@@ -39,10 +39,10 @@
         }
         .penlight-glow {
             position: absolute;
-            top: 10px;
-            left: 12px;
-            width: 16px;
-            height: 16px;
+            top: 25%;
+            left: 30%;
+            width: 40%;
+            height: 35%;
             border-radius: 50%;
             filter: blur(8px);
             animation: glow-intensity 2s infinite ease-in-out;
@@ -124,6 +124,10 @@
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
             holidays: {},
             mapInstance: null,
+
+            // ✨ 保存されたペンライトのカスタマイズデータを読み込む（初期値：サイズ40、フチ太さ2）
+            penlightSize: localStorage.getItem('pl_size') !== null ? parseInt(localStorage.getItem('pl_size')) : 40,
+            penlightStroke: localStorage.getItem('pl_stroke') !== null ? parseInt(localStorage.getItem('pl_stroke')) : 2,
             
             getLightColor: function(hex) {
                 if(!hex) return '#f1f5f9';
@@ -183,6 +187,9 @@
                 localStorage.setItem('oshi_list', JSON.stringify(this.oshis)); 
                 localStorage.setItem('cat_list', JSON.stringify(this.categories)); 
                 localStorage.setItem('oshi_events', JSON.stringify(this.events)); 
+                // ✨ ペンライト設定も保存
+                localStorage.setItem('pl_size', this.penlightSize);
+                localStorage.setItem('pl_stroke', this.penlightStroke);
             },
 
             editTitle: function() {
@@ -610,27 +617,21 @@
                         const o = this.oshis.find(x => String(x.id) === String(ev.oshiId));
                         const color = o?.color || '#3b82f6';
                         
-                        // ✨ 【大進化】白フチ、光沢、影を全部乗せした「ぷっくりハートペンライト」の魔法コード！
+                        // ✨ 保存されているペンライトの設定サイズを呼び出す
+                        const w = this.penlightSize;
+                        const h = Math.round(w * 1.35); // 幅に対して高さが自動で綺麗なバランスになります
+                        const anchorX = Math.round(w / 2);
+                        const anchorY = Math.round(h * (50 / 54));
+                        const sw = this.penlightStroke;
+                        
                         const penlightHTML = `
-                            <div class="penlight-wrapper flex flex-col items-center justify-center relative" style="width: 40px; height: 54px;">
-                                <!-- 後ろから漏れる推し色のオーラ（光） -->
+                            <div class="penlight-wrapper flex flex-col items-center justify-center relative" style="width: ${w}px; height: ${h}px;">
                                 <div class="penlight-glow" style="--glow-color: ${color}; background-color: ${color};"></div>
-                                
-                                <!-- ペンライト本体（SVG） -->
-                                <svg width="40" height="54" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10" style="filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.3));">
-                                    <!-- ① 白フチ ＆ メンカラのぷっくりハート -->
-                                    <path d="M20 28C20 23 6 16 6 9.5C6 4.5 10 2 14.5 2C17.5 2 19 3.5 20 5C21 3.5 22.5 2 25.5 2C30 2 34 4.5 34 9.5C34 16 20 23 20 28Z" fill="${color}" stroke="#ffffff" stroke-width="2"/>
-                                    
-                                    <!-- ② アクリル風の「光沢（ハイライト）」 -->
+                                <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10" style="filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.3));">
+                                    <path d="M20 28C20 23 6 16 6 9.5C6 4.5 10 2 14.5 2C17.5 2 19 3.5 20 5C21 3.5 22.5 2 25.5 2C30 2 34 4.5 34 9.5C34 16 20 23 20 28Z" fill="${color}" stroke="#ffffff" stroke-width="${sw}"/>
                                     <path d="M9.5 9.5C9.5 6 12 4 14.5 4" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.8"/>
-                                    
-                                    <!-- ③ シルバーのジョイント金具 -->
                                     <rect x="16" y="27" width="8" height="3" fill="#cbd5e1" stroke="#ffffff" stroke-width="1"/>
-                                    
-                                    <!-- ④ 美しい曲線の白いグリップ（持ち手） -->
                                     <path d="M16.5 30L15.5 46C15.5 48 16.5 49 20 49C23.5 49 24.5 48 24.5 46L23.5 30H16.5Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
-                                    
-                                    <!-- ⑤ ちっちゃなスイッチボタン -->
                                     <circle cx="20" cy="35" r="1.2" fill="#94a3b8"/>
                                 </svg>
                             </div>
@@ -639,8 +640,8 @@
                         const customIcon = L.divIcon({
                             html: penlightHTML,
                             className: 'custom-div-icon',
-                            iconSize: [40, 54],
-                            iconAnchor: [20, 50] // ピンの先端（グリップの底）が地図に刺さるように微調整
+                            iconSize: [w, h],
+                            iconAnchor: [anchorX, anchorY]
                         });
 
                         const popupContent = `
@@ -822,6 +823,25 @@
                         </button>
                     </div>
 
+                    <!-- ✨ ペンライトカスタマイザー機能を追加！ -->
+                    <div class="bg-sky-50 p-4 rounded-2xl border border-sky-100 mb-6">
+                        <h4 class="text-xs font-bold text-slate-600 mb-2 flex items-center gap-1">📍 マップピンのカスタマイズ</h4>
+                        <div class="flex justify-center mb-4 h-20 items-center">
+                            <div id="pl-preview-container"></div>
+                        </div>
+                        <label class="text-[9px] font-bold text-slate-500 mb-1 flex justify-between">
+                            <span>サイズ（大きさ）</span><span id="pl-size-val">${this.penlightSize}</span>
+                        </label>
+                        <input type="range" id="pl-size-slider" min="20" max="80" value="${this.penlightSize}" class="w-full accent-sky-400 mb-4" oninput="window.app.updatePenlightPreview()">
+                        
+                        <label class="text-[9px] font-bold text-slate-500 mb-1 flex justify-between">
+                            <span>白フチの太さ</span><span id="pl-stroke-val">${this.penlightStroke}</span>
+                        </label>
+                        <input type="range" id="pl-stroke-slider" min="0" max="6" value="${this.penlightStroke}" class="w-full accent-sky-400 mb-4" oninput="window.app.updatePenlightPreview()">
+                        
+                        <button onclick="window.app.savePenlightSettings()" class="w-full bg-sky-400 text-white py-2.5 rounded-xl text-[10px] font-extrabold shadow-sm active:bg-sky-500">このバランスで決定！</button>
+                    </div>
+
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                         <p class="text-[10px] text-slate-400 mb-2 font-bold">データの書き出し (バックアップ)</p>
                         <textarea id="back-data" class="w-full h-16 bg-white p-2 rounded-lg text-[8px] border border-slate-200 outline-none font-mono text-slate-400 mb-2">${JSON.stringify({oshis:this.oshis, events:this.events, cats:this.categories})}</textarea>
@@ -834,6 +854,45 @@
                     
                     <button onclick="window.app.closeModal()" class="w-full bg-slate-200 py-3.5 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
                 `);
+                this.updatePenlightPreview(); // 初期プレビューを描画
+            },
+
+            // ✨ カスタマイズのリアルタイムプレビューを更新する魔法
+            updatePenlightPreview: function() {
+                const sliderSize = document.getElementById('pl-size-slider');
+                const sliderStroke = document.getElementById('pl-stroke-slider');
+                if(!sliderSize || !sliderStroke) return;
+
+                const w = parseInt(sliderSize.value);
+                const sw = parseInt(sliderStroke.value);
+                
+                document.getElementById('pl-size-val').textContent = w;
+                document.getElementById('pl-stroke-val').textContent = sw;
+
+                const h = Math.round(w * 1.35);
+                const color = '#f43f5e'; // プレビュー用の推しカラー（かわいい赤色）
+
+                const html = `
+                    <div class="penlight-wrapper flex flex-col items-center justify-center relative" style="width: ${w}px; height: ${h}px;">
+                        <div class="penlight-glow" style="--glow-color: ${color}; background-color: ${color};"></div>
+                        <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10" style="filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.3));">
+                            <path d="M20 28C20 23 6 16 6 9.5C6 4.5 10 2 14.5 2C17.5 2 19 3.5 20 5C21 3.5 22.5 2 25.5 2C30 2 34 4.5 34 9.5C34 16 20 23 20 28Z" fill="${color}" stroke="#ffffff" stroke-width="${sw}"/>
+                            <path d="M9.5 9.5C9.5 6 12 4 14.5 4" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+                            <rect x="16" y="27" width="8" height="3" fill="#cbd5e1" stroke="#ffffff" stroke-width="1"/>
+                            <path d="M16.5 30L15.5 46C15.5 48 16.5 49 20 49C23.5 49 24.5 48 24.5 46L23.5 30H16.5Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+                            <circle cx="20" cy="35" r="1.2" fill="#94a3b8"/>
+                        </svg>
+                    </div>
+                `;
+                document.getElementById('pl-preview-container').innerHTML = html;
+            },
+
+            // ✨ ベストバランスの数字を保存する魔法
+            savePenlightSettings: function() {
+                this.penlightSize = parseInt(document.getElementById('pl-size-slider').value);
+                this.penlightStroke = parseInt(document.getElementById('pl-stroke-slider').value);
+                this.save();
+                alert('ペンライトのバランスを保存しました！✨\nマップを開いて確認してみてください！');
             },
 
             openOshiModal: function() {
