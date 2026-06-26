@@ -25,31 +25,24 @@
         .shot-mode .hide-in-shot { display: none !important; }
         
         .day-cell { position: relative; overflow: visible; }
-        .uchiwa-container {
-            position: absolute;
-            top: 22px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 20;
-            pointer-events: none;
-        }
-        .uchiwa-text { white-space: nowrap; display: inline-block; }
     </style>
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
-    <!-- ヘッダー -->
+    <!-- ヘッダー（スッキリ化！） -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
         </h1>
         
         <div class="flex gap-1.5 hide-in-shot">
-            <button onclick="window.app.requestNotif()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🔔</button>
+            <!-- 設定と図鑑の入り口だけに！ -->
             <button onclick="window.app.toggleScreenshotMode()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">📸</button>
             <button onclick="window.app.openSettingModal()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">⚙️</button>
-            <button onclick="window.app.openConfigModal()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🏷️</button>
-            <button onclick="window.app.openOshiModal()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">🩵</button>
+            <button onclick="window.app.openAlbumModal()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center relative overflow-hidden group">
+                <div class="absolute inset-0 bg-sky-100 opacity-0 transition-opacity"></div>
+                <span class="relative z-10 group-active:scale-90 transition-transform">🩵</span>
+            </button>
         </div>
     </header>
 
@@ -391,7 +384,6 @@
                                 if (wd === 0 || isHoliday) dayColorClass = 'text-rose-500';
                                 else if (wd === 6) dayColorClass = 'text-blue-500';
                                 
-                                // ✨【修正ポイント】マス目に優先順位（z-index）をかけて、左側の日が絶対に上になるようにしました！
                                 html += `<div class="day-cell relative p-1 h-[80px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" style="z-index: ${20 - wd};" onclick="window.app.selectDate('${ds}')">
                                          <span class="text-xs font-bold relative z-10 ${isSel ? 'text-white' : dayColorClass}">${d}</span>
                                          <div class="absolute top-[18px] w-full flex flex-col gap-[1px] items-center justify-center pointer-events-none z-20">
@@ -505,6 +497,71 @@
                 layer.classList.remove('hidden');
             },
             closeModal: function() { document.getElementById('modal-layer').classList.add('hidden'); },
+
+            // ✨ 【Step 2】エモい推し図鑑（チェキ風カードスワイプ）の実装！
+            openAlbumModal: function() {
+                if (this.oshis.length === 0) {
+                    alert('推しが登録されていません！⚙️設定から登録してください。');
+                    return;
+                }
+                let html = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-extrabold text-slate-700 flex items-center gap-2">📸 推し図鑑</h3>
+                    </div>
+                    
+                    <!-- 横スクロールコンテナ -->
+                    <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-6 px-4 -mx-4 scroll-smooth">
+                `;
+                
+                this.oshis.forEach(o => {
+                    const color = o.color || '#cbd5e1';
+                    const bdayStr = o.birthday ? o.birthday.replace(/-/g, '/') : '未登録';
+                    
+                    html += `
+                        <div class="shrink-0 w-64 snap-center bg-white border border-slate-100 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden relative mb-2">
+                            <!-- 🎨 メンカラのマスキングテープ風 -->
+                            <div class="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-4 opacity-70 -rotate-2 z-10 mix-blend-multiply" style="background-color: ${color}; box-shadow: inset 0 1px 3px rgba(255,255,255,0.5);"></div>
+                            
+                            <!-- 📸 チェキ風 写真エリア -->
+                            <div class="p-3 pb-0">
+                                <div class="aspect-square bg-slate-50 rounded-md flex items-center justify-center overflow-hidden border border-slate-200/50 relative">
+                                    ${o.image ? `<img src="${o.image}" class="w-full h-full object-cover">` : `<span class="text-5xl opacity-30" style="color:${color}">🩵</span>`}
+                                </div>
+                            </div>
+                            
+                            <!-- 🖋️ 余白＆プロフィールエリア -->
+                            <div class="p-4 flex flex-col gap-3 bg-white">
+                                <!-- 名前エリア -->
+                                <div class="border-b border-dashed pb-2" style="border-color: ${color}50;">
+                                    <div class="text-[10px] font-extrabold text-slate-400 tracking-widest uppercase">${o.englishName || 'NO NAME'}</div>
+                                    <div class="text-2xl font-black text-slate-700 mt-1 leading-none" style="font-family: serif;">${o.nickname || o.name}</div>
+                                </div>
+                                
+                                <!-- データエリア -->
+                                <div class="flex justify-between items-center text-[10px] font-bold text-slate-500">
+                                    <div class="flex items-center gap-1">🎂 ${bdayStr}</div>
+                                    <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full" style="background-color: ${color}1A; color: ${color};">
+                                        <div class="w-2.5 h-2.5 rounded-full shadow-inner" style="background-color: ${color}"></div> Color
+                                    </div>
+                                </div>
+                                
+                                <!-- メモエリア -->
+                                ${o.favoriteWork ? `<div class="mt-1 bg-slate-50 p-2.5 rounded-lg text-[10px] font-bold text-slate-600 border-l-4 leading-relaxed" style="border-color:${color}">🎬 ${o.favoriteWork.replace(/\n/g, '<br>')}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    </div>
+                    <div class="flex justify-center mt-1">
+                        <span class="text-[9px] bg-slate-100 text-slate-400 px-4 py-1.5 rounded-full font-extrabold tracking-widest animate-pulse shadow-sm border border-slate-200">← SWIPE →</span>
+                    </div>
+                    <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-6 text-slate-500">閉じる</button>
+                `;
+                
+                this.showModal(html);
+            },
 
             openMonthPicker: function() {
                 let html = `<h3 class="font-bold mb-4 text-slate-700">年月をジャンプ🚀</h3><div class="grid grid-cols-2 gap-2 mb-4"><select id="jump-year" class="bg-slate-50 p-3 rounded-xl text-sm font-bold text-center">`;
@@ -622,9 +679,46 @@
                 } 
             },
 
+            // ✨ コントロールパネルに昇格した「設定メニュー」
+            openSettingModal: function() {
+                this.showModal(`
+                    <h3 class="font-bold mb-5 text-slate-700">⚙️ アプリ設定</h3>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-6">
+                        <button onclick="window.app.openOshiModal()" class="bg-white border border-slate-100 py-4 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm scale-active">
+                            <span class="text-2xl">🩵</span>
+                            <span class="text-[10px] font-extrabold text-slate-500">推しの設定</span>
+                        </button>
+                        <button onclick="window.app.openConfigModal()" class="bg-white border border-slate-100 py-4 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm scale-active">
+                            <span class="text-2xl">🏷️</span>
+                            <span class="text-[10px] font-extrabold text-slate-500">タグの設定</span>
+                        </button>
+                        <button onclick="window.app.requestNotif()" class="col-span-2 bg-white border border-slate-100 py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-sm scale-active">
+                            <span class="text-xl">🔔</span>
+                            <span class="text-[10px] font-extrabold text-slate-500">通知をオンにする</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-[10px] text-slate-400 mb-2 font-bold">データの書き出し (バックアップ)</p>
+                        <textarea id="back-data" class="w-full h-16 bg-white p-2 rounded-lg text-[8px] border border-slate-200 outline-none font-mono text-slate-400 mb-2">${JSON.stringify({oshis:this.oshis, events:this.events, cats:this.categories})}</textarea>
+                        <button onclick="window.app.copyBackup()" class="w-full bg-slate-300 text-slate-600 py-2.5 rounded-xl text-[10px] font-extrabold mb-4 active:bg-slate-400">データをコピーする</button>
+                        
+                        <p class="text-[10px] text-slate-400 mb-2 font-bold">データの読み込み (復元)</p>
+                        <textarea id="import-data" placeholder="ここにデータを貼り付け" class="w-full h-16 bg-white p-2 rounded-lg text-[8px] border border-slate-200 outline-none font-mono text-slate-400 mb-2"></textarea>
+                        <button onclick="window.app.importBackup()" class="w-full bg-slate-700 text-white py-2.5 rounded-xl text-[10px] font-extrabold shadow-sm">データを読み込む</button>
+                    </div>
+                    
+                    <button onclick="window.app.closeModal()" class="w-full bg-slate-200 py-3.5 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
+                `);
+            },
+
             openOshiModal: function() {
                 let html = `
-                    <h3 class="font-bold mb-4 text-slate-700">🩵 推しの設定・編集</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-700">🩵 推しの設定・編集</h3>
+                        <button onclick="window.app.openSettingModal()" class="text-[10px] text-slate-400 font-bold bg-slate-100 px-3 py-1.5 rounded-full">← 戻る</button>
+                    </div>
                     
                     <form id="oshi-form" class="space-y-3 mb-6 bg-white p-3 rounded-2xl border border-sky-100 shadow-sm relative">
                         <div class="absolute -top-3 left-4 bg-sky-50 text-sky-600 text-[10px] px-2 py-0.5 rounded-full font-extrabold border border-sky-100">推しを追加 / 編集</div>
@@ -686,7 +780,6 @@
                 
                 html += `
                     </div>
-                    <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
                 `;
                 this.showModal(html);
 
@@ -796,9 +889,12 @@
 
             openConfigModal: function() {
                 let html = `
-                    <h3 class="font-bold mb-4 text-slate-700">項目設定</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-700">🏷️ タグの設定</h3>
+                        <button onclick="window.app.openSettingModal()" class="text-[10px] text-slate-400 font-bold bg-slate-100 px-3 py-1.5 rounded-full">← 戻る</button>
+                    </div>
                     <form id="cat-form" class="space-y-3 mb-4">
-                        <input type="text" id="c-name" placeholder="項目名 (例: ラジオ, 当選 etc)" required class="w-full bg-slate-50 p-3 rounded-xl text-sm border border-slate-100 outline-none font-bold">
+                        <input type="text" id="c-name" placeholder="タグ名 (例: ラジオ, 当選 etc)" required class="w-full bg-slate-50 p-3 rounded-xl text-sm border border-slate-100 outline-none font-bold">
                         <button type="submit" class="w-full bg-slate-700 text-white font-bold py-3 rounded-2xl text-xs shadow-md">追加する</button>
                     </form>
                     <div class="space-y-2 max-h-40 overflow-y-auto">
@@ -811,7 +907,7 @@
                         </div>
                     `;
                 });
-                html += `</div><button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>`;
+                html += `</div>`;
                 this.showModal(html);
 
                 document.getElementById('cat-form').onsubmit = (e) => {
@@ -821,25 +917,12 @@
                 };
             },
             deleteCat: function(id) { 
-                if (confirm('この項目を消去しますか？')) { 
+                if (confirm('このタグを消去しますか？')) { 
                     this.categories = this.categories.filter(x => String(x.id) !== String(id)); 
                     this.save(); this.openConfigModal(); this.renderCalendar(); 
                 } 
             },
 
-            openSettingModal: function() {
-                this.showModal(`
-                    <h3 class="font-bold mb-4 text-slate-700">アプリ設定</h3>
-                    <p class="text-[10px] text-slate-400 mb-2 font-bold">データの書き出し (機種変更など)</p>
-                    <textarea id="back-data" class="w-full h-20 bg-slate-50 p-2 rounded-xl text-[8px] border border-slate-100 outline-none font-mono text-slate-400">${JSON.stringify({oshis:this.oshis, events:this.events, cats:this.categories})}</textarea>
-                    <button onclick="window.app.copyBackup()" class="w-full bg-sky-400 text-white py-3 rounded-xl text-xs font-bold mt-2 shadow-sm">データをコピーする</button>
-                    <hr class="my-5 border-slate-100">
-                    <p class="text-[10px] text-slate-400 mb-2 font-bold">データの読み込み (復元)</p>
-                    <textarea id="import-data" placeholder="ここにデータを貼り付け" class="w-full h-20 bg-slate-50 p-2 rounded-xl text-[8px] border border-slate-100 outline-none font-mono text-slate-400"></textarea>
-                    <button onclick="window.app.importBackup()" class="w-full bg-slate-700 text-white py-3 rounded-xl text-xs font-bold mt-2 shadow-sm">データを読み込む</button>
-                    <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
-                `);
-            },
             copyBackup: function() { document.getElementById('back-data').select(); document.execCommand('copy'); alert('コピーしました！メモ帳などに貼り付けて保存してください。'); },
             importBackup: function() {
                 try {
