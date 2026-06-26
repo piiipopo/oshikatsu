@@ -38,7 +38,6 @@
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
-    <!-- ヘッダー -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
@@ -54,16 +53,13 @@
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
-        <!-- カウントダウン -->
         <div id="countdown-container"></div>
 
-        <!-- 推しフィルター ＆ 予定一覧 -->
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
         </div>
 
-        <!-- カレンダー本体 -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
@@ -78,7 +74,6 @@
             <div id="calendar-container" class="space-y-8"></div>
         </section>
 
-        <!-- Eventsリスト -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="selected-date-title" class="text-sm font-bold text-slate-500">Events</h3>
@@ -380,7 +375,6 @@
                                                          <span class="text-[6.5px] font-bold text-slate-700 ml-1 leading-none pt-[0.5px] pr-1 flex-1 text-left whitespace-nowrap relative z-50">${shortName}</span>`;
                                         }
 
-                                        // ✨ 魔法のソリッドカラーに変更！これで重なり線が完全消滅！
                                         const solidLightColor = this.getLightColor(color);
                                         indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border" style="background-color: ${solidLightColor};">
                                                           ${innerHtml}
@@ -408,7 +402,9 @@
                                          </div>`;
                             }
                         }
-                        html += `</div></div>`;
+                        html += `</div>`; // 👈👈👈【原因判明！】前回ここの「閉じカッコ」を1つ削ってしまっていました😭
+                    }
+                    html += `</div>`;
                     cont.innerHTML += `<div>${html}</div>`;
                 }
                 this.renderDailyEvents();
@@ -486,7 +482,7 @@
                                         <span class="text-[10px] font-bold text-slate-400 border border-slate-100 px-1.5 py-0.5 rounded">${o?.name || '不明'}</span>
                                     </div>
                                     <div class="flex gap-2">
-                                        ${ev.location ? `<a href="https://maps.google.com/?q=${encodeURIComponent(ev.location)}" target="_blank" onclick="event.stopPropagation();" class="text-[10px] text-sky-500 underline font-bold flex items-center">📍MAP</a>` : ''}
+                                        ${ev.location ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}" target="_blank" onclick="event.stopPropagation();" class="text-[10px] text-sky-500 underline font-bold flex items-center">📍MAP</a>` : ''}
                                         ${ev.url ? `<a href="${ev.url}" target="_blank" onclick="event.stopPropagation();" class="text-[10px] text-blue-500 underline font-bold flex items-center">🔗LINK</a>` : ''}
                                     </div>
                                 </div>
@@ -627,7 +623,6 @@
                 let html = `
                     <h3 class="font-bold mb-4 text-slate-700">🩵 推しの設定・編集</h3>
                     
-                    <!-- 登録フォーム -->
                     <form id="oshi-form" class="space-y-3 mb-6 bg-white p-3 rounded-2xl border border-sky-100 shadow-sm relative">
                         <div class="absolute -top-3 left-4 bg-sky-50 text-sky-600 text-[10px] px-2 py-0.5 rounded-full font-extrabold border border-sky-100">推しを追加 / 編集</div>
                         
@@ -645,7 +640,6 @@
                             </div>
                         </div>
 
-                        <!-- 📸 図鑑用データ枠（先行追加） -->
                         <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-2 mt-2">
                             <p class="text-[9px] font-extrabold text-slate-400 mb-1 flex items-center gap-1">📸 推し図鑑データ (任意)</p>
                             <input type="text" id="o-eng" placeholder="英字表記 (例: Yuta Jinguji)" class="w-full bg-white p-2 rounded-lg text-xs outline-none border border-slate-100 font-bold">
@@ -666,7 +660,6 @@
                         </div>
                     </form>
 
-                    <!-- 並び替え・編集可能なリスト -->
                     <p class="text-[10px] font-extrabold text-slate-400 mb-2 pl-1">登録済みの推し</p>
                     <div class="space-y-2 max-h-48 overflow-y-auto pr-1 pb-2">
                 `;
