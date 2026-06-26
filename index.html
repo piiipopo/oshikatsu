@@ -28,14 +28,28 @@
         
         .day-cell { position: relative; overflow: visible; }
 
-        /* ✨ 懐中電灯よサラバ！手作りのハートペンライトがぽわんと呼吸するように光る魔法 */
-        @keyframes penlight-pulse {
-            0%, 100% { transform: scale(0.92); filter: drop-shadow(0 0 4px var(--glow-color)); opacity: 0.85; }
-            50% { transform: scale(1.05); filter: drop-shadow(0 0 16px var(--glow-color)); opacity: 1; }
+        /* ✨ ぷっくりハートペンライトの魔法のアニメーション */
+        .penlight-wrapper {
+            animation: float-pulse 2s infinite ease-in-out;
+            transform-origin: bottom center;
         }
-        .penlight-heart-element {
-            animation: penlight-pulse 2s infinite ease-in-out;
-            transform-origin: 18px 14px;
+        @keyframes float-pulse {
+            0%, 100% { transform: scale(0.96) translateY(0); }
+            50% { transform: scale(1.04) translateY(-3px); }
+        }
+        .penlight-glow {
+            position: absolute;
+            top: 10px;
+            left: 12px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            filter: blur(8px);
+            animation: glow-intensity 2s infinite ease-in-out;
+        }
+        @keyframes glow-intensity {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.8); opacity: 0.9; }
         }
     </style>
 </head>
@@ -552,7 +566,7 @@
                                     </div>
                                 </div>
                                 
-                                ${o.favoriteWork ? `<div class="mt-2 bg-slate-50 p-2.5 rounded-lg text-xs text-slate-700 border-l-4 leading-relaxed tracking-wide text-center" style="border-color:${color}; font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;">🎬 ${o.favoriteWork.replace(/\n/g, '<br>')}</div>` : ''}
+                                ${o.favoriteWork ? `<div class="mt-2 bg-slate-50 p-2.5 rounded-lg text-xs text-slate-700 border-l-4 leading-relaxed tracking-wide text-center font-sans" style="border-color:${color}; font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;">🎬 ${o.favoriteWork.replace(/\n/g, '<br>')}</div>` : ''}
                             </div>
                         </div>
                     `;
@@ -596,20 +610,28 @@
                         const o = this.oshis.find(x => String(x.id) === String(ev.oshiId));
                         const color = o?.color || '#3b82f6';
                         
-                        // ✨【懐中電灯から大進化！】SVGの力で、お写真通りの「ハート型ペンライト」を作りました！
-                        // メンカラに合わせてハートが美しく染まり、優しく波打つように発光(アニメーション)します。
+                        // ✨ 【大進化】白フチ、光沢、影を全部乗せした「ぷっくりハートペンライト」の魔法コード！
                         const penlightHTML = `
-                            <div class="flex flex-col items-center justify-center" style="--glow-color: ${color}; width: 36px; height: 46px; overflow: visible;">
-                                <svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
-                                    <!-- ぽわんと発光する立体的なハートヘッド部分 -->
-                                    <path class="penlight-heart-element" d="M18 25C18 21 6 15 6 9C6 4.5 9.5 2 13.5 2C16 2 17.2 3.5 18 4.5C18.8 3.5 20 2 22.5 2C26.5 2 30 4.5 30 9C30 15 18 21 18 25Z" 
-                                          fill="${color}" />
-                                    <!-- スティックのシルバーのジョイント金具 -->
-                                    <rect x="15" y="24" width="6" height="3" fill="#94a3b8" rx="0.5"/>
-                                    <!-- スッキリ白い上品な持ち手グリップ -->
-                                    <rect x="14" y="27" width="8" height="16" fill="#ffffff" rx="2" stroke="#cbd5e1" stroke-width="1"/>
-                                    <!-- 中央のちっちゃなON/OFFスイッチボタン -->
-                                    <circle cx="18" cy="32" r="1" fill="#cbd5e1"/>
+                            <div class="penlight-wrapper flex flex-col items-center justify-center relative" style="width: 40px; height: 54px;">
+                                <!-- 後ろから漏れる推し色のオーラ（光） -->
+                                <div class="penlight-glow" style="--glow-color: ${color}; background-color: ${color};"></div>
+                                
+                                <!-- ペンライト本体（SVG） -->
+                                <svg width="40" height="54" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10" style="filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.3));">
+                                    <!-- ① 白フチ ＆ メンカラのぷっくりハート -->
+                                    <path d="M20 28C20 23 6 16 6 9.5C6 4.5 10 2 14.5 2C17.5 2 19 3.5 20 5C21 3.5 22.5 2 25.5 2C30 2 34 4.5 34 9.5C34 16 20 23 20 28Z" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+                                    
+                                    <!-- ② アクリル風の「光沢（ハイライト）」 -->
+                                    <path d="M9.5 9.5C9.5 6 12 4 14.5 4" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+                                    
+                                    <!-- ③ シルバーのジョイント金具 -->
+                                    <rect x="16" y="27" width="8" height="3" fill="#cbd5e1" stroke="#ffffff" stroke-width="1"/>
+                                    
+                                    <!-- ④ 美しい曲線の白いグリップ（持ち手） -->
+                                    <path d="M16.5 30L15.5 46C15.5 48 16.5 49 20 49C23.5 49 24.5 48 24.5 46L23.5 30H16.5Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+                                    
+                                    <!-- ⑤ ちっちゃなスイッチボタン -->
+                                    <circle cx="20" cy="35" r="1.2" fill="#94a3b8"/>
                                 </svg>
                             </div>
                         `;
@@ -617,8 +639,8 @@
                         const customIcon = L.divIcon({
                             html: penlightHTML,
                             className: 'custom-div-icon',
-                            iconSize: [36, 46],
-                            iconAnchor: [18, 43] // ピンの先端（グリップの底）が地図の地点にピタッと刺さるように調整
+                            iconSize: [40, 54],
+                            iconAnchor: [20, 50] // ピンの先端（グリップの底）が地図に刺さるように微調整
                         });
 
                         const popupContent = `
@@ -777,7 +799,7 @@
                             <div class="text-[9px] text-sky-500 font-bold bg-white border border-sky-100 px-3 py-1.5 rounded-full shadow-sm">編集 ＞</div>
                         </div>`;
                 });
-                html += `</div>`;
+                html += `</div><button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>`;
                 this.showModal(html);
             },
 
