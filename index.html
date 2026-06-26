@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Oshikatsu Calendar</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- ✨ 魔法の手書きフォント「Zen Kurenaido」を追加しました！ -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Zen+Kurenaido&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -529,7 +528,6 @@
                             <div class="p-4 flex flex-col gap-3 bg-white">
                                 <div class="border-b border-dashed pb-2" style="border-color: ${color}50;">
                                     <div class="text-[10px] font-extrabold text-slate-400 tracking-widest uppercase">${o.englishName || 'NO NAME'}</div>
-                                    <!-- ✨ フォントを「Zen Kurenaido」に変更！ -->
                                     <div class="text-3xl text-slate-700 mt-1 leading-none tracking-wide" style="font-family: 'Zen Kurenaido', sans-serif;">${o.nickname || o.name}</div>
                                 </div>
                                 
@@ -540,7 +538,8 @@
                                     </div>
                                 </div>
                                 
-                                ${o.favoriteWork ? `<div class="mt-1 bg-slate-50 p-2.5 rounded-lg text-[10px] font-bold text-slate-600 border-l-4 leading-relaxed" style="border-color:${color}">🎬 ${o.favoriteWork.replace(/\n/g, '<br>')}</div>` : ''}
+                                <!-- ✨ メモ欄を「Zen Kurenaido」に変更し、サイズも読みやすく調整しました！ -->
+                                ${o.favoriteWork ? `<div class="mt-2 bg-slate-50 p-2.5 rounded-lg text-xs text-slate-700 border-l-4 leading-relaxed tracking-wide" style="border-color:${color}; font-family: 'Zen Kurenaido', sans-serif;">🎬 ${o.favoriteWork.replace(/\n/g, '<br>')}</div>` : ''}
                             </div>
                         </div>
                     `;
@@ -828,7 +827,8 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const MAX_SIZE = 300;
+                        // ✨【画質上限の引き上げ！】300pxから800pxに変更しました！
+                        const MAX_SIZE = 800;
                         let width = img.width; let height = img.height;
                         if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
                         else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
