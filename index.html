@@ -616,32 +616,37 @@
         }
     });
 
-    Object.values(groups).forEach(group => {
+    Object.values(groups).forEach((group, gIdx) => {
         group.sort((a,b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.startDate));
         const w = this.penlightSize, h = Math.round(w * 1.35);
         const uniqueOshis = [...new Set(group.map(e => e.oshiId))];
         
-        // 色の切り替えアニメーション（複数ならキーフレームを作成）
+        // ハートごとに一意なアニメーション名を作成
+        const animName = 'anim' + gIdx + Date.now();
         let keyframes = '';
-        if (uniqueOshis.length > 0) {
+        
+        if (uniqueOshis.length === 1) {
+            // 1人のときは固定色
+            const o = this.oshis.find(x => String(x.id) == String(uniqueOshis[0]));
+            keyframes = `0% { fill: ${o?.color || '#3b82f6'}; } 100% { fill: ${o?.color || '#3b82f6'}; }`;
+        } else {
+            // 複数のときは順番に切り替え
             const step = 100 / uniqueOshis.length;
             uniqueOshis.forEach((oid, idx) => {
                 const o = this.oshis.find(x => String(x.id) == String(oid));
-                const color = o?.color || '#3b82f6';
-                keyframes += `${idx * step}% { fill: ${color}; } `;
+                keyframes += `${idx * step}% { fill: ${o?.color || '#3b82f6'}; } `;
             });
-            keyframes += `100% { fill: ${this.oshis.find(x => x.id == uniqueOshis[0]).color}; }`;
+            keyframes += `100% { fill: ${this.oshis.find(x => x.id == uniqueOshis[0])?.color || '#3b82f6'}; }`;
         }
         
-        const animName = 'colorCycle' + Date.now();
         const penlightHTML = `
             <div class="penlight-wrapper relative" style="width: ${w}px; height: ${h}px;">
                 <style>
                     @keyframes ${animName} { ${keyframes} }
-                    .heart-glow { animation: ${animName} ${uniqueOshis.length * 3}s infinite ease-in-out; }
+                    .heart-glow-${gIdx} { animation: ${animName} ${uniqueOshis.length * 2}s infinite linear; }
                 </style>
                 <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 0px 4px rgba(0,0,0,0.3));">
-                    <path class="heart-glow" d="M20 28C20 23 6 16 6 9.5C6 4.5 10 2 14.5 2C17.5 2 19 3.5 20 5C21 3.5 22.5 2 25.5 2C30 2 34 4.5 34 9.5C34 16 20 23 20 28Z" 
+                    <path class="heart-glow-${gIdx}" d="M20 28C20 23 6 16 6 9.5C6 4.5 10 2 14.5 2C17.5 2 19 3.5 20 5C21 3.5 22.5 2 25.5 2C30 2 34 4.5 34 9.5C34 16 20 23 20 28Z" 
                           stroke="#ffffff" stroke-width="3" stroke-opacity="0.8"/>
                     <rect x="16" y="27" width="8" height="3" fill="#cbd5e1" stroke="#ffffff" stroke-width="1"/>
                     <path d="M16.5 30L15.5 46C15.5 48 16.5 49 20 49C23.5 49 24.5 48 24.5 46L23.5 30H16.5Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
