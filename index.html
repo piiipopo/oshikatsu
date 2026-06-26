@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Oshikatsu Calendar</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap" rel="stylesheet">
+    <!-- ✨ 魔法の手書きフォント「Klee One」を追加しました！ -->
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Klee+One:wght@600&display=swap" rel="stylesheet">
     <style>
         body { 
             font-family: 'M PLUS Rounded 1c', sans-serif; 
@@ -29,14 +30,13 @@
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
-    <!-- ヘッダー（スッキリ化！） -->
+    <!-- ヘッダー -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
         </h1>
         
         <div class="flex gap-1.5 hide-in-shot">
-            <!-- 設定と図鑑の入り口だけに！ -->
             <button onclick="window.app.toggleScreenshotMode()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">📸</button>
             <button onclick="window.app.openSettingModal()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center">⚙️</button>
             <button onclick="window.app.openAlbumModal()" class="w-8 h-8 bg-white/80 text-base rounded-full scale-active shadow-sm border border-slate-100 flex items-center justify-center relative overflow-hidden group">
@@ -93,7 +93,7 @@
         const App = {
             appTitle: localStorage.getItem('oshi_title') || 'Oshikatsu',
             baseYear: 0, baseMonth: 0, selectedDateStr: '', activeOshiFilter: 'all', 
-            oshis: JSON.parse(localStorage.getItem('oshi_list')) || [{ id: 'o1', name: '推し', color: '#7dd3fc', birthday: '' }],
+            oshis: JSON.parse(localStorage.getItem('oshi_list')) || [{ id: 'o1', name: '推し', color: '#7dd3fc', birthday: '', imagePos: 50 }],
             categories: JSON.parse(localStorage.getItem('cat_list')) || [{ id: 'c1', name: 'LIVE' }, { id: 'c2', name: 'チケット発売日' }, { id: 'c3', name: '当落発表' }],
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
             holidays: {},
@@ -498,7 +498,6 @@
             },
             closeModal: function() { document.getElementById('modal-layer').classList.add('hidden'); },
 
-            // ✨ 【Step 2】エモい推し図鑑（チェキ風カードスワイプ）の実装！
             openAlbumModal: function() {
                 if (this.oshis.length === 0) {
                     alert('推しが登録されていません！⚙️設定から登録してください。');
@@ -509,35 +508,32 @@
                         <h3 class="font-extrabold text-slate-700 flex items-center gap-2">📸 推し図鑑</h3>
                     </div>
                     
-                    <!-- 横スクロールコンテナ -->
                     <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-6 px-4 -mx-4 scroll-smooth">
                 `;
                 
                 this.oshis.forEach(o => {
                     const color = o.color || '#cbd5e1';
                     const bdayStr = o.birthday ? o.birthday.replace(/-/g, '/') : '未登録';
+                    const pos = o.imagePos || 50; // ✨ 調整した位置データを取得
                     
                     html += `
                         <div class="shrink-0 w-64 snap-center bg-white border border-slate-100 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden relative mb-2">
-                            <!-- 🎨 メンカラのマスキングテープ風 -->
                             <div class="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-4 opacity-70 -rotate-2 z-10 mix-blend-multiply" style="background-color: ${color}; box-shadow: inset 0 1px 3px rgba(255,255,255,0.5);"></div>
                             
-                            <!-- 📸 チェキ風 写真エリア -->
                             <div class="p-3 pb-0">
                                 <div class="aspect-square bg-slate-50 rounded-md flex items-center justify-center overflow-hidden border border-slate-200/50 relative">
-                                    ${o.image ? `<img src="${o.image}" class="w-full h-full object-cover">` : `<span class="text-5xl opacity-30" style="color:${color}">🩵</span>`}
+                                    <!-- ✨ 画像の位置（object-position）をスタイルで適用 -->
+                                    ${o.image ? `<img src="${o.image}" class="w-full h-full object-cover" style="object-position: ${pos}% ${pos}%;">` : `<span class="text-5xl opacity-30" style="color:${color}">🩵</span>`}
                                 </div>
                             </div>
                             
-                            <!-- 🖋️ 余白＆プロフィールエリア -->
                             <div class="p-4 flex flex-col gap-3 bg-white">
-                                <!-- 名前エリア -->
                                 <div class="border-b border-dashed pb-2" style="border-color: ${color}50;">
                                     <div class="text-[10px] font-extrabold text-slate-400 tracking-widest uppercase">${o.englishName || 'NO NAME'}</div>
-                                    <div class="text-2xl font-black text-slate-700 mt-1 leading-none" style="font-family: serif;">${o.nickname || o.name}</div>
+                                    <!-- ✨ フォントを「Klee One」に指定してエモい手書き風に！少しサイズも大きくしました -->
+                                    <div class="text-3xl font-bold text-slate-700 mt-1 leading-none tracking-wide" style="font-family: 'Klee One', cursive;">${o.nickname || o.name}</div>
                                 </div>
                                 
-                                <!-- データエリア -->
                                 <div class="flex justify-between items-center text-[10px] font-bold text-slate-500">
                                     <div class="flex items-center gap-1">🎂 ${bdayStr}</div>
                                     <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full" style="background-color: ${color}1A; color: ${color};">
@@ -545,7 +541,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- メモエリア -->
                                 ${o.favoriteWork ? `<div class="mt-1 bg-slate-50 p-2.5 rounded-lg text-[10px] font-bold text-slate-600 border-l-4 leading-relaxed" style="border-color:${color}">🎬 ${o.favoriteWork.replace(/\n/g, '<br>')}</div>` : ''}
                             </div>
                         </div>
@@ -679,7 +674,6 @@
                 } 
             },
 
-            // ✨ コントロールパネルに昇格した「設定メニュー」
             openSettingModal: function() {
                 this.showModal(`
                     <h3 class="font-bold mb-5 text-slate-700">⚙️ アプリ設定</h3>
@@ -746,7 +740,18 @@
                             <div>
                                 <label class="text-[8px] font-bold text-slate-400 block mb-1">推しの画像 (※自動で小さく圧縮されます)</label>
                                 <input type="file" accept="image/*" onchange="window.app.handleImageUpload(event)" class="w-full text-[10px] file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-sky-50 file:text-sky-600 hover:file:bg-sky-100">
-                                <img id="o-img-preview" src="" class="hidden w-12 h-12 object-cover rounded-lg mt-2 border border-slate-200 shadow-sm">
+                                
+                                <!-- ✨ スライダー付きのプレビュー画面を追加！ -->
+                                <div id="o-img-preview-container" class="hidden mt-2 w-24 h-24 rounded-lg overflow-hidden border border-slate-200 shadow-sm mx-auto relative">
+                                    <img id="o-img-preview" src="" class="w-full h-full object-cover" style="object-position: 50% 50%;">
+                                </div>
+                                <div id="o-img-pos-container" class="hidden mt-2 bg-white p-2 rounded-lg border border-slate-100">
+                                    <label class="text-[8px] font-bold text-slate-400 mb-1 flex justify-between">
+                                        <span>上下・左右の位置調整</span>
+                                        <span id="o-img-pos-val">50%</span>
+                                    </label>
+                                    <input type="range" id="o-img-pos" min="0" max="100" value="50" class="w-full accent-sky-400" oninput="window.app.updateImagePos(this.value)">
+                                </div>
                                 <input type="hidden" id="o-img-base64" value="">
                             </div>
                         </div>
@@ -765,7 +770,7 @@
                     html += `
                         <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
                             <div class="flex items-center gap-2">
-                                ${o.image ? `<img src="${o.image}" class="w-6 h-6 rounded-full object-cover border border-slate-100">` : `<div class="w-4 h-4 rounded-full" style="background-color:${o.color}"></div>`}
+                                ${o.image ? `<img src="${o.image}" class="w-6 h-6 rounded-full object-cover border border-slate-100" style="object-position: ${o.imagePos || 50}% ${o.imagePos || 50}%;">` : `<div class="w-4 h-4 rounded-full" style="background-color:${o.color}"></div>`}
                                 <span class="text-xs font-extrabold text-slate-600">${o.name}</span>
                             </div>
                             <div class="flex items-center gap-1 shrink-0">
@@ -794,7 +799,8 @@
                         englishName: document.getElementById('o-eng').value,
                         nickname: document.getElementById('o-nick').value,
                         favoriteWork: document.getElementById('o-work').value,
-                        image: document.getElementById('o-img-base64').value
+                        image: document.getElementById('o-img-base64').value,
+                        imagePos: document.getElementById('o-img-pos').value // ✨ 位置データを保存！
                     };
                     
                     if (id) {
@@ -809,6 +815,12 @@
                     this.renderCountdowns(); 
                     this.renderCalendar();
                 };
+            },
+
+            // ✨ スライダーを動かした時にプレビュー画像をグリグリ動かす関数
+            updateImagePos: function(val) {
+                document.getElementById('o-img-pos-val').textContent = val + '%';
+                document.getElementById('o-img-preview').style.objectPosition = val + '% ' + val + '%';
             },
 
             handleImageUpload: function(event) {
@@ -829,8 +841,12 @@
                         const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                         
                         document.getElementById('o-img-preview').src = dataUrl;
-                        document.getElementById('o-img-preview').classList.remove('hidden');
+                        document.getElementById('o-img-preview').style.objectPosition = '50% 50%';
+                        document.getElementById('o-img-preview-container').classList.remove('hidden');
+                        document.getElementById('o-img-pos-container').classList.remove('hidden');
                         document.getElementById('o-img-base64').value = dataUrl;
+                        document.getElementById('o-img-pos').value = 50;
+                        document.getElementById('o-img-pos-val').textContent = '50%';
                     };
                     img.src = e.target.result;
                 };
@@ -849,11 +865,18 @@
                 document.getElementById('o-work').value = o.favoriteWork || '';
                 document.getElementById('o-img-base64').value = o.image || '';
                 
+                const pos = o.imagePos || 50; // 保存されている位置データを取得
+                document.getElementById('o-img-pos').value = pos;
+                document.getElementById('o-img-pos-val').textContent = pos + '%';
+
                 if(o.image) {
                     document.getElementById('o-img-preview').src = o.image;
-                    document.getElementById('o-img-preview').classList.remove('hidden');
+                    document.getElementById('o-img-preview').style.objectPosition = pos + '% ' + pos + '%';
+                    document.getElementById('o-img-preview-container').classList.remove('hidden');
+                    document.getElementById('o-img-pos-container').classList.remove('hidden');
                 } else {
-                    document.getElementById('o-img-preview').classList.add('hidden');
+                    document.getElementById('o-img-preview-container').classList.add('hidden');
+                    document.getElementById('o-img-pos-container').classList.add('hidden');
                 }
                 
                 document.getElementById('o-submit-btn').textContent = '更新する';
