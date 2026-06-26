@@ -619,27 +619,25 @@
     Object.values(groups).forEach(group => {
         group.sort((a,b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.startDate));
         
-        const w = this.penlightSize, h = Math.round(w * 1.35), sw = this.penlightStroke;
+        const w = this.penlightSize, h = Math.round(w * 1.35);
         const uniqueOshis = [...new Set(group.map(e => e.oshiId))];
         
-        // ✨ ドームの中に「推し色の粒」を配置するSVG
-        let dotsHTML = '';
-        uniqueOshis.forEach((oid, idx) => {
+        // 縁（リング）の多重描画ロジック
+        let ringsHTML = '';
+        uniqueOshis.slice(0, 3).forEach((oid, idx) => {
             const o = this.oshis.find(x => String(x.id) == String(oid));
             const color = o?.color || '#3b82f6';
-            // 30x30のドーム内での配置（粒の数で位置を調整）
-            const cx = uniqueOshis.length === 1 ? 20 : (idx === 0 ? 14 : (idx === 1 ? 26 : 20));
-            const cy = uniqueOshis.length === 1 ? 15 : (idx === 2 ? 22 : 15);
-            dotsHTML += `<circle cx="${cx}" cy="${cy}" r="5" fill="${color}" stroke="white" stroke-width="0.5"/>`;
+            const strokeW = 4 - idx; // 内側から順に細く
+            ringsHTML += `<path d="M7 18C7 9 13 4 20 4C27 4 33 9 33 18V28H7V18Z" fill="none" stroke="${color}" stroke-width="${strokeW}" stroke-opacity="${0.8 - idx*0.2}"/>`;
         });
-        
+
         const penlightHTML = `
             <div class="penlight-wrapper relative" style="width: ${w}px; height: ${h}px;">
                 <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.3));">
-                    <path d="M6 18C6 9 12 3 20 3C28 3 34 9 34 18V28H6V18Z" fill="#ffffff" fill-opacity="0.5" stroke="#ffffff" stroke-width="${sw}"/>
-                    ${dotsHTML}
-                    <rect x="16" y="28" width="8" height="3" fill="#cbd5e1" stroke="#ffffff" stroke-width="1"/>
-                    <path d="M16.5 31L15.5 47C15.5 49 16.5 50 20 50C23.5 50 24.5 49 24.5 47L23.5 31H16.5Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+                    <path d="M6 18C6 9 12 3 20 3C28 3 34 9 34 18V28H6V18Z" fill="#ffffff" fill-opacity="0.3"/>
+                    ${ringsHTML}
+                    <rect x="16" y="28" width="8" height="3" fill="#cbd5e1" stroke="#ffffff" stroke-width="0.5"/>
+                    <path d="M16.5 31L15.5 47C15.5 49 16.5 50 20 50C23.5 50 24.5 49 24.5 47L23.5 31H16.5Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="0.5"/>
                 </svg>
             </div>
         `;
@@ -649,11 +647,9 @@
         }).addTo(this.mapInstance);
 
         marker.bindPopup(`
-            <div class="text-center font-bold p-1">
-                <div class="text-[11px] text-slate-800 border-b pb-1 mb-1 font-black underline underline-offset-4 decoration-sky-300">
-                    ${group[0].location || '聖地'}
-                </div>
-                ${group.map(ev => `<div class="text-[9px] text-slate-600 mb-0.5">${ev.startDate.replace(/-/g, '/')} ${ev.name}</div>`).join('')}
+            <div class="text-center font-bold p-2">
+                <div class="text-xs text-slate-800 border-b pb-1 mb-1 font-black">${group[0].location}</div>
+                ${group.map(ev => `<div class="text-[10px] text-slate-600">${ev.startDate.replace(/-/g, '/')}：${ev.name}</div>`).join('')}
             </div>
         `);
     });
