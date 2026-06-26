@@ -722,51 +722,39 @@
 
                 document.getElementById('ev-form').onsubmit = async (e) => {
     e.preventDefault();
-    document.getElementById('ev-submit-btn').textContent = '住所を探しています...⏳';
-    document.getElementById('ev-submit-btn').disabled = true;
-
+    document.getElementById('ev-submit-btn').textContent = '聖地を検索中...';
+    
     const loc = document.getElementById('ev-loc').value.trim();
     const isMapPin = document.getElementById('ev-mappin').checked;
     
-    let latitude = ev.lat;
-    let longitude = ev.lng;
+    let lat = ev.lat, lng = ev.lng;
 
-    if (isMapPin && loc && (loc !== ev.location || !latitude)) {
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
-            if (res.ok) {
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    latitude = parseFloat(data[0].lat);
-                    longitude = parseFloat(data[0].lon);
-                }
-            }
-        } catch (err) { console.log('位置情報検索エラー'); }
+    if (isMapPin && loc) {
+        // ✨ 特例リスト：検索がズレやすい聖地を強制補正！
+        const specialSpots = {
+            '帝国劇場': { lat: 35.6763, lng: 139.7618 },
+            '横浜アリーナ': { lat: 35.5113, lng: 139.6133 },
+            // ここに他の聖地も増やせます！
+        };
+
+        if (specialSpots[loc]) {
+            lat = specialSpots[loc].lat;
+            lng = specialSpots[loc].lng;
+        } else {
+            // リストにない場合は通常検索
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
+                const d = await res.json();
+                if (d.length > 0) { lat = parseFloat(d[0].lat); lng = parseFloat(d[0].lon); }
+            } catch (err) {}
+        }
     }
 
-    const newEv = {
-        id: ev.id || 'ev' + Date.now(),
-        startDate: document.getElementById('ev-start').value,
-        endDate: document.getElementById('ev-end').value,
-        startTime: document.getElementById('ev-stime').value,
-        endTime: document.getElementById('ev-etime').value,
-        name: document.getElementById('ev-name').value,
-        location: loc,
-        oshiId: document.getElementById('ev-oshi').value,
-        categoryId: document.getElementById('ev-cat').value,
-        repeat: document.getElementById('ev-repeat').value,
-        isCountdown: document.getElementById('ev-count').checked,
-        isMapPin: isMapPin,
-        lat: latitude,
-        lng: longitude,
-        url: document.getElementById('ev-url').value,
-        memo: document.getElementById('ev-memo').value
-    };
+    const newEv = { ...ev, name: document.getElementById('ev-name').value, startDate: document.getElementById('ev-start').value, endDate: document.getElementById('ev-end').value, location: loc, isMapPin, lat, lng };
+    if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
+    else this.events.push(newEv);
     
-    if (ev.id) window.app.events = window.app.events.map(x => String(x.id) === String(ev.id) ? newEv : x);
-    else window.app.events.push(newEv);
-    
-    window.app.save(); window.app.closeModal(); window.app.renderCountdowns(); window.app.renderCalendar();
+    this.save(); this.closeModal(); this.renderCalendar();
 };
             },
 
