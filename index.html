@@ -125,7 +125,6 @@
             holidays: {},
             mapInstance: null,
 
-            // ✨ 保存されたペンライトのカスタマイズデータを読み込む（初期値：サイズ40、フチ太さ2）
             penlightSize: localStorage.getItem('pl_size') !== null ? parseInt(localStorage.getItem('pl_size')) : 40,
             penlightStroke: localStorage.getItem('pl_stroke') !== null ? parseInt(localStorage.getItem('pl_stroke')) : 2,
             
@@ -187,7 +186,6 @@
                 localStorage.setItem('oshi_list', JSON.stringify(this.oshis)); 
                 localStorage.setItem('cat_list', JSON.stringify(this.categories)); 
                 localStorage.setItem('oshi_events', JSON.stringify(this.events)); 
-                // ✨ ペンライト設定も保存
                 localStorage.setItem('pl_size', this.penlightSize);
                 localStorage.setItem('pl_stroke', this.penlightStroke);
             },
@@ -612,49 +610,84 @@
                     attribution: '&copy; OpenStreetMap'
                 }).addTo(this.mapInstance);
 
+                // ✨ 同じ場所（緯度・経度）の予定をグループ化する魔法
+                const groupedEvents = {};
                 this.events.forEach(ev => {
                     if (ev.isMapPin && ev.lat && ev.lng) {
-                        const o = this.oshis.find(x => String(x.id) === String(ev.oshiId));
-                        const color = o?.color || '#3b82f6';
-                        
-                        // ✨ 保存されているペンライトの設定サイズを呼び出す
-                        const w = this.penlightSize;
-                        const h = Math.round(w * 1.35); // 幅に対して高さが自動で綺麗なバランスになります
-                        const anchorX = Math.round(w / 2);
-                        const anchorY = Math.round(h * (50 / 54));
-                        const sw = this.penlightStroke;
-                        
-                        const penlightHTML = `
-                            <div class="penlight-wrapper flex flex-col items-center justify-center relative" style="width: ${w}px; height: ${h}px;">
-                                <div class="penlight-glow" style="--glow-color: ${color}; background-color: ${color};"></div>
-                                <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10" style="filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.3));">
-                                    <path d="M20 28C20 23 6 16 6 9.5C6 4.5 10 2 14.5 2C17.5 2 19 3.5 20 5C21 3.5 22.5 2 25.5 2C30 2 34 4.5 34 9.5C34 16 20 23 20 28Z" fill="${color}" stroke="#ffffff" stroke-width="${sw}"/>
-                                    <path d="M9.5 9.5C9.5 6 12 4 14.5 4" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.8"/>
-                                    <rect x="16" y="27" width="8" height="3" fill="#cbd5e1" stroke="#ffffff" stroke-width="1"/>
-                                    <path d="M16.5 30L15.5 46C15.5 48 16.5 49 20 49C23.5 49 24.5 48 24.5 46L23.5 30H16.5Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
-                                    <circle cx="20" cy="35" r="1.2" fill="#94a3b8"/>
-                                </svg>
-                            </div>
-                        `;
-                        
-                        const customIcon = L.divIcon({
-                            html: penlightHTML,
-                            className: 'custom-div-icon',
-                            iconSize: [w, h],
-                            iconAnchor: [anchorX, anchorY]
-                        });
-
-                        const popupContent = `
-                            <div class="text-center font-bold p-1">
-                                <div class="text-xs text-slate-700">${ev.name}</div>
-                                <div class="text-[9px] text-slate-400 mt-0.5">${ev.startDate.replace(/-/g, '/')}</div>
-                            </div>
-                        `;
-
-                        L.marker([ev.lat, ev.lng], { icon: customIcon })
-                         .addTo(this.mapInstance)
-                         .bindPopup(popupContent);
+                        // 場所のブレを吸収するため、小数点第4位（約10m単位）で丸めてキーにする
+                        const key = `${ev.lat.toFixed(4)}_${ev.lng.toFixed(4)}`;
+                        if (!groupedEvents[key]) groupedEvents[key] = [];
+                        groupedEvents[key].push(ev);
                     }
+                });
+
+                Object.values(groupedEvents).forEach(group => {
+                    // 日付順（古い順）に並び替え
+                    group.sort((a,b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.startDate));
+                    
+                    // ピンの色はグループ内の「一番最初」のイベントの推しカラーにする
+                    const mainEv = group[0];
+                    const o = this.oshis.find(x => String(x.id) === String(mainEv.oshiId));
+                    const color = o?.color || '#3b82f6';
+                    
+                    const w = this.penlightSize;
+                    const h = Math.round(w * 1.35); 
+                    const anchorX = Math.round(w / 2);
+                    const anchorY = Math.round(h * (50 / 54));
+                    const sw = this.penlightStroke;
+                    
+                    // ✨ 複数ある場合は右上に「件数バッジ」をつける
+                    let badgeHTML = '';
+                    if (group.length > 1) {
+                        badgeHTML = `<div class="absolute -top-1 -right-1 bg-slate-700 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center font-bold z-20 shadow-sm border-2 border-white">${group.length}</div>`;
+                    }
+
+                    const penlightHTML = `
+                        <div class="penlight-wrapper flex flex-col items-center justify-center relative" style="width: ${w}px; height: ${h}px;">
+                            ${badgeHTML}
+                            <div class="penlight-glow" style="--glow-color: ${color}; background-color: ${color};"></div>
+                            <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10" style="filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.3));">
+                                <path d="M20 28C20 23 6 16 6 9.5C6 4.5 10 2 14.5 2C17.5 2 19 3.5 20 5C21 3.5 22.5 2 25.5 2C30 2 34 4.5 34 9.5C34 16 20 23 20 28Z" fill="${color}" stroke="#ffffff" stroke-width="${sw}"/>
+                                <path d="M9.5 9.5C9.5 6 12 4 14.5 4" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+                                <rect x="16" y="27" width="8" height="3" fill="#cbd5e1" stroke="#ffffff" stroke-width="1"/>
+                                <path d="M16.5 30L15.5 46C15.5 48 16.5 49 20 49C23.5 49 24.5 48 24.5 46L23.5 30H16.5Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+                                <circle cx="20" cy="35" r="1.2" fill="#94a3b8"/>
+                            </svg>
+                        </div>
+                    `;
+                    
+                    const customIcon = L.divIcon({
+                        html: penlightHTML,
+                        className: 'custom-div-icon',
+                        iconSize: [w, h],
+                        iconAnchor: [anchorX, anchorY]
+                    });
+
+                    // ✨ ポップアップの中身を「リスト化」して全部表示する
+                    let popupList = group.map(ev => {
+                        const evOshi = this.oshis.find(x => String(x.id) === String(ev.oshiId));
+                        const evColor = evOshi?.color || '#cbd5e1';
+                        return `
+                            <div class="border-b border-slate-100 pb-1.5 mb-1.5 last:border-0 last:pb-0 last:mb-0">
+                                <div class="text-[9px] text-slate-400 font-bold mb-0.5 flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full inline-block" style="background-color:${evColor}"></span>
+                                    ${ev.startDate.replace(/-/g, '/')}
+                                </div>
+                                <div class="text-xs text-slate-700 font-extrabold leading-tight">${ev.name}</div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    const popupContent = `
+                        <div class="p-1 max-h-32 overflow-y-auto w-36">
+                            ${group.length > 1 ? `<div class="text-[8px] bg-slate-100 text-slate-500 rounded px-1.5 py-0.5 mb-2 font-bold inline-block">📍 ${group.length}件の予定</div>` : ''}
+                            ${popupList}
+                        </div>
+                    `;
+
+                    L.marker([mainEv.lat, mainEv.lng], { icon: customIcon })
+                     .addTo(this.mapInstance)
+                     .bindPopup(popupContent);
                 });
             },
 
@@ -823,7 +856,6 @@
                         </button>
                     </div>
 
-                    <!-- ✨ ペンライトカスタマイザー機能を追加！ -->
                     <div class="bg-sky-50 p-4 rounded-2xl border border-sky-100 mb-6">
                         <h4 class="text-xs font-bold text-slate-600 mb-2 flex items-center gap-1">📍 マップピンのカスタマイズ</h4>
                         <div class="flex justify-center mb-4 h-20 items-center">
@@ -854,10 +886,9 @@
                     
                     <button onclick="window.app.closeModal()" class="w-full bg-slate-200 py-3.5 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
                 `);
-                this.updatePenlightPreview(); // 初期プレビューを描画
+                this.updatePenlightPreview(); 
             },
 
-            // ✨ カスタマイズのリアルタイムプレビューを更新する魔法
             updatePenlightPreview: function() {
                 const sliderSize = document.getElementById('pl-size-slider');
                 const sliderStroke = document.getElementById('pl-stroke-slider');
@@ -870,7 +901,7 @@
                 document.getElementById('pl-stroke-val').textContent = sw;
 
                 const h = Math.round(w * 1.35);
-                const color = '#f43f5e'; // プレビュー用の推しカラー（かわいい赤色）
+                const color = '#f43f5e'; 
 
                 const html = `
                     <div class="penlight-wrapper flex flex-col items-center justify-center relative" style="width: ${w}px; height: ${h}px;">
@@ -887,7 +918,6 @@
                 document.getElementById('pl-preview-container').innerHTML = html;
             },
 
-            // ✨ ベストバランスの数字を保存する魔法
             savePenlightSettings: function() {
                 this.penlightSize = parseInt(document.getElementById('pl-size-slider').value);
                 this.penlightStroke = parseInt(document.getElementById('pl-stroke-slider').value);
