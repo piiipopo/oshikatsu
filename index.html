@@ -28,23 +28,20 @@
         
         .day-cell { position: relative; overflow: visible; }
 
-        /* ✨ ペンライトピンのアニメーションと光のエフェクト */
-        .penlight-icon { transition: all 0.3s; }
-        .penlight-glow {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            animation: pulse-glow 2s infinite;
+        /* ✨ 懐中電灯よサラバ！手作りのハートペンライトがぽわんと呼吸するように光る魔法 */
+        @keyframes penlight-pulse {
+            0%, 100% { transform: scale(0.92); filter: drop-shadow(0 0 4px var(--glow-color)); opacity: 0.85; }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 16px var(--glow-color)); opacity: 1; }
         }
-        @keyframes pulse-glow {
-            0% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 4px var(--glow-color); }
-            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 14px var(--glow-color), 0 0 20px var(--glow-color); }
-            100% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 4px var(--glow-color); }
+        .penlight-heart-element {
+            animation: penlight-pulse 2s infinite ease-in-out;
+            transform-origin: 18px 14px;
         }
     </style>
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
+    <!-- ヘッダー -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
@@ -62,13 +59,16 @@
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
+        <!-- カウントダウン -->
         <div id="countdown-container"></div>
 
+        <!-- 推しフィルター ＆ 予定一覧 -->
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
         </div>
 
+        <!-- カレンダー本体 -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
@@ -83,6 +83,7 @@
             <div id="calendar-container" class="space-y-8"></div>
         </section>
 
+        <!-- Eventsリスト -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="selected-date-title" class="text-sm font-bold text-slate-500">Events</h3>
@@ -108,7 +109,7 @@
             categories: JSON.parse(localStorage.getItem('cat_list')) || [{ id: 'c1', name: 'LIVE' }, { id: 'c2', name: 'チケット発売日' }, { id: 'c3', name: '当落発表' }],
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
             holidays: {},
-            mapInstance: null, // 地図オブジェクト用
+            mapInstance: null,
             
             getLightColor: function(hex) {
                 if(!hex) return '#f1f5f9';
@@ -568,7 +569,6 @@
                 this.showModal(html);
             },
 
-            // ✨ 【Step 4：推し活聖地マップ】モーダルの実装
             openMapModal: function() {
                 let html = `
                     <div class="flex justify-between items-center mb-4">
@@ -581,42 +581,46 @@
                 `;
                 this.showModal(html);
                 
-                // モーダルが画面に表示された直後に地図をレンダリングする
                 setTimeout(() => { this.initMap(); }, 200);
             },
 
-            // ✨ 地図の初期化とペンライトピンのプロット
             initMap: function() {
-                // 日本の中心付近（名古屋あたり）を初期位置にする
                 this.mapInstance = L.map('map-container').setView([35.5, 137.5], 5);
                 
-                // 可愛いデザインの無料地図タイル（OpenStreetMap）を読み込む
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap'
                 }).addTo(this.mapInstance);
 
-                // マップピンがONになっている予定を地図にプロットしていく
                 this.events.forEach(ev => {
                     if (ev.isMapPin && ev.lat && ev.lng) {
                         const o = this.oshis.find(x => String(x.id) === String(ev.oshiId));
                         const color = o?.color || '#3b82f6';
                         
-                        // 🔦 メンカラで光り輝くペンライトピンのHTMLを作る
+                        // ✨【懐中電灯から大進化！】SVGの力で、お写真通りの「ハート型ペンライト」を作りました！
+                        // メンカラに合わせてハートが美しく染まり、優しく波打つように発光(アニメーション)します。
                         const penlightHTML = `
-                            <div class="flex flex-col items-center penlight-icon">
-                                <span class="text-xl -mb-1 filter drop-shadow" style="user-select:none;">🔦</span>
-                                <div class="penlight-glow" style="--glow-color: ${color}; background-color: ${color};"></div>
+                            <div class="flex flex-col items-center justify-center" style="--glow-color: ${color}; width: 36px; height: 46px; overflow: visible;">
+                                <svg width="36" height="46" viewBox="0 0 36 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow: visible;">
+                                    <!-- ぽわんと発光する立体的なハートヘッド部分 -->
+                                    <path class="penlight-heart-element" d="M18 25C18 21 6 15 6 9C6 4.5 9.5 2 13.5 2C16 2 17.2 3.5 18 4.5C18.8 3.5 20 2 22.5 2C26.5 2 30 4.5 30 9C30 15 18 21 18 25Z" 
+                                          fill="${color}" />
+                                    <!-- スティックのシルバーのジョイント金具 -->
+                                    <rect x="15" y="24" width="6" height="3" fill="#94a3b8" rx="0.5"/>
+                                    <!-- スッキリ白い上品な持ち手グリップ -->
+                                    <rect x="14" y="27" width="8" height="16" fill="#ffffff" rx="2" stroke="#cbd5e1" stroke-width="1"/>
+                                    <!-- 中央のちっちゃなON/OFFスイッチボタン -->
+                                    <circle cx="18" cy="32" r="1" fill="#cbd5e1"/>
+                                </svg>
                             </div>
                         `;
                         
                         const customIcon = L.divIcon({
                             html: penlightHTML,
                             className: 'custom-div-icon',
-                            iconSize: [30, 42],
-                            iconAnchor: [15, 30]
+                            iconSize: [36, 46],
+                            iconAnchor: [18, 43] // ピンの先端（グリップの底）が地図の地点にピタッと刺さるように調整
                         });
 
-                        // ユーザーの要望通り「イベント名」と「日付」だけをシンプルにポップアップに！
                         const popupContent = `
                             <div class="text-center font-bold p-1">
                                 <div class="text-xs text-slate-700">${ev.name}</div>
@@ -631,7 +635,6 @@
                 });
             },
 
-            // ✨ 【Step 3】予定フォームのパワーアップ（チェックボックス＆自動ジオコーディング）
             openEventModal: function(id = null) {
                 const ev = this.events.find(e => String(e.id) === String(id)) || { 
                     name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
@@ -700,7 +703,6 @@
                     let latitude = ev.lat;
                     let longitude = ev.lng;
 
-                    // ピンがONで、場所が入力されていて、かつ場所が新しく変更された場合はジオコーディングを行う
                     if (isMapPin && loc && (loc !== ev.location || !latitude)) {
                         try {
                             const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
@@ -775,15 +777,8 @@
                             <div class="text-[9px] text-sky-500 font-bold bg-white border border-sky-100 px-3 py-1.5 rounded-full shadow-sm">編集 ＞</div>
                         </div>`;
                 });
-                html += `</div><button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>`;
+                html += `</div>`;
                 this.showModal(html);
-            },
-
-            deleteEvent: function(id) { 
-                if (confirm('予定を削除しますか？')) { 
-                    this.events = this.events.filter(x => String(x.id) !== String(id)); 
-                    this.save(); this.closeModal(); this.renderCountdowns(); this.renderCalendar(); 
-                } 
             },
 
             openSettingModal: function() {
