@@ -774,6 +774,9 @@ document.getElementById('ev-form').onsubmit = async (e) => {
     const btn = document.getElementById('ev-submit-btn');
     btn.textContent = '保存中...';
     
+    <input type="text" id="ev-hotel" value="${ev.hotel || ''}" placeholder="🏨 宿泊施設・ホテル名 (任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+    <input type="text" id="ev-loc" value="${ev.location}" placeholder="📍 場所・住所 (例: 横浜アリーナ / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+
     const loc = document.getElementById('ev-loc').value.trim();
     const isMapPin = document.getElementById('ev-mappin').checked;
     
@@ -802,6 +805,7 @@ document.getElementById('ev-form').onsubmit = async (e) => {
         startTime: document.getElementById('ev-stime') ? document.getElementById('ev-stime').value : (ev.startTime || ''),
         endTime: document.getElementById('ev-etime') ? document.getElementById('ev-etime').value : (ev.endTime || ''),
         name: document.getElementById('ev-name').value, 
+        hotel: document.getElementById('ev-hotel').value,
         location: loc, 
         oshiId: document.getElementById('ev-oshi').value, // ✨グループや個人の紐づけもバッチリ保存！
         categoryId: document.getElementById('ev-cat') ? document.getElementById('ev-cat').value : (ev.categoryId || ''),
