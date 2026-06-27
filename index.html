@@ -782,14 +782,6 @@ document.getElementById('ev-form').onsubmit = async (e) => {
     this.renderCalendar();
     if (typeof this.renderCountdowns === 'function') this.renderCountdowns();
 };
-    
-    if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
-    else this.events.push(newEv);
-    
-    this.save(); 
-    this.closeModal(); 
-    this.renderCalendar();
-};
             },
 
             openMonthPicker: function() {
