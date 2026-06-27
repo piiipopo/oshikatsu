@@ -148,7 +148,24 @@
 
             penlightSize: localStorage.getItem('pl_size') !== null ? parseInt(localStorage.getItem('pl_size')) : 40,
             penlightStroke: localStorage.getItem('pl_stroke') !== null ? parseInt(localStorage.getItem('pl_stroke')) : 2,
-            
+                        // 🌟 ボトムシートの開閉用
+            toggleBottomSheet: function(isOpen) {
+                const sheet = document.getElementById('bottom-sheet');
+                const icon = document.getElementById('bs-toggle-icon');
+                // 引数がない場合は、現在の状態を見て反転させる
+                if (isOpen === undefined) isOpen = sheet.classList.contains('translate-y-[calc(100%-48px)]');
+                
+                if (isOpen) {
+                    // 開くとき
+                    sheet.classList.remove('translate-y-[calc(100%-48px)]');
+                    icon.textContent = '▼';
+                } else {
+                    // 閉じるとき
+                    sheet.classList.add('translate-y-[calc(100%-48px)]');
+                    icon.textContent = '▲';
+                }
+            },
+
             getLightColor: function(hex) {
                 if(!hex) return '#f1f5f9';
                 hex = hex.replace('#', '');
