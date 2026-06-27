@@ -1251,7 +1251,33 @@ document.getElementById('ev-form').onsubmit = async (e) => {
                 } catch(e) { alert('データ形式が正しくありません'); }
             },
 
-            selectDate: function(ds) { this.selectedDateStr = ds; this.renderCalendar(); },
+                        selectDate: function(ds) {
+                this.selectedDateStr = ds;
+                
+                // 1. 日付の表示を更新
+                document.getElementById('bs-date-display').textContent = ds + ' の予定';
+                
+                // 2. その日の予定をフィルターして表示
+                const dailyEvents = this.events.filter(e => {
+                    const start = e.startDate;
+                    const end = e.endDate || e.startDate;
+                    return ds >= start && ds <= end;
+                });
+                
+                const container = document.getElementById('daily-events-container');
+                container.innerHTML = dailyEvents.map(e => `
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div class="text-xs font-bold text-slate-400">${e.startTime || '---'}</div>
+                        <div class="font-bold text-slate-700">${e.name}</div>
+                    </div>
+                `).join('') || '<p class="text-xs text-slate-400 font-bold">予定はありません</p>';
+
+                // 3. ボトムシートを開く（スッと上に！）
+                this.toggleBottomSheet(true);
+                
+                this.renderCalendar();
+            },
+
             shiftMonth: function(dir) { 
                 this.baseMonth += dir; 
                 if (this.baseMonth < 0) { this.baseMonth = 11; this.baseYear--; } 
