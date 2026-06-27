@@ -797,26 +797,29 @@ document.getElementById('ev-form').onsubmit = async (e) => {
         } catch (err) { console.log('検索エラー'); }
     }
 
-    // 3. 画面の入力内容（推しIDなど）を漏れなくしっかり集めて保存！
-    const newEv = { 
-        id: ev.id || 'ev' + Date.now(),
-        startDate: document.getElementById('ev-start').value,
-        endDate: document.getElementById('ev-end').value,
-        startTime: document.getElementById('ev-stime') ? document.getElementById('ev-stime').value : (ev.startTime || ''),
-        endTime: document.getElementById('ev-etime') ? document.getElementById('ev-etime').value : (ev.endTime || ''),
-        name: document.getElementById('ev-name').value, 
-        location: loc, 
-        hotel: document.getElementById('ev-hotel').value,
-        oshiId: document.getElementById('ev-oshi').value, // ✨グループや個人の紐づけもバッチリ保存！
-        categoryId: document.getElementById('ev-cat') ? document.getElementById('ev-cat').value : (ev.categoryId || ''),
-        repeat: document.getElementById('ev-repeat') ? document.getElementById('ev-repeat').value : (ev.repeat || 'none'),
-        isCountdown: document.getElementById('ev-count') ? document.getElementById('ev-count').checked : (ev.isCountdown || false),
-        isMapPin: isMapPin, 
-        lat: lat, 
-        lng: lng,
-        url: document.getElementById('ev-url').value,
-        memo: document.getElementById('ev-memo').value
-    };
+// 3. 画面の入力内容をしっかり集めて保存！
+const newEv = { 
+    id: ev.id || 'ev' + Date.now(),
+    startDate: document.getElementById('ev-start').value,
+    endDate: document.getElementById('ev-end').value,
+    startTime: document.getElementById('ev-stime') ? document.getElementById('ev-stime').value : (ev.startTime || ''),
+    endTime: document.getElementById('ev-etime') ? document.getElementById('ev-etime').value : (ev.endTime || ''),
+    name: document.getElementById('ev-name').value, 
+    location: loc, 
+    hotel: document.getElementById('ev-hotel').value, // ホテル名
+    oshiId: document.getElementById('ev-oshi').value,
+    categoryId: document.getElementById('ev-cat') ? document.getElementById('ev-cat').value : (ev.categoryId || ''),
+    repeat: document.getElementById('ev-repeat') ? document.getElementById('ev-repeat').value : (ev.repeat || 'none'),
+    isCountdown: document.getElementById('ev-count') ? document.getElementById('ev-count').checked : (ev.isCountdown || false),
+    isMapPin: isMapPin, 
+    lat: lat, 
+    lng: lng,
+    // ★ここからホテルの緯度経度をしっかり拾う！
+    hotelLat: document.getElementById('ev-hotel-lat') ? document.getElementById('ev-hotel-lat').value : (ev.hotelLat || null),
+    hotelLng: document.getElementById('ev-hotel-lng') ? document.getElementById('ev-hotel-lng').value : (ev.hotelLng || null),
+    url: document.getElementById('ev-url').value,
+    memo: document.getElementById('ev-memo').value
+};
     
     if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
     else this.events.push(newEv);
