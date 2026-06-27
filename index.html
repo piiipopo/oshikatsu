@@ -724,43 +724,54 @@
                 `;
                 this.showModal(html);
 
-                document.getElementById('ev-form').onsubmit = async (e) => {
+                // フォームを開いた時に、保存済みの座標を表示する（onsubmitの直前に置くと安全です！）
+document.getElementById('ev-lat').value = ev.lat || '';
+document.getElementById('ev-lng').value = ev.lng || '';
+
+// ここから下が上書きするメインの処理です！
+document.getElementById('ev-form').onsubmit = async (e) => {
     e.preventDefault();
-    document.getElementById('ev-submit-btn').textContent = '聖地を検索中...';
+    const btn = document.getElementById('ev-submit-btn');
+    btn.textContent = '保存中...';
     
     const loc = document.getElementById('ev-loc').value.trim();
     const isMapPin = document.getElementById('ev-mappin').checked;
     
-    let lat = ev.lat, lng = ev.lng;
+    // 1. まず手入力の緯度経度を取得する
+    let lat = parseFloat(document.getElementById('ev-lat').value);
+    let lng = parseFloat(document.getElementById('ev-lng').value);
 
-    if (isMapPin && loc) {
-        // ✨ 特例リスト：検索がズレやすい聖地を強制補正！
-        const specialSpots = {
-            '帝国劇場': { lat: 35.6763, lng: 139.7618 },
-            '横浜アリーナ': { lat: 35.5113, lng: 139.6133 },
-            'シアター1010': { lat: 35.7505, lng: 139.8055 },
-            'クレインズ6142': { lat: 35.6663, lng: 139.7061 },
-            // ここに他の聖地も増やせます！
-        };
-
-        if (specialSpots[loc]) {
-            lat = specialSpots[loc].lat;
-            lng = specialSpots[loc].lng;
-        } else {
-            // リストにない場合は通常検索
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
-                const d = await res.json();
-                if (d.length > 0) { lat = parseFloat(d[0].lat); lng = parseFloat(d[0].lon); }
-            } catch (err) {}
-        }
+    // 2. もし手入力欄が空っぽ(NaN)なら、検索して座標を探す
+    if (isMapPin && loc && (isNaN(lat) || isNaN(lng))) {
+        btn.textContent = '場所を検索中...';
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
+            const d = await res.json();
+            if (d && d.length > 0) { 
+                lat = parseFloat(d[0].lat); 
+                lng = parseFloat(d[0].lon); 
+            }
+        } catch (err) { console.log('検索エラー'); }
     }
 
-    const newEv = { ...ev, name: document.getElementById('ev-name').value, startDate: document.getElementById('ev-start').value, endDate: document.getElementById('ev-end').value, location: loc, isMapPin, lat, lng };
+    // 3. データ（newEv）を更新して保存！
+    const newEv = { 
+        ...ev, 
+        name: document.getElementById('ev-name').value, 
+        startDate: document.getElementById('ev-start').value, 
+        endDate: document.getElementById('ev-end').value, 
+        location: loc, 
+        isMapPin: isMapPin, 
+        lat: lat,  // 手入力 or 検索結果が入る
+        lng: lng   // 手入力 or 検索結果が入る
+    };
+    
     if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
     else this.events.push(newEv);
     
-    this.save(); this.closeModal(); this.renderCalendar();
+    this.save(); 
+    this.closeModal(); 
+    this.renderCalendar();
 };
             },
 
