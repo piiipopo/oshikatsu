@@ -703,7 +703,7 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
     });
 },
 
-                        OpenEventModal: function(id = null) {
+                                    OpenEventModal: function(id = null) {
                 const ev = this.events.find(e => String(e.id) === String(id)) || { 
                     name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
                     oshiId: this.oshis[0]?.id, categoryId: this.categories[0]?.id, repeat: 'none', 
@@ -752,17 +752,20 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                             <option value="weekly" ${ev.repeat === 'weekly' ? 'selected' : ''}>毎週</option>
                             <option value="monthly" ${ev.repeat === 'monthly' ? 'selected' : ''}>毎月</option>
                         </select>
-                        <div class="flex gap-2 pt-2">
-                            <button type="button" onclick="window.app.closeModal()" class="flex-1 bg-slate-100 py-3 rounded-2xl text-xs font-bold text-slate-500">戻る</button>
-                            ${id ? `<button type="button" onclick="window.app.deleteEvent('${id}')" class="flex-1 bg-rose-50 text-rose-500 py-3 rounded-2xl text-xs font-bold">削除</button>` : ''}
-                            <button type="submit" id="ev-submit-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl text-xs font-bold shadow-md">保存する</button>
-                       </form>
-                        </div>
+
                         <div class="grid grid-cols-2 gap-2">
                             <input type="number" step="any" id="ev-lat" placeholder="緯度" class="border p-2 rounded">
                             <input type="number" step="any" id="ev-lng" placeholder="経度" class="border p-2 rounded">
                         </div>
+
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" onclick="window.app.closeModal()" class="flex-1 bg-slate-100 py-3 rounded-2xl text-xs font-bold text-slate-500">戻る</button>
+                            ${id ? `<button type="button" onclick="window.app.deleteEvent('${id}')" class="flex-1 bg-rose-50 text-rose-500 py-3 rounded-2xl text-xs font-bold">削除</button>` : ''}
+                            <button type="submit" id="ev-submit-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl text-xs font-bold shadow-md">保存する</button>
+                        </div>
+                    </form>
                 `;
+
                 this.showModal(html);
 
                 document.getElementById('ev-lat').value = ev.lat || '';
