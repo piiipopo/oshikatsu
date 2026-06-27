@@ -274,7 +274,7 @@
                     
                     html += `<div class="shrink-0 bg-white/90 border border-white shadow-sm rounded-2xl py-2.5 px-4 flex items-center gap-3 scale-active cursor-pointer" onclick="window.app.selectDate('${e.startDate}')">
                         <div class="text-[10px] font-bold text-slate-500">${e.name} まで</div>
-                        <div class="text-sm font-extrabold" style="color:${color}">${diffDays === 0 ? '本日！🎉' : `あと <span class="text-lg">${diffDays}</span> 日`}</div>
+                        <div class="text-sm font-extrabold" style="color:${color}">${diffDays === 0 ? '本日！' : `あと <span class="text-lg">${diffDays}</span> 日`}</div>
                     </div>`;
                 });
                 html += `</div>`;
@@ -783,7 +783,7 @@ document.getElementById('ev-form').onsubmit = async (e) => {
             },
             // 🗑️ 予定を削除する機能
             deleteEvent: function(id) {
-                if (confirm('この予定を削除してもよろしいですか？')) {
+                if (confirm('この予定を削除しますか？')) {
                     this.events = this.events.filter(e => String(e.id) !== String(id));
                     this.save();
                     this.closeModal();
@@ -919,7 +919,7 @@ document.getElementById('ev-form').onsubmit = async (e) => {
                 this.penlightSize = parseInt(document.getElementById('pl-size-slider').value);
                 this.penlightStroke = parseInt(document.getElementById('pl-stroke-slider').value);
                 this.save();
-                alert('ペンライトのバランスを保存しました！✨\nマップを開いて確認してみてください！');
+                alert('ペンライトのバランスを保存しました！\nマップを開いて確認してみてください！');
             },
 
             // 🌟 1. 新機能：グループとメンバーの入力欄を切り替える処理
@@ -997,7 +997,7 @@ document.getElementById('ev-form').onsubmit = async (e) => {
                                 </div>
                                 <div id="o-img-pos-container" class="hidden mt-2 bg-white p-2 rounded-lg border border-slate-100">
                                     <label class="text-[8px] font-bold text-slate-400 mb-1 flex justify-between">
-                                        <span>上下・左右の位置調整</span>
+                                        <span>上下の位置調整</span>
                                         <span id="o-img-pos-val">50%</span>
                                     </label>
                                     <input type="range" id="o-img-pos" min="0" max="100" value="50" class="w-full accent-sky-400" oninput="window.app.updateImagePos(this.value)">
