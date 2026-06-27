@@ -703,16 +703,7 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
         `);
     });
         // ホテルピンのテスト用コード
-    this.events.forEach(ev => {
-        // 条件を一旦ゆるめて、ホテル名があれば全部立てる！
-        if (ev.hotelLat && ev.hotelLng) {
-            console.log("ピンを立てるホテル:", ev.hotel, ev.hotelLat, ev.hotelLng); // コンソールで確認！
-            L.marker([parseFloat(ev.hotelLat), parseFloat(ev.hotelLng)])
-             .addTo(this.mapInstance)
-             .bindPopup("テスト用ホテルピン");
-        }
-    });
-
+    
             openEventModal: function(id = null) {
                 const ev = this.events.find(e => String(e.id) === String(id)) || { 
     name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
