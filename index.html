@@ -489,12 +489,14 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                 });
             },
 
-            renderDailyEvents: function() {
-                const list = document.getElementById('daily-event-list');
+                        renderDailyEvents: function() {
+                // 1. ボトムシートの中のコンテナを指定
+                const container = document.getElementById('daily-events-container');
                 const evs = this.getEventsForDay(this.selectedDateStr);
                 const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === this.selectedDateStr.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
                 
-                document.getElementById('selected-date-title').textContent = this.selectedDateStr.replace(/-/g, '/');
+                // 2. ボトムシートの日付表示を更新
+                document.getElementById('bs-date-display').textContent = this.selectedDateStr.replace(/-/g, '/') + ' の予定';
                 
                 let html = '';
                 const holidayName = this.holidays[this.selectedDateStr];
@@ -556,7 +558,9 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                 }
 
                 if (!html && bdays.length === 0 && !holidayName) html = '<div class="text-center text-slate-300 text-xs py-8">予定はありません</div>';
-                list.innerHTML = html;
+                
+                // 3. ボトムシートの中身を書き換える
+                container.innerHTML = html;
             },
 
             showModal: function(html) {
