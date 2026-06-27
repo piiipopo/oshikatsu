@@ -395,19 +395,40 @@
                                             shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-20'; 
                                         }
 
-                                                                                const solidLightColor = this.getLightColor(color);
+                                        const solidLightColor = this.getLightColor(color);
                                         let innerHtml = '';
                                         if (roundLeft) {
-                                            // JavaScriptでの文字数計算はもう不要なので、e.name をそのまま入れます！
+                                            const maxLength = isSingle ? 7 : 12;
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　const shortName = e.name.slice(0, maxLength);
                                             innerHtml = `<div class="h-full w-[2px] shrink-0 rounded-l relative z-20" style="background-color: ${color};"></div>
-                                                         <span class="absolute left-[6px] text-[6.5px] font-bold text-slate-700 leading-none pt-[0.5px] whitespace-nowrap z-50 pointer-events-none">${e.name}</span>`;
+                                                         <span class="absolute left-[6px] text-[6.5px] font-bold text-slate-700 leading-none pt-[0.5px] whitespace-nowrap z-50 pointer-events-none">${shortName}</span>`;
                                         }
 
-                                        // 🌟 ここが魔法のポイント！ 「overflow-hidden relative」を追加します
-                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border overflow-hidden relative" style="background-color: ${solidLightColor};">
+                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border" style="background-color: ${solidLightColor};">
                                                           ${innerHtml}
                                                        </div>`;
-                        }
+                                    }
+                                }
+                                
+                                const isSel = ds === this.selectedDateStr;
+                                const isHoliday = this.holidays[ds];
+                                let dayColorClass = 'text-slate-700';
+                                if (wd === 0 || isHoliday) dayColorClass = 'text-rose-500';
+                                else if (wd === 6) dayColorClass = 'text-blue-500';
+                                
+                                html += `<div class="day-cell relative p-1 h-[80px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" style="z-index: ${20 - wd};" onclick="window.app.selectDate('${ds}')">
+                                         <span class="text-xs font-bold relative z-10 ${isSel ? 'text-white' : dayColorClass}">${d}</span>
+                                         <div class="absolute top-[18px] w-full flex flex-col gap-[1px] items-center justify-center pointer-events-none z-20">
+                                            ${bdays.map(o => `<div class="flex flex-col items-center leading-none">
+                                                <span class="text-[10px] font-extrabold whitespace-nowrap" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">${o.name}</span>
+                                                <span class="text-[8px] font-extrabold" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">HBD</span>
+                                            </div>`).join('')}
+                                         </div>
+                                         <div class="absolute bottom-1 left-0 w-full flex flex-col z-10">
+                                            ${indicators}
+                                         </div>
+                                         </div>`;
+                            }
                         html += `</div>`; 
                     }
                     html += `</div>`; 
