@@ -724,7 +724,7 @@
                 `;
                 this.showModal(html);
 
-                // フォームを開いた時に、保存済みの座標を表示する（onsubmitの直前に置くと安全です！）
+// フォームを開いた時に、保存済みの座標を表示する（onsubmitの直前に置くと安全です！）
 document.getElementById('ev-lat').value = ev.lat || '';
 document.getElementById('ev-lng').value = ev.lng || '';
 
@@ -902,7 +902,27 @@ document.getElementById('ev-form').onsubmit = async (e) => {
                 alert('ペンライトのバランスを保存しました！✨\nマップを開いて確認してみてください！');
             },
 
+            // 🌟 1. 新機能：グループとメンバーの入力欄を切り替える処理
+            toggleOshiType: function() {
+                const isMember = document.getElementById('o-type-member').checked;
+                const groupWrapper = document.getElementById('parent-group-wrapper');
+                if (isMember) {
+                    groupWrapper.classList.remove('hidden');
+                } else {
+                    groupWrapper.classList.add('hidden');
+                    document.getElementById('o-group-id').value = ''; // グループの場合は所属をリセット
+                }
+            },
+
+            // 🌟 2. 進化した推し登録フォーム
             openOshiModal: function() {
+                // 登録済みの「グループ」だけを集めて、ドロップダウンの選択肢を作ります
+                const groups = this.oshis.filter(o => o.type === 'group');
+                let groupOptions = '<option value="">所属グループを選択してください</option>';
+                groups.forEach(g => {
+                    groupOptions += `<option value="${g.id}">${g.name}</option>`;
+                });
+
                 let html = `
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-700">🩵 推しの設定・編集</h3>
@@ -913,7 +933,23 @@ document.getElementById('ev-form').onsubmit = async (e) => {
                         <div class="absolute -top-3 left-4 bg-sky-50 text-sky-600 text-[10px] px-2 py-0.5 rounded-full font-extrabold border border-sky-100">推しを追加 / 編集</div>
                         
                         <input type="hidden" id="o-id" value="">
-                        <input type="text" id="o-name" placeholder="推しの名前 (必須)" required class="w-full bg-slate-50 p-2.5 rounded-xl text-sm border border-slate-100 outline-none font-bold mt-2">
+                        
+                        <div class="flex gap-4 p-2 bg-slate-50 rounded-xl border border-slate-100 mt-2">
+                            <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-slate-600">
+                                <input type="radio" name="o-type" id="o-type-group" value="group" onchange="window.app.toggleOshiType()"> 👥 グループ
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer font-bold text-xs text-slate-600">
+                                <input type="radio" name="o-type" id="o-type-member" value="member" checked onchange="window.app.toggleOshiType()"> 👤 メンバー
+                            </label>
+                        </div>
+
+                        <div id="parent-group-wrapper" class="">
+                            <select id="o-group-id" class="w-full bg-slate-50 p-2.5 rounded-xl text-xs border border-slate-100 font-bold text-slate-600 outline-none">
+                                ${groupOptions}
+                            </select>
+                        </div>
+                        
+                        <input type="text" id="o-name" placeholder="推しの名前 (必須)" required class="w-full bg-slate-50 p-2.5 rounded-xl text-sm border border-slate-100 outline-none font-bold mt-1">
                         
                         <div class="grid grid-cols-2 gap-2">
                             <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100">
@@ -961,11 +997,17 @@ document.getElementById('ev-form').onsubmit = async (e) => {
                 `;
                 
                 this.oshis.forEach((o, index) => {
+                    // グループかメンバーかでラベルの表示を変えます
+                    const typeLabel = o.type === 'group' 
+                        ? `<span class="bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded-sm ml-2">グループ</span>` 
+                        : (o.groupId ? `<span class="bg-slate-100 text-slate-500 text-[8px] px-1.5 py-0.5 rounded-sm border border-slate-200 ml-2">👥 ${this.oshis.find(x => x.id === o.groupId)?.name || '不明'}</span>` : '');
+
                     html += `
                         <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
-                            <div class="flex items-center gap-2">
-                                ${o.image ? `<img src="${o.image}" class="w-6 h-6 rounded-full object-cover border border-slate-100" style="object-position: ${o.imagePos || 50}% ${o.imagePos || 50}%;">` : `<div class="w-4 h-4 rounded-full" style="background-color:${o.color}"></div>`}
+                            <div class="flex items-center gap-2 flex-wrap">
+                                ${o.image ? `<img src="${o.image}" class="w-6 h-6 rounded-full object-cover border border-slate-100" style="object-position: ${o.imagePos || 50}% ${o.imagePos || 50}%;">` : `<div class="w-4 h-4 rounded-full shrink-0" style="background-color:${o.color}"></div>`}
                                 <span class="text-xs font-extrabold text-slate-600">${o.name}</span>
+                                ${typeLabel}
                             </div>
                             <div class="flex items-center gap-1 shrink-0">
                                 <button onclick="window.app.moveOshi(${index}, -1)" class="w-6 h-6 flex items-center justify-center text-slate-400 font-bold text-[10px] bg-slate-50 rounded-md active:bg-slate-200" ${index===0?'disabled style="opacity:0.3"':''}>▲</button>
@@ -985,8 +1027,12 @@ document.getElementById('ev-form').onsubmit = async (e) => {
                 document.getElementById('oshi-form').onsubmit = (e) => {
                     e.preventDefault();
                     const id = document.getElementById('o-id').value;
+                    const isGroup = document.getElementById('o-type-group').checked;
+                    
                     const newOshi = { 
                         id: id || 'o' + Date.now(), 
+                        type: isGroup ? 'group' : 'member',               // 🌟 保存時に種類を記録
+                        groupId: isGroup ? null : document.getElementById('o-group-id').value, // 🌟 グループIDを記録
                         name: document.getElementById('o-name').value, 
                         color: document.getElementById('o-color').value, 
                         birthday: document.getElementById('o-bday').value,
@@ -1050,6 +1096,16 @@ document.getElementById('ev-form').onsubmit = async (e) => {
                 const o = this.oshis.find(x => String(x.id) === String(id));
                 if(!o) return;
                 document.getElementById('o-id').value = o.id;
+
+                // 🌟 編集時に、グループかメンバーかを正しくフォームに反映させます
+                if (o.type === 'group') {
+                    document.getElementById('o-type-group').checked = true;
+                } else {
+                    document.getElementById('o-type-member').checked = true;
+                    document.getElementById('o-group-id').value = o.groupId || '';
+                }
+                this.toggleOshiType(); // 表示を切り替え
+
                 document.getElementById('o-name').value = o.name;
                 document.getElementById('o-color').value = o.color;
                 document.getElementById('o-bday').value = o.birthday || '';
