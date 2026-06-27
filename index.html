@@ -716,6 +716,10 @@
                             ${id ? `<button type="button" onclick="window.app.deleteEvent('${id}')" class="flex-1 bg-rose-50 text-rose-500 py-3 rounded-2xl text-xs font-bold">削除</button>` : ''}
                             <button type="submit" id="ev-submit-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl text-xs font-bold shadow-md">保存する</button>
                         </div>
+                        <div class="grid grid-cols-2 gap-2">
+    <input type="number" step="any" id="ev-lat" placeholder="緯度" class="border p-2 rounded">
+    <input type="number" step="any" id="ev-lng" placeholder="経度" class="border p-2 rounded">
+</div>
                     </form>
                 `;
                 this.showModal(html);
