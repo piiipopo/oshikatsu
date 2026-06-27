@@ -106,6 +106,27 @@
         </section>
     </main>
 
+        <div id="bottom-sheet" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transition-transform duration-300 transform translate-y-[calc(100%-48px)] z-40" style="padding-bottom: env(safe-area-inset-bottom);">
+        <div id="bottom-sheet-handle" class="w-full flex flex-col items-center pt-3 pb-2 cursor-pointer" onclick="window.app.toggleBottomSheet()">
+            <div class="w-10 h-1.5 bg-slate-200 rounded-full mb-1.5"></div>
+            <div class="text-[11px] font-bold text-slate-500 flex items-center gap-2">
+                <span id="bs-date-display">📅 日付をタップして予定を確認</span>
+                <span id="bs-toggle-icon" class="text-[9px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-400">▲</span>
+            </div>
+        </div>
+        <div id="bottom-sheet-content" class="px-4 pb-6 overflow-y-auto" style="max-height: 40vh; min-height: 20vh;">
+            <div id="daily-events-container" class="space-y-3 pb-20">
+                </div>
+        </div>
+    </div>
+    <button id="fab-button" onclick="window.app.openEventModal()" class="fixed bottom-10 right-6 w-14 h-14 bg-slate-700 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl font-bold z-40 scale-active hide-in-shot transition-all duration-400">
+        <span class="mb-1">＋</span>
+    </button>
+
+    <div id="modal-layer" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
+        <div id="modal-content" class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl overflow-y-auto max-h-[90vh]"></div>
+    </div>
+
     <button id="fab-button" onclick="window.app.openEventModal()" class="fixed bottom-10 right-6 w-14 h-14 bg-slate-700 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl font-bold z-40 scale-active hide-in-shot transition-all duration-400">
         <span class="mb-1">＋</span>
     </button>
