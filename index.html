@@ -783,6 +783,19 @@ document.getElementById('ev-form').onsubmit = async (e) => {
     if (typeof this.renderCountdowns === 'function') this.renderCountdowns();
 };
             },
+            // 🗑️ 予定を削除する機能
+            deleteEvent: function(id) {
+                if (confirm('この予定を削除してもよろしいですか？')) {
+                    this.events = this.events.filter(e => String(e.id) !== String(id));
+                    this.save();
+                    this.closeModal();
+                    this.renderCalendar();
+                    // カウントダウン機能があればそれも更新
+                    if (typeof this.renderCountdowns === 'function') {
+                        this.renderCountdowns();
+                    }
+                }
+            },
 
             openMonthPicker: function() {
                 let html = `<h3 class="font-bold mb-4 text-slate-700">年月をジャンプ🚀</h3><div class="grid grid-cols-2 gap-2 mb-4"><select id="jump-year" class="bg-slate-50 p-3 rounded-xl text-sm font-bold text-center">`;
