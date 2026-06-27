@@ -704,12 +704,13 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
     });
 },
 
-            openEventModal: function(id = null) {
-                const ev = this.events.find(e => String(e.id) === String(id)) || { 
-                    name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
-                    oshiId: this.oshis[0]?.id, categoryId: this.categories[0]?.id, repeat: 'none', 
-                    location: '', isCountdown: false, memo: '', url: '', isMapPin: false, lat: null, lng: null
-                };
+            const ev = this.events.find(e => String(e.id) === String(id)) || { 
+    name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
+    oshiId: this.oshis[0]?.id, categoryId: this.categories[0]?.id, repeat: 'none', 
+    location: '', hotel: '', isCountdown: false, memo: '', url: '', isMapPin: false, 
+    lat: null, lng: null,
+    hotelLat: null, hotelLng: null // ✨ ここを追加！
+};
                 
                 let html = `
                     <h3 class="font-bold mb-4 text-slate-700">${id ? '予定を編集' : '予定を追加'}</h3>
@@ -812,9 +813,12 @@ document.getElementById('ev-form').onsubmit = async (e) => {
         isMapPin: isMapPin, 
         lat: lat, 
         lng: lng,
+        hotel: document.getElementById('ev-hotel').value,
+        hotelLat: ev.hotelLat || null, // ✨ 初期値から引き継ぐか、後で更新できるようにします
+        hotelLng: ev.hotelLng || null, // ✨ 同上
         url: document.getElementById('ev-url').value,
         memo: document.getElementById('ev-memo').value
-    };
+};
     
     if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
     else this.events.push(newEv);
