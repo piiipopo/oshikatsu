@@ -703,14 +703,17 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
         `);
     });
         // ホテルピンの処理を少しだけ改造
-L.marker([parseFloat(ev.hotelLat), parseFloat(ev.hotelLng)], {
-    icon: L.divIcon({
-        // ピンの色をグレーにする（座標がない時などはこれで区別！）
-        html: `<div style="background:${ev.hotelLat ? '#6366f1' : '#cbd5e1'}; ...">🏨</div>`,
-        // ...
-    })
-})
-});
+    this.events.forEach(ev => {
+        if (ev.hotelLat && ev.hotelLng) {
+            L.marker([parseFloat(ev.hotelLat), parseFloat(ev.hotelLng)], {
+                icon: L.divIcon({
+                    html: `<div style="background:#6366f1; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border:2px solid white; font-size:10px; box-shadow:0 2px 4px rgba(0,0,0,0.3);">🏨</div>`,
+                    className: 'hotel-icon', iconSize: [24, 24]
+                })
+            }).addTo(this.mapInstance).bindPopup(`<div class="text-[11px] font-bold">🏨 ${ev.hotel}</div>`);
+        }
+    });
+},
 
             openEventModal: function(id = null) {
                 const ev = this.events.find(e => String(e.id) === String(id)) || { 
