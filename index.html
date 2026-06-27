@@ -395,16 +395,16 @@
                                             shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-20'; 
                                         }
 
-                                        const solidLightColor = this.getLightColor(color);
+                                                                                const solidLightColor = this.getLightColor(color);
                                         let innerHtml = '';
                                         if (roundLeft) {
-                                            const maxLength = isSingle ? 7 : 12;
-　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　const shortName = e.name.slice(0, maxLength);
+                                            // 🌟 文字数計算をなくして、そのままの名前を入れます
                                             innerHtml = `<div class="h-full w-[2px] shrink-0 rounded-l relative z-20" style="background-color: ${color};"></div>
-                                                         <span class="absolute left-[6px] text-[6.5px] font-bold text-slate-700 leading-none pt-[0.5px] whitespace-nowrap z-50 pointer-events-none">${shortName}</span>`;
+                                                         <span class="absolute left-[6px] text-[6.5px] font-bold text-slate-700 leading-none pt-[0.5px] whitespace-nowrap z-50 pointer-events-none">${e.name}</span>`;
                                         }
 
-                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border" style="background-color: ${solidLightColor};">
+                                        // 🌟 はみ出た分を隠す魔法（overflow-hidden relative）を追加！
+                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border overflow-hidden relative" style="background-color: ${solidLightColor};">
                                                           ${innerHtml}
                                                        </div>`;
                                     }
@@ -432,6 +432,7 @@
                     html += `</div>`; 
                     cont.innerHTML += `<div>${html}</div>`;
                 }
+
                 this.renderDailyEvents();
             },
 
