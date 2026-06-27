@@ -702,18 +702,16 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
             </div>
         `);
     });
-    // 3. ホテルのピンを立てる（新機能！）
+        // ホテルピンのテスト用コード
     this.events.forEach(ev => {
-        if (ev.hotel && ev.hotelLat && ev.hotelLng) {
-            const hotelIcon = L.divIcon({
-                html: `<div class="bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center border-2 border-white shadow-md text-[10px]">🏨</div>`,
-                className: 'hotel-icon', iconSize: [24, 24]
-            });
-            L.marker([ev.hotelLat, ev.hotelLng], { icon: hotelIcon }).addTo(this.mapInstance)
-             .bindPopup(`<div class="text-[11px] font-bold">🏨 ${ev.hotel}</div>`);
+        // 条件を一旦ゆるめて、ホテル名があれば全部立てる！
+        if (ev.hotelLat && ev.hotelLng) {
+            console.log("ピンを立てるホテル:", ev.hotel, ev.hotelLat, ev.hotelLng); // コンソールで確認！
+            L.marker([parseFloat(ev.hotelLat), parseFloat(ev.hotelLng)])
+             .addTo(this.mapInstance)
+             .bindPopup("テスト用ホテルピン");
         }
     });
-},
 
             openEventModal: function(id = null) {
                 const ev = this.events.find(e => String(e.id) === String(id)) || { 
