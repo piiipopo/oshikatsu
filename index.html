@@ -742,7 +742,7 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                                 <span class="text-xs font-bold text-slate-600">📍 マップにペンライトピンを立てる</span>
                             </label>
                         </div>
-
+　　　　　　　　　　　　　　　　<input type="text" id="ev-hotel" value="${ev.hotel || ''}" placeholder="🏨 宿泊施設名 (任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                         <input type="text" id="ev-loc" value="${ev.location}" placeholder="📍 場所・住所 (例: 横浜アリーナ / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                         <input type="url" id="ev-url" value="${ev.url || ''}" placeholder="🔗 URL (動画やチケット等 / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                         <textarea id="ev-memo" placeholder="📝 思い出メモ・座席番号など (任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold h-16">${ev.memo || ''}</textarea>
@@ -803,6 +803,7 @@ document.getElementById('ev-form').onsubmit = async (e) => {
         endTime: document.getElementById('ev-etime') ? document.getElementById('ev-etime').value : (ev.endTime || ''),
         name: document.getElementById('ev-name').value, 
         location: loc, 
+        hotel: document.getElementById('ev-hotel').value,
         oshiId: document.getElementById('ev-oshi').value, // ✨グループや個人の紐づけもバッチリ保存！
         categoryId: document.getElementById('ev-cat') ? document.getElementById('ev-cat').value : (ev.categoryId || ''),
         repeat: document.getElementById('ev-repeat') ? document.getElementById('ev-repeat').value : (ev.repeat || 'none'),
