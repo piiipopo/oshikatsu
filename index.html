@@ -703,11 +703,11 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
     });
 },
 
-            openEventModal: function(id = null) {
+                        OpenEventModal: function(id = null) {
                 const ev = this.events.find(e => String(e.id) === String(id)) || { 
                     name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
                     oshiId: this.oshis[0]?.id, categoryId: this.categories[0]?.id, repeat: 'none', 
-                    location: '', isCountdown: false, memo: '', url: '', isMapPin: false, lat: null, lng: null
+                    location: '', hotel: '', isCountdown: false, memo: '', url: '', isMapPin: false, lat: null, lng: null
                 };
                 
                 let html = `
@@ -736,16 +736,17 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                                 <input type="checkbox" id="ev-count" ${ev.isCountdown ? 'checked' : ''} class="w-4 h-4 text-sky-400 rounded">
                                 <span class="text-xs font-bold text-slate-600">⏳ トップにカウントダウンを表示</span>
                             </label>
-                            
                             <label class="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 cursor-pointer hover:bg-sky-50">
                                 <input type="checkbox" id="ev-mappin" ${ev.isMapPin ? 'checked' : ''} class="w-4 h-4 text-sky-400 rounded">
                                 <span class="text-xs font-bold text-slate-600">📍 マップにペンライトピンを立てる</span>
                             </label>
                         </div>
 
+                        <input type="text" id="ev-hotel" value="${ev.hotel || ''}" placeholder="🏨 宿泊施設・ホテル名 (任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                         <input type="text" id="ev-loc" value="${ev.location}" placeholder="📍 場所・住所 (例: 横浜アリーナ / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                         <input type="url" id="ev-url" value="${ev.url || ''}" placeholder="🔗 URL (動画やチケット等 / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                         <textarea id="ev-memo" placeholder="📝 思い出メモ・座席番号など (任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold h-16">${ev.memo || ''}</textarea>
+                        
                         <select id="ev-repeat" class="w-full bg-slate-50 p-3 rounded-xl text-xs border border-slate-100 font-bold">
                             <option value="none" ${ev.repeat === 'none' ? 'selected' : ''}>繰り返しなし</option>
                             <option value="weekly" ${ev.repeat === 'weekly' ? 'selected' : ''}>毎週</option>
@@ -757,89 +758,65 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                             <button type="submit" id="ev-submit-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl text-xs font-bold shadow-md">保存する</button>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
-    <input type="number" step="any" id="ev-lat" placeholder="緯度" class="border p-2 rounded">
-    <input type="number" step="any" id="ev-lng" placeholder="経度" class="border p-2 rounded">
-</div>
+                            <input type="number" step="any" id="ev-lat" placeholder="緯度" class="border p-2 rounded">
+                            <input type="number" step="any" id="ev-lng" placeholder="経度" class="border p-2 rounded">
+                        </div>
                     </form>
                 `;
                 this.showModal(html);
 
-// フォームを開いた時に、保存済みの座標を表示する（onsubmitの直前に置くと安全です！）
-document.getElementById('ev-lat').value = ev.lat || '';
-document.getElementById('ev-lng').value = ev.lng || '';
+                document.getElementById('ev-lat').value = ev.lat || '';
+                document.getElementById('ev-lng').value = ev.lng || '';
 
-// ここから下が上書きするメインの処理です！
-document.getElementById('ev-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('ev-submit-btn');
-    btn.textContent = '保存中...';
-    
-    <input type="text" id="ev-hotel" value="${ev.hotel || ''}" placeholder="🏨 宿泊施設・ホテル名 (任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
-    <input type="text" id="ev-loc" value="${ev.location}" placeholder="📍 場所・住所 (例: 横浜アリーナ / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                document.getElementById('ev-form').onsubmit = async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('ev-submit-btn');
+                    btn.textContent = '保存中...';
+                    
+                    const loc = document.getElementById('ev-loc').value.trim();
+                    const isMapPin = document.getElementById('ev-mappin').checked;
+                    let lat = parseFloat(document.getElementById('ev-lat').value);
+                    let lng = parseFloat(document.getElementById('ev-lng').value);
 
-    const loc = document.getElementById('ev-loc').value.trim();
-    const isMapPin = document.getElementById('ev-mappin').checked;
-    
-    // 1. まず手入力の緯度経度を取得する
-    let lat = parseFloat(document.getElementById('ev-lat').value);
-    let lng = parseFloat(document.getElementById('ev-lng').value);
-
-    // 2. もし手入力欄が空っぽなら、検索して座標を探す
-    if (isMapPin && loc && (isNaN(lat) || isNaN(lng))) {
-        btn.textContent = '場所を検索中...';
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
-            const d = await res.json();
-            if (d && d.length > 0) { 
-                lat = parseFloat(d[0].lat); 
-                lng = parseFloat(d[0].lon); 
-            }
-        } catch (err) { console.log('検索エラー'); }
-    }
-
-    // 3. 画面の入力内容（推しIDなど）を漏れなくしっかり集めて保存！
-    const newEv = { 
-        id: ev.id || 'ev' + Date.now(),
-        startDate: document.getElementById('ev-start').value,
-        endDate: document.getElementById('ev-end').value,
-        startTime: document.getElementById('ev-stime') ? document.getElementById('ev-stime').value : (ev.startTime || ''),
-        endTime: document.getElementById('ev-etime') ? document.getElementById('ev-etime').value : (ev.endTime || ''),
-        name: document.getElementById('ev-name').value, 
-        hotel: document.getElementById('ev-hotel').value,
-        location: loc, 
-        oshiId: document.getElementById('ev-oshi').value, // ✨グループや個人の紐づけもバッチリ保存！
-        categoryId: document.getElementById('ev-cat') ? document.getElementById('ev-cat').value : (ev.categoryId || ''),
-        repeat: document.getElementById('ev-repeat') ? document.getElementById('ev-repeat').value : (ev.repeat || 'none'),
-        isCountdown: document.getElementById('ev-count') ? document.getElementById('ev-count').checked : (ev.isCountdown || false),
-        isMapPin: isMapPin, 
-        lat: lat, 
-        lng: lng,
-        url: document.getElementById('ev-url').value,
-        memo: document.getElementById('ev-memo').value
-    };
-    
-    if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
-    else this.events.push(newEv);
-    
-    this.save(); 
-    this.closeModal(); 
-    this.renderCalendar();
-    if (typeof this.renderCountdowns === 'function') this.renderCountdowns();
-};
-            },
-            // 🗑️ 予定を削除する機能
-            deleteEvent: function(id) {
-                if (confirm('この予定を削除しますか？')) {
-                    this.events = this.events.filter(e => String(e.id) !== String(id));
-                    this.save();
-                    this.closeModal();
-                    this.renderCalendar();
-                    // カウントダウン機能があればそれも更新
-                    if (typeof this.renderCountdowns === 'function') {
-                        this.renderCountdowns();
+                    if (isMapPin && loc && (isNaN(lat) || isNaN(lng))) {
+                        btn.textContent = '場所を検索中...';
+                        try {
+                            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
+                            const d = await res.json();
+                            if (d && d.length > 0) { lat = parseFloat(d[0].lat); lng = parseFloat(d[0].lon); }
+                        } catch (err) { console.log('検索エラー'); }
                     }
-                }
+
+                    const newEv = { 
+                        id: ev.id || 'ev' + Date.now(),
+                        startDate: document.getElementById('ev-start').value,
+                        endDate: document.getElementById('ev-end').value,
+                        startTime: document.getElementById('ev-stime') ? document.getElementById('ev-stime').value : (ev.startTime || ''),
+                        endTime: document.getElementById('ev-etime') ? document.getElementById('ev-etime').value : (ev.endTime || ''),
+                        name: document.getElementById('ev-name').value, 
+                        hotel: document.getElementById('ev-hotel').value,
+                        location: loc, 
+                        oshiId: document.getElementById('ev-oshi').value,
+                        categoryId: document.getElementById('ev-cat') ? document.getElementById('ev-cat').value : (ev.categoryId || ''),
+                        repeat: document.getElementById('ev-repeat') ? document.getElementById('ev-repeat').value : (ev.repeat || 'none'),
+                        isCountdown: document.getElementById('ev-count') ? document.getElementById('ev-count').checked : (ev.isCountdown || false),
+                        isMapPin: isMapPin, 
+                        lat: lat, 
+                        lng: lng,
+                        url: document.getElementById('ev-url').value,
+                        memo: document.getElementById('ev-memo').value
+                    };
+                    
+                    if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
+                    else this.events.push(newEv);
+                    
+                    this.save(); 
+                    this.closeModal(); 
+                    this.renderCalendar();
+                    if (typeof this.renderCountdowns === 'function') this.renderCountdowns();
+                };
             },
+
 
             openMonthPicker: function() {
                 let html = `<h3 class="font-bold mb-4 text-slate-700">年月をジャンプ🚀</h3><div class="grid grid-cols-2 gap-2 mb-4"><select id="jump-year" class="bg-slate-50 p-3 rounded-xl text-sm font-bold text-center">`;
