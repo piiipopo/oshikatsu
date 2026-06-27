@@ -741,7 +741,7 @@ document.getElementById('ev-form').onsubmit = async (e) => {
     let lat = parseFloat(document.getElementById('ev-lat').value);
     let lng = parseFloat(document.getElementById('ev-lng').value);
 
-    // 2. もし手入力欄が空っぽ(NaN)なら、検索して座標を探す
+    // 2. もし手入力欄が空っぽなら、検索して座標を探す
     if (isMapPin && loc && (isNaN(lat) || isNaN(lng))) {
         btn.textContent = '場所を検索中...';
         try {
@@ -754,17 +754,34 @@ document.getElementById('ev-form').onsubmit = async (e) => {
         } catch (err) { console.log('検索エラー'); }
     }
 
-    // 3. データ（newEv）を更新して保存！
+    // 3. 画面の入力内容（推しIDなど）を漏れなくしっかり集めて保存！
     const newEv = { 
-        ...ev, 
+        id: ev.id || 'ev' + Date.now(),
+        startDate: document.getElementById('ev-start').value,
+        endDate: document.getElementById('ev-end').value,
+        startTime: document.getElementById('ev-stime') ? document.getElementById('ev-stime').value : (ev.startTime || ''),
+        endTime: document.getElementById('ev-etime') ? document.getElementById('ev-etime').value : (ev.endTime || ''),
         name: document.getElementById('ev-name').value, 
-        startDate: document.getElementById('ev-start').value, 
-        endDate: document.getElementById('ev-end').value, 
         location: loc, 
+        oshiId: document.getElementById('ev-oshi').value, // ✨グループや個人の紐づけもバッチリ保存！
+        categoryId: document.getElementById('ev-cat') ? document.getElementById('ev-cat').value : (ev.categoryId || ''),
+        repeat: document.getElementById('ev-repeat') ? document.getElementById('ev-repeat').value : (ev.repeat || 'none'),
+        isCountdown: document.getElementById('ev-count') ? document.getElementById('ev-count').checked : (ev.isCountdown || false),
         isMapPin: isMapPin, 
-        lat: lat,  // 手入力 or 検索結果が入る
-        lng: lng   // 手入力 or 検索結果が入る
+        lat: lat, 
+        lng: lng,
+        url: document.getElementById('ev-url').value,
+        memo: document.getElementById('ev-memo').value
     };
+    
+    if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
+    else this.events.push(newEv);
+    
+    this.save(); 
+    this.closeModal(); 
+    this.renderCalendar();
+    if (typeof this.renderCountdowns === 'function') this.renderCountdowns();
+};
     
     if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
     else this.events.push(newEv);
