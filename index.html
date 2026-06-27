@@ -549,6 +549,7 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                                     </div>
                                     <div class="flex gap-2">
                                         ${ev.location ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.location)}" target="_blank" onclick="event.stopPropagation();" class="text-[10px] text-sky-500 underline font-bold flex items-center">📍MAP</a>` : ''}
+                                        ${ev.hotel ? `<div class="text-[10px] text-sky-600 font-bold flex items-center gap-1 mt-0.5">🏨 ${ev.hotel}</div>` : ''}
                                         ${ev.url ? `<a href="${ev.url}" target="_blank" onclick="event.stopPropagation();" class="text-[10px] text-blue-500 underline font-bold flex items-center">🔗LINK</a>` : ''}
                                     </div>
                                 </div>
