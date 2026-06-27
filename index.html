@@ -361,79 +361,80 @@
                             }
                         });
 
-                               html += `<div class="calendar-grid gap-x-1">`;
-                                for (let wd = 0; wd < 7; wd++) {
-                                    const d = weekDays[wd];
-                                    if (d === null) { 
-                                        html += `<div></div>`; 
+                        html += `<div class="calendar-grid gap-x-1">`;
+                        for (let wd = 0; wd < 7; wd++) {
+                            const d = weekDays[wd];
+                            if (d === null) { 
+                                html += `<div></div>`; 
+                            } else {
+                                const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                                const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
+                                const maxVisibleRows = bdays.length > 0 ? 0 : 2; 
+
+                                let indicators = '';
+                                for (let r = 0; r <= 2; r++) {
+                                    const e = slots[wd][r];
+                                    if (!e || r > maxVisibleRows) {
+                                        indicators += `<div class="h-[10px] mb-[2px] w-full invisible"></div>`;
                                     } else {
-                                        const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                                        const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === ds.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
-                                        const maxVisibleRows = bdays.length > 0 ? 0 : 2; 
+                                        const o = this.oshis.find(x => String(x.id) === String(e.oshiId)); 
+                                        const color = o?.color || '#cbd5e1';
+                                        
+                                        const isSingle = (e.startDate === (e.endDate || e.startDate)) || (e.repeat !== 'none');
+                                        const roundLeft = ds === e.startDate || wd === 0 || isSingle;
+                                        const roundRight = ds === (e.endDate || e.startDate) || wd === 6 || isSingle;
 
-                                        let indicators = '';
-                                        for (let r = 0; r <= 2; r++) {
-                                            const e = slots[wd][r];
-                                            if (!e || r > maxVisibleRows) {
-                                                indicators += `<div class="h-[10px] mb-[2px] w-full invisible"></div>`;
-                                            } else {
-                                                const o = this.oshis.find(x => String(x.id) === String(e.oshiId)); 
-                                                const color = o?.color || '#cbd5e1';
-                                                
-                                                const isSingle = (e.startDate === (e.endDate || e.startDate)) || (e.repeat !== 'none');
-                                                const roundLeft = ds === e.startDate || wd === 0 || isSingle;
-                                                const roundRight = ds === (e.endDate || e.startDate) || wd === 6 || isSingle;
-
-                                                let shapeClass = '';
-                                                if (roundLeft && roundRight) {
-                                                    shapeClass = 'w-[calc(100%-4px)] mx-[2px] rounded relative z-10'; 
-                                                } else if (roundLeft && !roundRight) {
-                                                    shapeClass = 'w-[calc(100%+4px)] ml-[2px] mr-[-6px] rounded-l relative z-30'; 
-                                                } else if (!roundLeft && roundRight) {
-                                                    shapeClass = 'w-[calc(100%+4px)] ml-[-6px] mr-[2px] rounded-r relative z-10';
-                                                } else {
-                                                    shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-20'; 
-                                                }
-
-                                                const solidLightColor = this.getLightColor(color);
-                                                let innerHtml = '';
-                                                if (roundLeft) {
-                                                    // 🌟 そのままの名前を入れる
-                                                    innerHtml = `<div class="h-full w-[2px] shrink-0 rounded-l relative z-20" style="background-color: ${color};"></div>
-                                                                 <span class="absolute left-[6px] text-[6.5px] font-bold text-slate-700 leading-none pt-[0.5px] whitespace-nowrap z-50 pointer-events-none">${e.name}</span>`;
-                                                }
-
-                                                // 🌟 はみ出た分を隠す魔法（overflow-hidden relative）！
-                                                indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border overflow-hidden relative" style="background-color: ${solidLightColor};">
-                                                                  ${innerHtml}
-                                                               </div>`;
-                                            }
+                                        let shapeClass = '';
+                                        if (roundLeft && roundRight) {
+                                            shapeClass = 'w-[calc(100%-4px)] mx-[2px] rounded relative z-10'; 
+                                        } else if (roundLeft && !roundRight) {
+                                            shapeClass = 'w-[calc(100%+4px)] ml-[2px] mr-[-6px] rounded-l relative z-30'; 
+                                        } else if (!roundLeft && roundRight) {
+                                            shapeClass = 'w-[calc(100%+4px)] ml-[-6px] mr-[2px] rounded-r relative z-10';
+                                        } else {
+                                            shapeClass = 'w-[calc(100%+12px)] ml-[-6px] mr-[-6px] relative z-20'; 
                                         }
-                                        
-                                        const isSel = ds === this.selectedDateStr;
-                                        const isHoliday = this.holidays[ds];
-                                        let dayColorClass = 'text-slate-700';
-                                        if (wd === 0 || isHoliday) dayColorClass = 'text-rose-500';
-                                        else if (wd === 6) dayColorClass = 'text-blue-500';
-                                        
-                                        html += `<div class="day-cell relative p-1 h-[80px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" style="z-index: ${20 - wd};" onclick="window.app.selectDate('${ds}')">
-                                                 <span class="text-xs font-bold relative z-10 ${isSel ? 'text-white' : dayColorClass}">${d}</span>
-                                                 <div class="absolute top-[18px] w-full flex flex-col gap-[1px] items-center justify-center pointer-events-none z-20">
-                                                    ${bdays.map(o => `<div class="flex flex-col items-center leading-none">
-                                                        <span class="text-[10px] font-extrabold whitespace-nowrap" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">${o.name}</span>
-                                                        <span class="text-[8px] font-extrabold" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">HBD</span>
-                                                    </div>`).join('')}
-                                                 </div>
-                                                 <div class="absolute bottom-1 left-0 w-full flex flex-col z-10">
-                                                    ${indicators}
-                                                 </div>
-                                                 </div>`;
+
+                                        const solidLightColor = this.getLightColor(color);
+                                        let innerHtml = '';
+                                        if (roundLeft) {
+                                            const maxLength = isSingle ? 7 : 12;
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　const shortName = e.name.slice(0, maxLength);
+                                            innerHtml = `<div class="h-full w-[2px] shrink-0 rounded-l relative z-20" style="background-color: ${color};"></div>
+                                                         <span class="absolute left-[6px] text-[6.5px] font-bold text-slate-700 leading-none pt-[0.5px] whitespace-nowrap z-50 pointer-events-none">${shortName}</span>`;
+                                        }
+
+                                        indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start items-center box-border" style="background-color: ${solidLightColor};">
+                                                          ${innerHtml}
+                                                       </div>`;
                                     }
                                 }
-                                html += `</div>`; 
-                                cont.innerHTML += `<div>${html}</div>`;
+                                
+                                const isSel = ds === this.selectedDateStr;
+                                const isHoliday = this.holidays[ds];
+                                let dayColorClass = 'text-slate-700';
+                                if (wd === 0 || isHoliday) dayColorClass = 'text-rose-500';
+                                else if (wd === 6) dayColorClass = 'text-blue-500';
+                                
+                                html += `<div class="day-cell relative p-1 h-[80px] rounded-2xl flex flex-col items-center cursor-pointer transition-all ${isSel ? 'bg-slate-700 text-white shadow-md' : 'hover:bg-white/50'}" style="z-index: ${20 - wd};" onclick="window.app.selectDate('${ds}')">
+                                         <span class="text-xs font-bold relative z-10 ${isSel ? 'text-white' : dayColorClass}">${d}</span>
+                                         <div class="absolute top-[18px] w-full flex flex-col gap-[1px] items-center justify-center pointer-events-none z-20">
+                                            ${bdays.map(o => `<div class="flex flex-col items-center leading-none">
+                                                <span class="text-[10px] font-extrabold whitespace-nowrap" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">${o.name}</span>
+                                                <span class="text-[8px] font-extrabold" style="color:#334155; text-shadow: 0.5px 0.5px 0 #fff, -0.5px -0.5px 0 #fff, 0.5px -0.5px 0 #fff, -0.5px 0.5px 0 #fff, 0px 0.5px 0 #fff, 0px -0.5px 0 #fff, 0.5px 0px 0 #fff, -0.5px 0px 0 #fff, 1px 1px 0 ${o.color}, -1px -1px 0 ${o.color}, 1px -1px 0 ${o.color}, -1px 1px 0 ${o.color}, 0px 1px 0 ${o.color}, 0px -1px 0 ${o.color}, 1px 0px 0 ${o.color}, -1px 0px 0 ${o.color};">HBD</span>
+                                            </div>`).join('')}
+                                         </div>
+                                         <div class="absolute bottom-1 left-0 w-full flex flex-col z-10">
+                                            ${indicators}
+                                         </div>
+                                         </div>`;
+                            }
+                        }
+                        html += `</div>`; 
+                    }
+                    html += `</div>`; 
+                    cont.innerHTML += `<div>${html}</div>`;
                 }
-
                 this.renderDailyEvents();
             },
 
