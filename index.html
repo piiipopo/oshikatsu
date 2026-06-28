@@ -167,44 +167,40 @@
     }
 },
 exportToIPhone: function(evId) {
+    // 💡 1. まずはボタンが繋がっているかの確認用アラート！
+    alert('🍏 カレンダー連携を開始します！'); 
+    
     const ev = this.events.find(e => String(e.id) === String(evId));
-    if (!ev) return;
+    if (!ev) return alert('データが見つかりませんでした');
 
-    // 時間の書式をカレンダー用に変換 (例: 20260715T103000)
     const makeDateTime = (dateStr, timeStr) => {
         if (!dateStr) return '';
-        const base = dateStr.replace(/-/g, '');
-        const time = timeStr ? timeStr.replace(/:/g, '') + '00' : '000000';
-        return base + 'T' + time;
+        return dateStr.replace(/-/g, '') + 'T' + (timeStr ? timeStr.replace(/:/g, '') + '00' : '000000');
     };
 
     const start = makeDateTime(ev.startDate, ev.startTime);
     const end = makeDateTime(ev.endDate || ev.startDate, ev.endTime || ev.startTime);
 
-    // iCalendar形式（iPhoneが読める形式）のデータを作成
+    // 改行が原因でiPhoneがエラーを起こすのを防ぐ安全処理
+    const safeMemo = (ev.memo || '').replace(/\n/g, ' / ');
+    const urlStr = ev.url ? '🔗 ' + ev.url : '';
+
     const icsData = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PROID:-//Oshikatsu Calendar//NONSGML v1.0//EN',
         'BEGIN:VEVENT',
         `SUMMARY:${ev.name}`,
         `DTSTART:${start}`,
         `DTEND:${end}`,
-        `LOCATION:${ev.location || ''}${ev.hotel ? ' / 宿泊先: ' + ev.hotel : ''}`,
-        `DESCRIPTION:${ev.memo || ''}${ev.url ? '\\n🔗 ' + ev.url : ''}`,
+        `LOCATION:${ev.location || ''} ${ev.hotel ? '(宿: ' + ev.hotel + ')' : ''}`,
+        `DESCRIPTION:${safeMemo} ${urlStr}`,
         'END:VEVENT',
         'END:VCALENDAR'
     ].join('\r\n');
 
-    // iPhoneのカレンダーアプリを強制的に起動させる処理
-    const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${ev.name}.ics`;
-    a.click();
-    URL.revokeObjectURL(url);
-}, // ← 最後のカンマ（,）を絶対に忘れないでね！
+    // 💡 2. iPhoneが反応しやすい「直接データを開く」方式に変更
+    window.location.href = 'data:text/calendar;charset=utf8,' + encodeURIComponent(icsData);
+},
 
             penlightSize: localStorage.getItem('pl_size') !== null ? parseInt(localStorage.getItem('pl_size')) : 40,
             penlightStroke: localStorage.getItem('pl_stroke') !== null ? parseInt(localStorage.getItem('pl_stroke')) : 2,
