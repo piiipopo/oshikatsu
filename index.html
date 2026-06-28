@@ -826,7 +826,8 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                             <option value="none" ${ev.repeat === 'none' ? 'selected' : ''}>繰り返しなし</option>
                             <option value="weekly" ${ev.repeat === 'weekly' ? 'selected' : ''}>毎週</option>
                             <option value="monthly" ${ev.repeat === 'monthly' ? 'selected' : ''}>毎月</option>
-                        // ...（上のセレクトボックスなどの続き）...
+                        // ...（上のセレクトボックスなどの
+
 </select>
 
 ${id ? `
@@ -842,13 +843,12 @@ ${id ? `
 </div>
 
 <div class="grid grid-cols-2 gap-2 mt-2">
-    <input type="number" step="any" id="ev-lat" value="${ev?.lat || ''}" placeholder="緯度" class="border p-2 rounded text-xs bg-slate-50">
-    <input type="number" step="any" id="ev-lng" value="${ev?.lng || ''}" placeholder="経度" class="border p-2 rounded text-xs bg-slate-50">
+    <input type="number" step="any" id="ev-lat" placeholder="緯度" class="border p-2 rounded text-xs bg-slate-50">
+    <input type="number" step="any" id="ev-lng" placeholder="経度" class="border p-2 rounded text-xs bg-slate-50">
 </div>
-
-                    </form>
-                `;
-                this.showModal(html);
+</form>
+`;
+this.showModal(html);
 
 // フォームを開いた時に、保存済みの座標を表示する（onsubmitの直前に置くと安全です！）
 document.getElementById('ev-lat').value = ev.lat || '';
