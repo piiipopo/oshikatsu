@@ -215,6 +215,23 @@
         window.URL.revokeObjectURL(url);
     },
 
+    // 🌟🌟🌟 ここから下の部分を新しく追加します！ 🌟🌟🌟
+    toggleBottomSheet: function(isOpen) {
+        const sheet = document.getElementById('bottom-sheet');
+        if (!sheet) return;
+        
+        if (isOpen) {
+            // シートを上に引っ張り出す
+            sheet.classList.remove('translate-y-full');
+            sheet.style.transform = 'translateY(0)'; 
+        } else {
+            // シートを下に隠す
+            sheet.classList.add('translate-y-full');
+            sheet.style.transform = 'translateY(100%)';
+        }
+    },
+    // 🌟🌟🌟 ここまで 🌟🌟🌟
+
     getLightColor: function(hex) {
                 if(!hex) return '#f1f5f9';
                 hex = hex.replace('#', '');
