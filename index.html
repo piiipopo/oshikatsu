@@ -167,51 +167,54 @@
     }
 },
 
-exportToIPhone: function(evId) {
-    // 💡 まずはこれが絶対に出るはず！
-    alert('🍏 カレンダー連携ボタンが押されました！'); 
-
-    const ev = this.events.find(e => String(e.id) === String(evId));
-    if (!ev) return alert('予定データが見つかりません🥲');
-
-    // 時間の書式変換
-    const makeDateTime = (dateStr, timeStr) => {
-        if (!dateStr) return '';
-        return dateStr.replace(/-/g, '') + 'T' + (timeStr ? timeStr.replace(/:/g, '') + '00' : '000000');
-    };
-
-    const start = makeDateTime(ev.startDate, ev.startTime);
-    const end = makeDateTime(ev.endDate || ev.startDate, ev.endTime || ev.startTime);
-
-    // メモ欄の改行などでエラーが起きないようにする処理
-    const safeMemo = (ev.memo || '').replace(/\n/g, ' / ');
-    const urlStr = ev.url ? '🔗 ' + ev.url : '';
-
-    const icsData = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'BEGIN:VEVENT',
-        `SUMMARY:${ev.name}`,
-        `DTSTART:${start}`,
-        `DTEND:${end}`,
-        `LOCATION:${ev.location || ''} ${ev.hotel ? '(宿: ' + ev.hotel + ')' : ''}`,
-        `DESCRIPTION:${safeMemo} ${urlStr}`,
-        'END:VEVENT',
-        'END:VCALENDAR'
-    ].join('\r\n');
-
-    // 🍏 iPhoneのSafariでも確実にダウンロードさせるための呪文
-    const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'event.ics';
-    document.body.appendChild(a); // ← iPhone Safari用に追加！
-    a.click();
-    document.body.removeChild(a); // ← 用が終わったらお片付け
-    window.URL.revokeObjectURL(url);
+        alert('検索中にエラーが発生しました。');
+    }
 },
 
+    exportToIPhone: function(evId) {
+        // 💡 まずはこれが絶対に出るはず！
+        alert('🍏 カレンダー連携ボタンが押されました！'); 
+
+        const ev = this.events.find(e => String(e.id) === String(evId));
+        if (!ev) return alert('予定データが見つかりません🥲');
+
+        // 時間の書式変換
+        const makeDateTime = (dateStr, timeStr) => {
+            if (!dateStr) return '';
+            return dateStr.replace(/-/g, '') + 'T' + (timeStr ? timeStr.replace(/:/g, '') + '00' : '000000');
+        };
+
+        const start = makeDateTime(ev.startDate, ev.startTime);
+        const end = makeDateTime(ev.endDate || ev.startDate, ev.endTime || ev.startTime);
+
+        // メモ欄の改行などでエラーが起きないようにする処理
+        const safeMemo = (ev.memo || '').replace(/\n/g, ' / ');
+        const urlStr = ev.url ? '🔗 ' + ev.url : '';
+
+        const icsData = [
+            'BEGIN:VCALENDAR',
+            'VERSION:2.0',
+            'BEGIN:VEVENT',
+            `SUMMARY:${ev.name}`,
+            `DTSTART:${start}`,
+            `DTEND:${end}`,
+            `LOCATION:${ev.location || ''} ${ev.hotel ? '(宿: ' + ev.hotel + ')' : ''}`,
+            `DESCRIPTION:${safeMemo} ${urlStr}`,
+            'END:VEVENT',
+            'END:VCALENDAR'
+        ].join('\r\n');
+
+        // 🍏 iPhoneのSafariでも確実にダウンロードさせるための呪文
+        const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'event.ics';
+        document.body.appendChild(a); // ← iPhone Safari用に追加！
+        a.click();
+        document.body.removeChild(a); // ← 用が終わったらお片付け
+        window.URL.revokeObjectURL(url);
+    },
 
             getLightColor: function(hex) {
                 if(!hex) return '#f1f5f9';
