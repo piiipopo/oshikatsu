@@ -166,13 +166,15 @@
         alert('検索中にエラーが発生しました。');
     }
 },
-　exportToIPhone: function(evId) {
-    // 💡 1. まずはボタンが繋がっているかの確認用アラート！
-    alert('🍏 カレンダー連携を開始します！'); 
-    
-    const ev = this.events.find(e => String(e.id) === String(evId));
-    if (!ev) return alert('データが見つかりませんでした');
 
+　exportToIPhone: function(evId) {
+    // 💡 まずはこれが絶対に出るはず！
+    alert('🍏 カレンダー連携ボタンが押されました！'); 
+
+    const ev = this.events.find(e => String(e.id) === String(evId));
+    if (!ev) return alert('予定データが見つかりません🥲');
+
+    // 時間の書式変換
     const makeDateTime = (dateStr, timeStr) => {
         if (!dateStr) return '';
         return dateStr.replace(/-/g, '') + 'T' + (timeStr ? timeStr.replace(/:/g, '') + '00' : '000000');
@@ -181,7 +183,7 @@
     const start = makeDateTime(ev.startDate, ev.startTime);
     const end = makeDateTime(ev.endDate || ev.startDate, ev.endTime || ev.startTime);
 
-    // 改行が原因でiPhoneがエラーを起こすのを防ぐ安全処理
+    // メモ欄の改行などでエラーが起きないようにする処理
     const safeMemo = (ev.memo || '').replace(/\n/g, ' / ');
     const urlStr = ev.url ? '🔗 ' + ev.url : '';
 
@@ -198,29 +200,18 @@
         'END:VCALENDAR'
     ].join('\r\n');
 
-    // 💡 2. iPhoneが反応しやすい「直接データを開く」方式に変更
-    window.location.href = 'data:text/calendar;charset=utf8,' + encodeURIComponent(icsData);
+    // 🍏 iPhoneのSafariでも確実にダウンロードさせるための呪文
+    const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'event.ics';
+    document.body.appendChild(a); // ← iPhone Safari用に追加！
+    a.click();
+    document.body.removeChild(a); // ← 用が終わったらお片付け
+    window.URL.revokeObjectURL(url);
 },
 
-            penlightSize: localStorage.getItem('pl_size') !== null ? parseInt(localStorage.getItem('pl_size')) : 40,
-            penlightStroke: localStorage.getItem('pl_stroke') !== null ? parseInt(localStorage.getItem('pl_stroke')) : 2,
-                        // 🌟 ボトムシートの開閉用
-            toggleBottomSheet: function(isOpen) {
-                const sheet = document.getElementById('bottom-sheet');
-                const icon = document.getElementById('bs-toggle-icon');
-                // 引数がない場合は、現在の状態を見て反転させる
-                if (isOpen === undefined) isOpen = sheet.classList.contains('translate-y-[calc(100%-48px)]');
-                
-                if (isOpen) {
-                    // 開くとき
-                    sheet.classList.remove('translate-y-[calc(100%-48px)]');
-                    icon.textContent = '▼';
-                } else {
-                    // 閉じるとき
-                    sheet.classList.add('translate-y-[calc(100%-48px)]');
-                    icon.textContent = '▲';
-                }
-            },
 
             getLightColor: function(hex) {
                 if(!hex) return '#f1f5f9';
@@ -841,9 +832,10 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
 
 ${id ? `
 <div class="pt-1 mb-2">
-    <button type="button" onclick="window.app.exportToIPhone('${id}')" class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl text-xs font-bold border border-indigo-100 flex items-center justify-center gap-1">🍏 iPhoneカレンダーへ連携（通知設定）</button>
+    <button type="button" onclick="alert(typeof window.app.exportToIPhone)" class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl text-xs font-bold border border-indigo-100 flex items-center justify-center gap-1">🍏 iPhoneカレンダーへ連携（通知設定）</button>
 </div>
 ` : ''}
+
 
                         <div class="flex gap-2 pt-2">
                             <button type="button" onclick="window.app.closeModal()" class="flex-1 bg-slate-100 py-3 rounded-2xl text-xs font-bold text-slate-500">戻る</button>
