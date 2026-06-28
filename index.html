@@ -831,20 +831,21 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
 
 ${id ? `
 <div class="pt-1 mb-2">
-    <button type="button" onclick="alert(typeof window.app.exportToIPhone)" class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl text-xs font-bold border border-indigo-100 flex items-center justify-center gap-1">🍏 iPhoneカレンダーへ連携（通知設定）</button>
+    <button type="button" onclick="window.app.exportToIPhone('${id}')" class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl text-xs font-bold border border-indigo-100 flex items-center justify-center gap-1">🍏 iPhoneカレンダーへ連携（通知設定）</button>
 </div>
 ` : ''}
 
-
-                        <div class="flex gap-2 pt-2">
-                            <button type="button" onclick="window.app.closeModal()" class="flex-1 bg-slate-100 py-3 rounded-2xl text-xs font-bold text-slate-500">戻る</button>
-                            ${id ? `<button type="button" onclick="window.app.deleteEvent('${id}')" class="flex-1 bg-rose-50 text-rose-500 py-3 rounded-2xl text-xs font-bold">削除</button>` : ''}
-                            <button type="submit" id="ev-submit-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl text-xs font-bold shadow-md">保存する</button>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-    <input type="number" step="any" id="ev-lat" placeholder="緯度" class="border p-2 rounded">
-    <input type="number" step="any" id="ev-lng" placeholder="経度" class="border p-2 rounded">
+<div class="flex gap-2 pt-2">
+    <button type="button" onclick="window.app.closeModal()" class="flex-1 bg-slate-100 py-3 rounded-2xl text-xs font-bold text-slate-500">戻る</button>
+    ${id ? `<button type="button" onclick="window.app.deleteEvent('${id}')" class="flex-1 bg-rose-50 text-rose-500 py-3 rounded-2xl text-xs font-bold">削除</button>` : ''}
+    <button type="submit" id="ev-submit-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl text-xs font-bold shadow-md">保存する</button>
 </div>
+
+<div class="grid grid-cols-2 gap-2 mt-2">
+    <input type="number" step="any" id="ev-lat" value="${ev?.lat || ''}" placeholder="緯度" class="border p-2 rounded text-xs bg-slate-50">
+    <input type="number" step="any" id="ev-lng" value="${ev?.lng || ''}" placeholder="経度" class="border p-2 rounded text-xs bg-slate-50">
+</div>
+
                     </form>
                 `;
                 this.showModal(html);
