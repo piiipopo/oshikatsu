@@ -171,6 +171,10 @@
     }
 },
 
+        alert('検索中にエラーが発生しました。');
+    }
+},
+
     exportToIPhone: function(evId) {
         // 💡 まずはこれが絶対に出るはず！
         alert('🍏 カレンダー連携ボタンが押されました！'); 
@@ -216,7 +220,7 @@
         window.URL.revokeObjectURL(url);
     },
 
-            getLightColor: function(hex) {
+    getLightColor: function(hex) {
                 if(!hex) return '#f1f5f9';
                 hex = hex.replace('#', '');
                 if(hex.length === 3) hex = hex.split('').map(c => c+c).join('');
