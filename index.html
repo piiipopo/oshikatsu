@@ -737,16 +737,17 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
         let keyframes = '';
         let animSetting = '';
 
-        if (uniqueOshis.length === 1) {
+                if (uniqueOshis.length === 1) {
             // 🌟 単色の場合：「動きなし（シンプルイズベスト！）」
             const o = this.oshis.find(x => String(x.id) == String(uniqueOshis[0]));
             const c = o?.color || '#3b82f6';
             
-            // アニメーションはさせず、色を固定するだけ
+            // 0sだと透明になってしまうので、変化しないアニメーションをかけ続けます
             keyframes = `0%, 100% { fill: ${c}; }`;
-            animSetting = '0s'; // 動かさない
+            animSetting = '1s infinite linear'; // 🌟 0s を 1s infinite linear に修正！
             
         } else {
+          
             // 🌟 複数色の場合（ゆっくりオーロラ）
             const step = 100 / uniqueOshis.length;
             uniqueOshis.forEach((oid, idx) => {
