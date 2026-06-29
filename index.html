@@ -699,27 +699,26 @@ openMapModal: function() {
     let html = `...`; // htmlはそのまま
     this.showModal(html);
     
-    // 少し待ってから地図を作る
-    setTimeout(() => { this.initMap(); }, 200);
-},
-
-// --- 2. 地図を作る処理 ---
-initMap: function() {
-    // すでに地図が作られていたら重複しないようにガード
-    if (this.mapInstance) this.mapInstance.remove();
-
-    this.mapInstance = L.map('map-container').setView([35.5, 137.5], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-        attribution: '&copy; OpenStreetMap' 
-    }).addTo(this.mapInstance);
-
-    // データがなければ待機、あれば描画
-    if (!this.events || this.events.length === 0) {
-        console.log("データがまだ届いてないみたい！0.5秒待つね");
-        setTimeout(() => { this.drawPenlights(); }, 500); 
+   // 修正版：OpenMapModal の中の setTimeout 部分
+setTimeout(() => {
+    // 地図がまだ作られていない場合だけ initMap を呼ぶ
+    if (!this.mapInstance) {
+        this.initMap();
     } else {
+        // すでに地図がある場合は、地図のサイズだけ再計算して更新する
+        this.mapInstance.invalidateSize();
+        // そしてペンライトを再描画する
         this.drawPenlights();
     }
+}, 300); // 300ミリ秒に少し延ばしました
+
+initMap: function() {
+    // 地図を作る処理
+    this.mapInstance = L.map('map-container').setView([35.5, 137.5], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { ... }).addTo(this.mapInstance);
+
+    // 作った地図にペンライトを描画する
+    this.drawPenlights();
 },
 
 // --- 3. ペンライトを描画する専用関数 ---
