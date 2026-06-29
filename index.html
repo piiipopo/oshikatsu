@@ -695,19 +695,25 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
             },
 
             openMapModal: function() {
-                let html = `
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-extrabold text-slate-700 flex items-center gap-1.5">📍 Oshikatsu Map</h3>
-                    </div>
-                    
-                    <div id="map-container" class="w-full h-80 rounded-2xl border border-slate-200 shadow-inner z-10"></div>
-                    
-                    <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
-                `;
-                this.showModal(html);
-                
-                setTimeout(() => { this.initMap(); }, 200);
-            },
+    // 🌟 お守りポイント：もし前の地図が残っていたら、完全に破壊して記憶を消す！
+    if (this.mapInstance) {
+        this.mapInstance.remove();
+        this.mapInstance = null; // nullを入れて完全に空っぽにするのが裏技です
+    }
+
+    let html = `
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-extrabold text-slate-700 flex items-center gap-1.5">📍 Oshikatsu Map</h3>
+        </div>
+        <div id="map-container" class="w-full h-80 rounded-2xl border border-slate-200 shadow-inner z-10"></div>
+        <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
+    `;
+    this.showModal(html);
+    
+    // 🌟 お守りポイント：画面がちゃんと作られるまで、ちょっとだけ長めに待つ（300推奨）
+    setTimeout(() => { this.initMap(); }, 300);
+},
+
 
             initMap: function() {
     this.mapInstance = L.map('map-container').setView([35.5, 137.5], 5);
