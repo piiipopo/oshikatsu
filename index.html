@@ -150,7 +150,7 @@
             
     searchHotelLatLng: async function() {
     const hotelName = document.getElementById('ev-hotel').value;
-    if (!hotelName) return alert('ホテル名を入力してください！');
+    if (!hotelName) return alert('ホテル名を入力してください');
 
     try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(hotelName)}&limit=1`);
@@ -160,12 +160,12 @@
             document.getElementById('ev-hotel-lat').value = data[0].lat;
             document.getElementById('ev-hotel-lng').value = data[0].lon;
             document.getElementById('manual-hotel-latlng').style.display = 'block';
-            alert('見つかりました！自動入力完了です🏨');
+            alert('見つかりました🏨自動入力完了です🙆‍♀️');
         } else {
-            alert('場所が見つかりませんでした。手入力してください。');
+            alert('場所が見つかりませんでした🙅‍♀️手入力してください');
         }
     } catch (err) {
-        alert('検索中にエラーが発生しました。');
+        alert('検索中にエラーが発生しました😵‍💫');
     }
 },
 
