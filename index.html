@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Oshikatsu Calendar</title>
@@ -30,30 +29,14 @@
         
         .day-cell { position: relative; overflow: visible; }
 
-        /* ✨ ペンライトのアニメーション */
+        /* ✨ ペンライトのアニメーション（フワフワを削除し、原点のみ指定） */
         .penlight-wrapper {
             transform-origin: bottom center;
-        }
-       
-        .penlight-glow {
-            position: absolute;
-            top: 25%;
-            left: 30%;
-            width: 40%;
-            height: 35%;
-            border-radius: 50%;
-            filter: blur(8px);
-            animation: glow-intensity 2s infinite ease-in-out;
-        }
-        @keyframes glow-intensity {
-            0%, 100% { transform: scale(1); opacity: 0.2; }
-            50% { transform: scale(1.8); opacity: 0.3; }
         }
     </style>
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
-    <!-- ヘッダー -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
@@ -71,16 +54,13 @@
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
-        <!-- カウントダウン -->
         <div id="countdown-container"></div>
 
-        <!-- 推しフィルター ＆ 予定一覧 -->
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
         </div>
 
-        <!-- カレンダー本体 -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
@@ -95,7 +75,6 @@
             <div id="calendar-container" class="space-y-8"></div>
         </section>
 
-        <!-- Eventsリスト -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="selected-date-title" class="text-sm font-bold text-slate-500">Events</h3>
@@ -104,7 +83,7 @@
         </section>
     </main>
 
-        <div id="bottom-sheet" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transition-transform duration-300 transform translate-y-[calc(100%-48px)] z-40" style="padding-bottom: env(safe-area-inset-bottom);">
+    <div id="bottom-sheet" class="fixed bottom-0 left-0 w-full bg-white rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] transition-transform duration-300 transform translate-y-[calc(100%-48px)] z-40" style="padding-bottom: env(safe-area-inset-bottom);">
         <div id="bottom-sheet-handle" class="w-full flex flex-col items-center pt-3 pb-2 cursor-pointer" onclick="window.app.toggleBottomSheet()">
             <div class="w-10 h-1.5 bg-slate-200 rounded-full mb-1.5"></div>
             <div class="text-[11px] font-bold text-slate-500 flex items-center gap-2">
@@ -113,18 +92,10 @@
             </div>
         </div>
         <div id="bottom-sheet-content" class="px-4 pb-6 overflow-y-auto" style="max-height: 40vh; min-height: 20vh;">
-            <div id="daily-events-container" class="space-y-3 pb-20">
-                </div>
+            <div id="daily-events-container" class="space-y-3 pb-20"></div>
         </div>
     </div>
-    <button id="fab-button" onclick="window.app.openEventModal()" class="fixed bottom-10 right-6 w-14 h-14 bg-slate-700 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl font-bold z-40 scale-active hide-in-shot transition-all duration-400">
-        <span class="mb-1">＋</span>
-    </button>
-
-    <div id="modal-layer" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 modal-overlay">
-        <div id="modal-content" class="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl overflow-y-auto max-h-[90vh]"></div>
-    </div>
-
+    
     <button id="fab-button" onclick="window.app.openEventModal()" class="fixed bottom-10 right-6 w-14 h-14 bg-slate-700 text-white rounded-full shadow-2xl flex items-center justify-center text-3xl font-bold z-40 scale-active hide-in-shot transition-all duration-400">
         <span class="mb-1">＋</span>
     </button>
@@ -135,103 +106,71 @@
 
     <script>
     (function() {
-                const App = {
+        const App = {
             appTitle: localStorage.getItem('oshi_title') || 'Oshikatsu',
             baseYear: 0, baseMonth: 0, selectedDateStr: '', activeOshiFilter: 'all', 
             oshis: JSON.parse(localStorage.getItem('oshi_list')) || [{ id: 'o1', name: '推し', color: '#7dd3fc', birthday: '', imagePos: 50 }],
             categories: JSON.parse(localStorage.getItem('cat_list')) || [{ id: 'c1', name: 'LIVE' }, { id: 'c2', name: 'チケット発売日' }, { id: 'c3', name: '当落発表' }],
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
+            hotels: JSON.parse(localStorage.getItem('hotel_list')) || [], // 🌟 ホテルマスタ用のデータを追加
             holidays: {},
             mapInstance: null,
             
-            // 🌟🌟🌟 ここに2行追加するだけ！ 🌟🌟🌟
             penlightSize: parseInt(localStorage.getItem('pl_size')) || 40,
             penlightStroke: parseInt(localStorage.getItem('pl_stroke')) || 2,
-            
-            searchHotelLatLng: async function() {
-    const hotelName = document.getElementById('ev-hotel').value;
-    if (!hotelName) return alert('ホテル名を入力してください');
 
-    try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(hotelName)}&limit=1`);
-        const data = await res.json();
+            exportToIPhone: function(evId) {
+                alert('🍏 カレンダーで通知を登録してください'); 
+                const ev = this.events.find(e => String(e.id) === String(evId));
+                if (!ev) return alert('予定データが見つかりません🥲');
 
-        if (data && data.length > 0) {
-            document.getElementById('ev-hotel-lat').value = data[0].lat;
-            document.getElementById('ev-hotel-lng').value = data[0].lon;
-            document.getElementById('manual-hotel-latlng').style.display = 'block';
-            alert('見つかりました🏨自動入力完了です🙆‍♀️');
-        } else {
-            alert('場所が見つかりませんでした🙅‍♀️手入力してください');
-        }
-    } catch (err) {
-        alert('検索中にエラーが発生しました😵‍💫');
-    }
-},
+                const makeDateTime = (dateStr, timeStr) => {
+                    if (!dateStr) return '';
+                    return dateStr.replace(/-/g, '') + 'T' + (timeStr ? timeStr.replace(/:/g, '') + '00' : '000000');
+                };
 
-    exportToIPhone: function(evId) {
-        // 💡 まずはこれが絶対に出るはず！
-        alert('🍏 カレンダーで通知を登録してください'); 
+                const start = makeDateTime(ev.startDate, ev.startTime);
+                const end = makeDateTime(ev.endDate || ev.startDate, ev.endTime || ev.startTime);
+                const safeMemo = (ev.memo || '').replace(/\n/g, ' / ');
+                const urlStr = ev.url ? '🔗 ' + ev.url : '';
 
-        const ev = this.events.find(e => String(e.id) === String(evId));
-        if (!ev) return alert('予定データが見つかりません🥲');
+                const icsData = [
+                    'BEGIN:VCALENDAR',
+                    'VERSION:2.0',
+                    'BEGIN:VEVENT',
+                    `SUMMARY:${ev.name}`,
+                    `DTSTART:${start}`,
+                    `DTEND:${end}`,
+                    `LOCATION:${ev.location || ''} ${ev.hotel ? '(宿: ' + ev.hotel + ')' : ''}`,
+                    `DESCRIPTION:${safeMemo} ${urlStr}`,
+                    'END:VEVENT',
+                    'END:VCALENDAR'
+                ].join('\r\n');
 
-        // 時間の書式変換
-        const makeDateTime = (dateStr, timeStr) => {
-            if (!dateStr) return '';
-            return dateStr.replace(/-/g, '') + 'T' + (timeStr ? timeStr.replace(/:/g, '') + '00' : '000000');
-        };
+                const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'event.ics';
+                document.body.appendChild(a); 
+                a.click();
+                document.body.removeChild(a); 
+                window.URL.revokeObjectURL(url);
+            },
 
-        const start = makeDateTime(ev.startDate, ev.startTime);
-        const end = makeDateTime(ev.endDate || ev.startDate, ev.endTime || ev.startTime);
+            toggleBottomSheet: function(isOpen) {
+                const sheet = document.getElementById('bottom-sheet');
+                if (!sheet) return;
+                if (isOpen) {
+                    sheet.classList.remove('translate-y-full');
+                    sheet.style.transform = 'translateY(0)'; 
+                } else {
+                    sheet.classList.add('translate-y-full');
+                    sheet.style.transform = 'translateY(100%)';
+                }
+            },
 
-        // メモ欄の改行などでエラーが起きないようにする処理
-        const safeMemo = (ev.memo || '').replace(/\n/g, ' / ');
-        const urlStr = ev.url ? '🔗 ' + ev.url : '';
-
-        const icsData = [
-            'BEGIN:VCALENDAR',
-            'VERSION:2.0',
-            'BEGIN:VEVENT',
-            `SUMMARY:${ev.name}`,
-            `DTSTART:${start}`,
-            `DTEND:${end}`,
-            `LOCATION:${ev.location || ''} ${ev.hotel ? '(宿: ' + ev.hotel + ')' : ''}`,
-            `DESCRIPTION:${safeMemo} ${urlStr}`,
-            'END:VEVENT',
-            'END:VCALENDAR'
-        ].join('\r\n');
-
-        // 🍏 iPhoneのSafariでも確実にダウンロードさせるための呪文
-        const blob = new Blob([icsData], { type: 'text/calendar;charset=utf-8' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'event.ics';
-        document.body.appendChild(a); // ← iPhone Safari用に追加！
-        a.click();
-        document.body.removeChild(a); // ← 用が終わったらお片付け
-        window.URL.revokeObjectURL(url);
-    },
-
-    // 🌟🌟🌟 ここから下の部分を新しく追加します！ 🌟🌟🌟
-    toggleBottomSheet: function(isOpen) {
-        const sheet = document.getElementById('bottom-sheet');
-        if (!sheet) return;
-        
-        if (isOpen) {
-            // シートを上に引っ張り出す
-            sheet.classList.remove('translate-y-full');
-            sheet.style.transform = 'translateY(0)'; 
-        } else {
-            // シートを下に隠す
-            sheet.classList.add('translate-y-full');
-            sheet.style.transform = 'translateY(100%)';
-        }
-    },
-    // 🌟🌟🌟 ここまで 🌟🌟🌟
-
-    getLightColor: function(hex) {
+            getLightColor: function(hex) {
                 if(!hex) return '#f1f5f9';
                 hex = hex.replace('#', '');
                 if(hex.length === 3) hex = hex.split('').map(c => c+c).join('');
@@ -291,6 +230,7 @@
                 localStorage.setItem('oshi_events', JSON.stringify(this.events)); 
                 localStorage.setItem('pl_size', this.penlightSize);
                 localStorage.setItem('pl_stroke', this.penlightStroke);
+                localStorage.setItem('hotel_list', JSON.stringify(this.hotels)); // 🌟 ホテル保存追加
             },
 
             editTitle: function() {
@@ -554,13 +494,11 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                 });
             },
 
-                        renderDailyEvents: function() {
-                // 1. ボトムシートの中のコンテナを指定
+            renderDailyEvents: function() {
                 const container = document.getElementById('daily-events-container');
                 const evs = this.getEventsForDay(this.selectedDateStr);
                 const bdays = this.oshis.filter(o => o.birthday && o.birthday.slice(5) === this.selectedDateStr.slice(5) && (this.activeOshiFilter === 'all' || String(o.id) === String(this.activeOshiFilter)));
                 
-                // 2. ボトムシートの日付表示を更新
                 document.getElementById('bs-date-display').textContent = this.selectedDateStr.replace(/-/g, '/') + ' の予定';
                 
                 let html = '';
@@ -625,7 +563,6 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
 
                 if (!html && bdays.length === 0 && !holidayName) html = '<div class="text-center text-slate-300 text-xs py-8">予定はありません</div>';
                 
-                // 3. ボトムシートの中身を書き換える
                 container.innerHTML = html;
             },
 
@@ -695,117 +632,109 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
             },
 
             openMapModal: function() {
-    // 🌟 お守りポイント：もし前の地図が残っていたら、完全に破壊して記憶を消す！
-    if (this.mapInstance) {
-        this.mapInstance.remove();
-        this.mapInstance = null; // nullを入れて完全に空っぽにするのが裏技です
-    }
+                if (this.mapInstance) {
+                    this.mapInstance.remove();
+                    this.mapInstance = null; 
+                }
 
-    let html = `
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-extrabold text-slate-700 flex items-center gap-1.5">📍 Oshikatsu Map</h3>
-        </div>
-        <div id="map-container" class="w-full h-80 rounded-2xl border border-slate-200 shadow-inner z-10"></div>
-        <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
-    `;
-    this.showModal(html);
-    
-    // 🌟 お守りポイント：画面がちゃんと作られるまで、ちょっとだけ長めに待つ（300推奨）
-    setTimeout(() => { this.initMap(); }, 300);
-},
-
+                let html = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-extrabold text-slate-700 flex items-center gap-1.5">📍 Oshikatsu Map</h3>
+                    </div>
+                    <div id="map-container" class="w-full h-80 rounded-2xl border border-slate-200 shadow-inner z-10"></div>
+                    <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
+                `;
+                this.showModal(html);
+                
+                setTimeout(() => { this.initMap(); }, 300);
+            },
 
             initMap: function() {
-    this.mapInstance = L.map('map-container').setView([35.5, 137.5], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(this.mapInstance);
+                this.mapInstance = L.map('map-container').setView([35.5, 137.5], 5);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(this.mapInstance);
 
-    const groups = {};
-    this.events.forEach(ev => {
-        if (ev.isMapPin && ev.lat && ev.lng) {
-            const key = `${ev.lat.toFixed(4)}_${ev.lng.toFixed(4)}`;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(ev);
-        }
-    });
+                const groups = {};
+                this.events.forEach(ev => {
+                    if (ev.isMapPin && ev.lat && ev.lng) {
+                        const key = `${ev.lat.toFixed(4)}_${ev.lng.toFixed(4)}`;
+                        if (!groups[key]) groups[key] = [];
+                        groups[key].push(ev);
+                    }
+                });
 
-    Object.values(groups).forEach((group, gIdx) => {
-        group.sort((a,b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.startDate));
-        const w = this.penlightSize, h = Math.round(w * 1.35);
-        const uniqueOshis = [...new Set(group.map(e => e.oshiId))];
-        
-                        const animName = 'anim' + gIdx + Date.now();
-        let keyframes = '';
-        let animSetting = '';
+                Object.values(groups).forEach((group, gIdx) => {
+                    group.sort((a,b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.startDate));
+                    const w = this.penlightSize, h = Math.round(w * 1.35);
+                    const uniqueOshis = [...new Set(group.map(e => e.oshiId))];
+                    
+                    const animName = 'anim' + gIdx + Date.now();
+                    let keyframes = '';
+                    let animSetting = '';
 
-                if (uniqueOshis.length === 1) {
-            // 🌟 単色の場合：「動きなし（シンプルイズベスト！）」
-            const o = this.oshis.find(x => String(x.id) == String(uniqueOshis[0]));
-            const c = o?.color || '#3b82f6';
-            
-            // 0sだと透明になってしまうので、変化しないアニメーションをかけ続けます
-            keyframes = `0%, 100% { fill: ${c}; }`;
-            animSetting = '1s infinite linear'; // 🌟 0s を 1s infinite linear に修正！
-            
-        } else {
-          
-            // 🌟 複数色の場合（ゆっくりオーロラ）
-            const step = 100 / uniqueOshis.length;
-            uniqueOshis.forEach((oid, idx) => {
-                const o = this.oshis.find(x => String(x.id) == String(oid));
-                keyframes += `${idx * step}% { fill: ${o?.color || '#3b82f6'}; } `;
-            });
-            keyframes += `100% { fill: ${this.oshis.find(x => x.id == uniqueOshis[0])?.color || '#3b82f6'}; }`;
-            animSetting = `${uniqueOshis.length * 2}s infinite linear`;
-        }
-        
-        const penlightHTML = `
-            <div class="penlight-wrapper relative" style="width: ${w}px; height: ${h}px;">
-                <style>
-                    @keyframes ${animName} { ${keyframes} }
-                    .heart-glow-${gIdx} { animation: ${animName} ${animSetting}; }
-                </style>
-                <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); position: relative; z-index: 10;">
-                    <path class="heart-glow-${gIdx}" d="M13 6 L27 6 L36 14 L20 27 L4 14 Z" stroke="#ffffff" stroke-width="${this.penlightStroke}" stroke-linejoin="round" stroke-opacity="0.8"/>
-                    <path d="M4 14 L36 14 M13 6 L16 14 L24 14 L27 6 M16 14 L20 27 L24 14" stroke="#ffffff" stroke-width="1" fill="none" opacity="0.6" stroke-linejoin="round"/>
-                    <rect x="16" y="27" width="8" height="3" fill="#111111" stroke="#000000" stroke-width="1"/>
-                    <path d="M16.5 30L15.5 46C15.5 48 16.5 49 20 49C23.5 49 24.5 48 24.5 46L23.5 30H16.5Z" fill="#333333" stroke="#000000" stroke-width="1"/>
-                    <circle cx="20" cy="35" r="1.2" fill="#aaaaaa"/>
-                </svg>
-            </div>
-        `;
-        
-        const marker = L.marker([group[0].lat, group[0].lng], { 
-            icon: L.divIcon({ html: penlightHTML, className: 'custom-div-icon', iconSize: [w, h], iconAnchor: [w/2, h*0.9] }) 
-        }).addTo(this.mapInstance);
+                    if (uniqueOshis.length === 1) {
+                        const o = this.oshis.find(x => String(x.id) == String(uniqueOshis[0]));
+                        const c = o?.color || '#3b82f6';
+                        
+                        // 🌟 透明にならないよう、1s infinite linear で色を固定
+                        keyframes = `0%, 100% { fill: ${c}; }`;
+                        animSetting = '1s infinite linear'; 
+                    } else {
+                        const step = 100 / uniqueOshis.length;
+                        uniqueOshis.forEach((oid, idx) => {
+                            const o = this.oshis.find(x => String(x.id) == String(oid));
+                            keyframes += `${idx * step}% { fill: ${o?.color || '#3b82f6'}; } `;
+                        });
+                        keyframes += `100% { fill: ${this.oshis.find(x => x.id == uniqueOshis[0])?.color || '#3b82f6'}; }`;
+                        animSetting = `${uniqueOshis.length * 2}s infinite linear`;
+                    }
+                    
+                    const penlightHTML = `
+                        <div class="penlight-wrapper relative" style="width: ${w}px; height: ${h}px;">
+                            <style>
+                                @keyframes ${animName} { ${keyframes} }
+                                .heart-glow-${gIdx} { animation: ${animName} ${animSetting}; }
+                            </style>
+                            <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); position: relative; z-index: 10;">
+                                <path class="heart-glow-${gIdx}" d="M13 6 L27 6 L36 14 L20 27 L4 14 Z" stroke="#ffffff" stroke-width="${this.penlightStroke}" stroke-linejoin="round" stroke-opacity="0.8"/>
+                                <path d="M4 14 L36 14 M13 6 L16 14 L24 14 L27 6 M16 14 L20 27 L24 14" stroke="#ffffff" stroke-width="1" fill="none" opacity="0.6" stroke-linejoin="round"/>
+                                <rect x="16" y="27" width="8" height="3" fill="#111111" stroke="#000000" stroke-width="1"/>
+                                <path d="M16.5 30L15.5 46C15.5 48 16.5 49 20 49C23.5 49 24.5 48 24.5 46L23.5 30H16.5Z" fill="#333333" stroke="#000000" stroke-width="1"/>
+                                <circle cx="20" cy="35" r="1.2" fill="#aaaaaa"/>
+                            </svg>
+                        </div>
+                    `;
+                    
+                    const marker = L.marker([group[0].lat, group[0].lng], { 
+                        icon: L.divIcon({ html: penlightHTML, className: 'custom-div-icon', iconSize: [w, h], iconAnchor: [w/2, h*0.9] }) 
+                    }).addTo(this.mapInstance);
 
-        marker.bindPopup(`
-            <div class="text-center font-bold p-1">
-                <div class="text-[11px] text-slate-800 border-b pb-1 mb-1 font-black underline decoration-sky-300">${group[0].location}</div>
-                ${group.map(ev => `<div class="text-[9px] text-slate-600">${ev.startDate.replace(/-/g, '/')} ${ev.name}</div>`).join('')}
-            </div>
-        `);
-    });
-        // ホテルピンの処理を少しだけ改造
-    this.events.forEach(ev => {
-        if (ev.hotelLat && ev.hotelLng) {
-            L.marker([parseFloat(ev.hotelLat), parseFloat(ev.hotelLng)], {
-                icon: L.divIcon({
-                    html: `<div style="background:white; color:black; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:2px solid #9C9C9C; font-size:10px; box-shadow:0 2px 4px rgba(0,0,0,0.3);">🏨</div>`,
-                    className: 'hotel-icon', iconSize: [24, 24]
-                })
-            }).addTo(this.mapInstance).bindPopup(`<div class="text-[11px] font-bold">🏨 ${ev.hotel}</div>`);
-        }
-    });
-},
+                    marker.bindPopup(`
+                        <div class="text-center font-bold p-1">
+                            <div class="text-[11px] text-slate-800 border-b pb-1 mb-1 font-black underline decoration-sky-300">${group[0].location}</div>
+                            ${group.map(ev => `<div class="text-[9px] text-slate-600">${ev.startDate.replace(/-/g, '/')} ${ev.name}</div>`).join('')}
+                        </div>
+                    `);
+                });
+
+                this.events.forEach(ev => {
+                    if (ev.hotelLat && ev.hotelLng) {
+                        L.marker([parseFloat(ev.hotelLat), parseFloat(ev.hotelLng)], {
+                            icon: L.divIcon({
+                                html: `<div style="background:white; color:black; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border:2px solid #9C9C9C; font-size:10px; box-shadow:0 2px 4px rgba(0,0,0,0.3);">🏨</div>`,
+                                className: 'hotel-icon', iconSize: [24, 24]
+                            })
+                        }).addTo(this.mapInstance).bindPopup(`<div class="text-[11px] font-bold">🏨 ${ev.hotel}</div>`);
+                    }
+                });
+            },
 
             openEventModal: function(id = null) {
                 const ev = this.events.find(e => String(e.id) === String(id)) || { 
-    name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
-    oshiId: this.oshis[0]?.id, categoryId: this.categories[0]?.id, repeat: 'none', 
-    location: '', hotel: '', isCountdown: false, memo: '', url: '', isMapPin: false, 
-    lat: null, lng: null,
-    hotelLat: null, hotelLng: null // ✨ ここを追加！
-};
+                    name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
+                    oshiId: this.oshis[0]?.id, categoryId: this.categories[0]?.id, repeat: 'none', 
+                    location: '', hotelId: '', hotel: '', isCountdown: false, memo: '', url: '', isMapPin: false, 
+                    lat: null, lng: null, hotelLat: null, hotelLng: null
+                };
                 
                 let html = `
                     <h3 class="font-bold mb-4 text-slate-700">${id ? '予定を編集' : '予定を追加'}</h3>
@@ -840,127 +769,125 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                             </label>
                        </div>
 
-<input type="text" id="ev-loc" value="${ev.location || ''}" placeholder="📍 場所・住所 (例: 横浜アリーナ / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                        <input type="text" id="ev-loc" value="${ev.location || ''}" placeholder="📍 場所・住所 (例: 横浜アリーナ / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold mb-1">
 
-<div class="flex gap-2">
-    <input type="text" id="ev-hotel" value="${ev.hotel || ''}" placeholder="🏨 宿泊施設名 (任意)" class="flex-grow bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
-    <button type="button" onclick="window.app.searchHotelLatLng()" class="bg-sky-500 text-white px-3 rounded-xl text-[10px] font-bold whitespace-nowrap">検索</button>
-</div>
-
-<div class="mt-2">
-    <button type="button" onclick="document.getElementById('manual-hotel-latlng').style.display='block'" 
-            class="text-[9px] text-slate-400 underline font-bold ml-1">📍 ホテル緯度経度の手入力が必要な場合</button>
-    <div id="manual-hotel-latlng" class="hidden grid grid-cols-2 gap-2 mt-2">
-        <input type="number" step="any" id="ev-hotel-lat" placeholder="ホテル緯度" value="${ev.hotelLat || ''}" class="bg-slate-50 border p-2 rounded text-xs font-bold">
-        <input type="number" step="any" id="ev-hotel-lng" placeholder="ホテル経度" value="${ev.hotelLng || ''}" class="bg-slate-50 border p-2 rounded text-xs font-bold">
-    </div>
-</div>
-
+                        <div class="bg-sky-50/50 p-2 rounded-xl border border-sky-100 mb-2">
+                            <select id="ev-hotel-id" class="w-full bg-white p-3 rounded-lg text-xs border border-slate-200 font-bold text-slate-600 outline-none">
+                                <option value="">🏨 宿泊なし / ホテル未選択</option>
+                                ${ev.hotel && !ev.hotelId ? `<option value="old_custom" selected>🏨 ${ev.hotel} (過去の直接入力)</option>` : ''}
+                                ${this.hotels.map(h => `<option value="${h.id}" ${String(h.id) === String(ev.hotelId) ? 'selected' : ''}>${h.name}</option>`).join('')}
+                            </select>
+                            <p class="text-[9px] text-slate-400 mt-1.5 ml-1 font-bold">※ 定宿は⚙️設定の「ホテルマスタ」から追加できます</p>
+                        </div>
 
                         <input type="url" id="ev-url" value="${ev.url || ''}" placeholder="🔗 URL (動画やチケット等 / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                         <textarea id="ev-memo" placeholder="📝 思い出メモ・座席番号など (任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold h-16">${ev.memo || ''}</textarea>
+                        
                         <select id="ev-repeat" class="w-full bg-slate-50 p-3 rounded-xl text-xs border border-slate-100 font-bold">
                             <option value="none" ${ev.repeat === 'none' ? 'selected' : ''}>繰り返しなし</option>
                             <option value="weekly" ${ev.repeat === 'weekly' ? 'selected' : ''}>毎週</option>
                             <option value="monthly" ${ev.repeat === 'monthly' ? 'selected' : ''}>毎月</option>
-                        // ...（上のセレクトボックスなどの
+                        </select>
 
-</select>
+                        ${id ? `
+                        <div class="pt-1 mb-2">
+                            <button type="button" onclick="window.app.exportToIPhone('${id}')" class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl text-xs font-bold border border-indigo-100 flex items-center justify-center gap-1">🍏 iPhoneカレンダーへ連携（通知設定）</button>
+                        </div>
+                        ` : ''}
 
-${id ? `
-<div class="pt-1 mb-2">
-    <button type="button" onclick="window.app.exportToIPhone('${id}')" class="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl text-xs font-bold border border-indigo-100 flex items-center justify-center gap-1">🍏 iPhoneカレンダーへ連携（通知設定）</button>
-</div>
-` : ''}
+                        <div class="flex gap-2 pt-2">
+                            <button type="button" onclick="window.app.closeModal()" class="flex-1 bg-slate-100 py-3 rounded-2xl text-xs font-bold text-slate-500">戻る</button>
+                            ${id ? `<button type="button" onclick="window.app.deleteEvent('${id}')" class="flex-1 bg-rose-50 text-rose-500 py-3 rounded-2xl text-xs font-bold">削除</button>` : ''}
+                            <button type="submit" id="ev-submit-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl text-xs font-bold shadow-md">保存する</button>
+                        </div>
 
-<div class="flex gap-2 pt-2">
-    <button type="button" onclick="window.app.closeModal()" class="flex-1 bg-slate-100 py-3 rounded-2xl text-xs font-bold text-slate-500">戻る</button>
-    ${id ? `<button type="button" onclick="window.app.deleteEvent('${id}')" class="flex-1 bg-rose-50 text-rose-500 py-3 rounded-2xl text-xs font-bold">削除</button>` : ''}
-    <button type="submit" id="ev-submit-btn" class="flex-1 bg-slate-700 text-white py-3 rounded-2xl text-xs font-bold shadow-md">保存する</button>
-</div>
+                        <div class="grid grid-cols-2 gap-2 mt-1.5">
+                            <input type="number" step="any" id="ev-lat" placeholder="緯度" class="border p-1 h-7 rounded-lg text-[10px] bg-slate-50 text-slate-400 text-center focus:outline-none">
+                            <input type="number" step="any" id="ev-lng" placeholder="経度" class="border p-1 h-7 rounded-lg text-[10px] bg-slate-50 text-slate-400 text-center focus:outline-none">
+                        </div>
+                    </form>
+                `;
+                this.showModal(html);
 
-<div class="grid grid-cols-2 gap-2 mt-1.5">
-    <input type="number" step="any" id="ev-lat" placeholder="緯度" class="border p-1 h-7 rounded-lg text-[10px] bg-slate-50 text-slate-400 text-center focus:outline-none">
-    <input type="number" step="any" id="ev-lng" placeholder="経度" class="border p-1 h-7 rounded-lg text-[10px] bg-slate-50 text-slate-400 text-center focus:outline-none">
-</div>
-</form>
-`;
-this.showModal(html);
+                document.getElementById('ev-lat').value = ev.lat || '';
+                document.getElementById('ev-lng').value = ev.lng || '';
 
-// フォームを開いた時に、保存済みの座標を表示する（onsubmitの直前に置くと安全です！）
-document.getElementById('ev-lat').value = ev.lat || '';
-document.getElementById('ev-lng').value = ev.lng || '';
+                document.getElementById('ev-form').onsubmit = async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('ev-submit-btn');
+                    btn.textContent = '保存中...';
+                    
+                    const loc = document.getElementById('ev-loc').value.trim();
+                    const isMapPin = document.getElementById('ev-mappin').checked;
+                    
+                    let lat = parseFloat(document.getElementById('ev-lat').value);
+                    let lng = parseFloat(document.getElementById('ev-lng').value);
 
-// ここから下が上書きするメインの処理です！
-document.getElementById('ev-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('ev-submit-btn');
-    btn.textContent = '保存中...';
-    
-    const loc = document.getElementById('ev-loc').value.trim();
-    const isMapPin = document.getElementById('ev-mappin').checked;
-    
-    // 1. まず手入力の緯度経度を取得する
-    let lat = parseFloat(document.getElementById('ev-lat').value);
-    let lng = parseFloat(document.getElementById('ev-lng').value);
+                    if (isMapPin && loc && (isNaN(lat) || isNaN(lng))) {
+                        btn.textContent = '場所を検索中...';
+                        try {
+                            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
+                            const d = await res.json();
+                            if (d && d.length > 0) { 
+                                lat = parseFloat(d[0].lat); 
+                                lng = parseFloat(d[0].lon); 
+                            }
+                        } catch (err) { console.log('検索エラー'); }
+                    }
 
-    // 2. もし手入力欄が空っぽなら、検索して座標を探す
-    if (isMapPin && loc && (isNaN(lat) || isNaN(lng))) {
-        btn.textContent = '場所を検索中...';
-        try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}`);
-            const d = await res.json();
-            if (d && d.length > 0) { 
-                lat = parseFloat(d[0].lat); 
-                lng = parseFloat(d[0].lon); 
-            }
-        } catch (err) { console.log('検索エラー'); }
-    }
+                    // 🌟 ホテル情報の紐付け
+                    const selectedHotelId = document.getElementById('ev-hotel-id').value;
+                    let hName = ''; let hLat = null; let hLng = null;
 
-// 3. 画面の入力内容をしっかり集めて保存！
-const newEv = { 
-    id: ev.id || 'ev' + Date.now(),
-    startDate: document.getElementById('ev-start').value,
-    endDate: document.getElementById('ev-end').value,
-    startTime: document.getElementById('ev-stime') ? document.getElementById('ev-stime').value : (ev.startTime || ''),
-    endTime: document.getElementById('ev-etime') ? document.getElementById('ev-etime').value : (ev.endTime || ''),
-    name: document.getElementById('ev-name').value, 
-    location: loc, 
-    hotel: document.getElementById('ev-hotel').value, // ホテル名
-    oshiId: document.getElementById('ev-oshi').value,
-    categoryId: document.getElementById('ev-cat') ? document.getElementById('ev-cat').value : (ev.categoryId || ''),
-    repeat: document.getElementById('ev-repeat') ? document.getElementById('ev-repeat').value : (ev.repeat || 'none'),
-    isCountdown: document.getElementById('ev-count') ? document.getElementById('ev-count').checked : (ev.isCountdown || false),
-    isMapPin: isMapPin, 
-    lat: lat, 
-    lng: lng,
-    // ★ここからホテルの緯度経度をしっかり拾う！
-    hotelLat: document.getElementById('ev-hotel-lat') ? document.getElementById('ev-hotel-lat').value : (ev.hotelLat || null),
-    hotelLng: document.getElementById('ev-hotel-lng') ? document.getElementById('ev-hotel-lng').value : (ev.hotelLng || null),
-    url: document.getElementById('ev-url').value,
-    memo: document.getElementById('ev-memo').value
-};
-    
-    if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
-    else this.events.push(newEv);
-    
-    this.save(); 
-    this.closeModal(); 
-    this.renderCalendar();
-    if (typeof this.renderCountdowns === 'function') this.renderCountdowns();
-};
+                    if (selectedHotelId === 'old_custom') {
+                        // 過去の直接入力データを維持
+                        hName = ev.hotel; hLat = ev.hotelLat; hLng = ev.hotelLng;
+                    } else if (selectedHotelId) {
+                        // マスタから取得
+                        const h = this.hotels.find(x => String(x.id) === String(selectedHotelId));
+                        if (h) { hName = h.name; hLat = h.lat; hLng = h.lng; }
+                    }
+
+                    const newEv = { 
+                        id: ev.id || 'ev' + Date.now(),
+                        startDate: document.getElementById('ev-start').value,
+                        endDate: document.getElementById('ev-end').value,
+                        startTime: document.getElementById('ev-stime') ? document.getElementById('ev-stime').value : (ev.startTime || ''),
+                        endTime: document.getElementById('ev-etime') ? document.getElementById('ev-etime').value : (ev.endTime || ''),
+                        name: document.getElementById('ev-name').value, 
+                        location: loc, 
+                        oshiId: document.getElementById('ev-oshi').value,
+                        categoryId: document.getElementById('ev-cat') ? document.getElementById('ev-cat').value : (ev.categoryId || ''),
+                        repeat: document.getElementById('ev-repeat') ? document.getElementById('ev-repeat').value : (ev.repeat || 'none'),
+                        isCountdown: document.getElementById('ev-count') ? document.getElementById('ev-count').checked : (ev.isCountdown || false),
+                        isMapPin: isMapPin, 
+                        lat: lat, 
+                        lng: lng,
+                        hotelId: selectedHotelId === 'old_custom' ? '' : selectedHotelId, // 🌟 ホテルの保存
+                        hotel: hName,
+                        hotelLat: hLat,
+                        hotelLng: hLng,
+                        url: document.getElementById('ev-url').value,
+                        memo: document.getElementById('ev-memo').value
+                    };
+                    
+                    if (id) this.events = this.events.map(x => String(x.id) === String(id) ? newEv : x);
+                    else this.events.push(newEv);
+                    
+                    this.save(); 
+                    this.closeModal(); 
+                    this.renderCalendar();
+                    if (typeof this.renderCountdowns === 'function') this.renderCountdowns();
+                };
             },
-            // 🗑️ 予定を削除する機能
+
             deleteEvent: function(id) {
                 if (confirm('この予定を削除しますか？')) {
                     this.events = this.events.filter(e => String(e.id) !== String(id));
                     this.save();
                     this.closeModal();
                     this.renderCalendar();
-                    // カウントダウン機能があればそれも更新
-                    if (typeof this.renderCountdowns === 'function') {
-                        this.renderCountdowns();
-                    }
+                    if (typeof this.renderCountdowns === 'function') this.renderCountdowns();
                 }
             },
 
@@ -1004,6 +931,7 @@ const newEv = {
             },
 
             openSettingModal: function() {
+                // 🌟 2x2のキレイなグリッドにホテルマスタを追加
                 this.showModal(`
                     <h3 class="font-bold mb-5 text-slate-700">⚙️ アプリ設定</h3>
                     
@@ -1016,9 +944,13 @@ const newEv = {
                             <span class="text-2xl">🏷️</span>
                             <span class="text-[10px] font-extrabold text-slate-500">タグの設定</span>
                         </button>
-                        <button onclick="window.app.requestNotif()" class="col-span-2 bg-white border border-slate-100 py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-sm scale-active">
-                            <span class="text-xl">🔔</span>
-                            <span class="text-[10px] font-extrabold text-slate-500">通知をオンにする</span>
+                        <button onclick="window.app.openHotelModal()" class="bg-white border border-slate-100 py-4 rounded-2xl flex flex-col items-center justify-center gap-2 shadow-sm scale-active">
+                            <span class="text-2xl">🏨</span>
+                            <span class="text-[10px] font-extrabold text-slate-500">ホテルマスタ</span>
+                        </button>
+                        <button onclick="window.app.requestNotif()" class="bg-white border border-slate-100 py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-sm scale-active">
+                            <span class="text-2xl">🔔</span>
+                            <span class="text-[10px] font-extrabold text-slate-500">通知をオン</span>
                         </button>
                     </div>
 
@@ -1042,7 +974,7 @@ const newEv = {
 
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                         <p class="text-[10px] text-slate-400 mb-2 font-bold">データの書き出し (バックアップ)</p>
-                        <textarea id="back-data" class="w-full h-16 bg-white p-2 rounded-lg text-[8px] border border-slate-200 outline-none font-mono text-slate-400 mb-2">${JSON.stringify({oshis:this.oshis, events:this.events, cats:this.categories})}</textarea>
+                        <textarea id="back-data" class="w-full h-16 bg-white p-2 rounded-lg text-[8px] border border-slate-200 outline-none font-mono text-slate-400 mb-2">${JSON.stringify({oshis:this.oshis, events:this.events, cats:this.categories, hotels:this.hotels})}</textarea>
                         <button onclick="window.app.copyBackup()" class="w-full bg-slate-300 text-slate-600 py-2.5 rounded-xl text-[10px] font-extrabold mb-4 active:bg-slate-400">データをコピーする</button>
                         
                         <p class="text-[10px] text-slate-400 mb-2 font-bold">データの読み込み (復元)</p>
@@ -1053,6 +985,79 @@ const newEv = {
                     <button onclick="window.app.closeModal()" class="w-full bg-slate-200 py-3.5 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
                 `);
                 this.updatePenlightPreview(); 
+            },
+
+            // 🌟 新機能：ホテルマスタの管理画面
+            openHotelModal: function() {
+                let html = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-slate-700">🏨 ホテルマスタの設定</h3>
+                        <button onclick="window.app.openSettingModal()" class="text-[10px] text-slate-400 font-bold bg-slate-100 px-3 py-1.5 rounded-full">← 戻る</button>
+                    </div>
+                    <form id="hotel-form" class="space-y-3 mb-4 bg-sky-50 p-3 rounded-2xl border border-sky-100">
+                        <p class="text-[10px] font-bold text-slate-500">新しい定宿を検索してリストに追加</p>
+                        <div class="flex gap-2">
+                            <input type="text" id="h-search-name" placeholder="ホテル名 (例: アパホテル新宿)" required class="flex-1 bg-white p-2.5 rounded-xl text-xs border border-slate-200 outline-none font-bold">
+                            <button type="submit" id="h-search-btn" class="bg-sky-500 text-white px-3 rounded-xl text-[10px] font-bold whitespace-nowrap shadow-sm">検索＆登録</button>
+                        </div>
+                    </form>
+                    <div class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                `;
+                
+                if (this.hotels.length === 0) {
+                    html += `<p class="text-xs text-slate-400 text-center py-6 border border-dashed border-slate-200 rounded-xl">登録されているホテルはありません</p>`;
+                }
+
+                this.hotels.forEach(h => {
+                    html += `
+                        <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                            <div>
+                                <div class="text-xs font-extrabold text-slate-600">${h.name}</div>
+                                <div class="text-[9px] text-slate-400 mt-1">📍 ${h.lat.toFixed(4)}, ${h.lng.toFixed(4)}</div>
+                            </div>
+                            <button onclick="window.app.deleteHotel('${h.id}')" class="text-slate-300 text-xs px-3 py-2 font-bold active:bg-slate-50 rounded-lg">✕</button>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                this.showModal(html);
+
+                document.getElementById('hotel-form').onsubmit = async (e) => {
+                    e.preventDefault();
+                    const btn = document.getElementById('h-search-btn');
+                    const name = document.getElementById('h-search-name').value.trim();
+                    
+                    btn.textContent = '検索中...';
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=1`);
+                        const data = await res.json();
+                        
+                        if (data && data.length > 0) {
+                            this.hotels.push({
+                                id: 'h' + Date.now(),
+                                name: name,
+                                lat: parseFloat(data[0].lat),
+                                lng: parseFloat(data[0].lon)
+                            });
+                            this.save();
+                            this.openHotelModal();
+                        } else {
+                            alert('場所が見つかりませんでした。別の名前で試してください🙅‍♀️');
+                            btn.textContent = '検索＆登録';
+                        }
+                    } catch (err) {
+                        alert('検索中にエラーが発生しました😵‍💫');
+                        btn.textContent = '検索＆登録';
+                    }
+                };
+            },
+
+            deleteHotel: function(id) {
+                if (confirm('このホテルをリストから削除しますか？\n※すでに登録済みの予定には影響しません')) {
+                    this.hotels = this.hotels.filter(h => h.id !== id);
+                    this.save();
+                    this.openHotelModal();
+                }
             },
 
             updatePenlightPreview: function() {
@@ -1071,17 +1076,12 @@ const newEv = {
 
                 const html = `
                     <div class="penlight-wrapper flex flex-col items-center justify-center relative" style="width: ${w}px; height: ${h}px;">
-                        <div class="penlight-glow" style="--glow-color: ${color}; background-color: ${color};"></div>
                         <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" class="relative z-10" style="filter: drop-shadow(0px 3px 2px rgba(0,0,0,0.3));">
-                            
                             <path d="M13 6 L27 6 L36 14 L20 27 L4 14 Z" fill="${color}" stroke="#ffffff" stroke-width="${sw}" stroke-linejoin="round"/>
-                            
                             <path d="M4 14 L36 14 M13 6 L16 14 L24 14 L27 6 M16 14 L20 27 L24 14" stroke="#ffffff" stroke-width="1" fill="none" opacity="0.6" stroke-linejoin="round"/>
-                            
                             <rect x="16" y="27" width="8" height="3" fill="#111111" stroke="#000000" stroke-width="1"/>
                             <path d="M16.5 30L15.5 46C15.5 48 16.5 49 20 49C23.5 49 24.5 48 24.5 46L23.5 30H16.5Z" fill="#333333" stroke="#000000" stroke-width="1"/>
                             <circle cx="20" cy="35" r="1.2" fill="#aaaaaa"/>
-                            
                         </svg>
                     </div>`;
 
@@ -1095,7 +1095,6 @@ const newEv = {
                 alert('ペンライトのバランスを保存しました\nマップを開いて確認してみてください✨');
             },
 
-            // 🌟 1. 新機能：グループとメンバーの入力欄を切り替える処理
             toggleOshiType: function() {
                 const isMember = document.getElementById('o-type-member').checked;
                 const groupWrapper = document.getElementById('parent-group-wrapper');
@@ -1103,13 +1102,11 @@ const newEv = {
                     groupWrapper.classList.remove('hidden');
                 } else {
                     groupWrapper.classList.add('hidden');
-                    document.getElementById('o-group-id').value = ''; // グループの場合は所属をリセット
+                    document.getElementById('o-group-id').value = ''; 
                 }
             },
 
-            // 🌟 2. 進化した推し登録フォーム
             openOshiModal: function() {
-                // 登録済みの「グループ」だけを集めて、ドロップダウンの選択肢を作ります
                 const groups = this.oshis.filter(o => o.type === 'group');
                 let groupOptions = '<option value="">所属グループを選択してください</option>';
                 groups.forEach(g => {
@@ -1124,7 +1121,6 @@ const newEv = {
                     
                     <form id="oshi-form" class="space-y-3 mb-6 bg-white p-3 rounded-2xl border border-sky-100 shadow-sm relative">
                         <div class="absolute -top-3 left-4 bg-sky-50 text-sky-600 text-[10px] px-2 py-0.5 rounded-full font-extrabold border border-sky-100">推しを追加 / 編集</div>
-                        
                         <input type="hidden" id="o-id" value="">
                         
                         <div class="flex gap-4 p-2 bg-slate-50 rounded-xl border border-slate-100 mt-2">
@@ -1190,7 +1186,6 @@ const newEv = {
                 `;
                 
                 this.oshis.forEach((o, index) => {
-                    // グループかメンバーかでラベルの表示を変えます
                     const typeLabel = o.type === 'group' 
                         ? `<span class="bg-slate-700 text-white text-[8px] px-1.5 py-0.5 rounded-sm ml-2">グループ</span>` 
                         : (o.groupId ? `<span class="bg-slate-100 text-slate-500 text-[8px] px-1.5 py-0.5 rounded-sm border border-slate-200 ml-2">👥 ${this.oshis.find(x => x.id === o.groupId)?.name || '不明'}</span>` : '');
@@ -1212,9 +1207,7 @@ const newEv = {
                     `;
                 });
                 
-                html += `
-                    </div>
-                `;
+                html += `</div>`;
                 this.showModal(html);
 
                 document.getElementById('oshi-form').onsubmit = (e) => {
@@ -1224,8 +1217,8 @@ const newEv = {
                     
                     const newOshi = { 
                         id: id || 'o' + Date.now(), 
-                        type: isGroup ? 'group' : 'member',               // 🌟 保存時に種類を記録
-                        groupId: isGroup ? null : document.getElementById('o-group-id').value, // 🌟 グループIDを記録
+                        type: isGroup ? 'group' : 'member',               
+                        groupId: isGroup ? null : document.getElementById('o-group-id').value, 
                         name: document.getElementById('o-name').value, 
                         color: document.getElementById('o-color').value, 
                         birthday: document.getElementById('o-bday').value,
@@ -1290,14 +1283,13 @@ const newEv = {
                 if(!o) return;
                 document.getElementById('o-id').value = o.id;
 
-                //  編集時に、グループかメンバーかを正しくフォームに反映させます
                 if (o.type === 'group') {
                     document.getElementById('o-type-group').checked = true;
                 } else {
                     document.getElementById('o-type-member').checked = true;
                     document.getElementById('o-group-id').value = o.groupId || '';
                 }
-                this.toggleOshiType(); // 表示を切り替え
+                this.toggleOshiType();
 
                 document.getElementById('o-name').value = o.name;
                 document.getElementById('o-color').value = o.color;
@@ -1382,17 +1374,15 @@ const newEv = {
                     if (data.oshis) this.oshis = data.oshis;
                     if (data.events) this.events = data.events;
                     if (data.cats) this.categories = data.cats;
+                    if (data.hotels) this.hotels = data.hotels;
                     this.save(); location.reload();
                 } catch(e) { alert('データ形式が正しくありません'); }
             },
 
-                        selectDate: function(ds) {
+            selectDate: function(ds) {
                 this.selectedDateStr = ds;
-                
-                // 1. 日付の表示を更新
                 document.getElementById('bs-date-display').textContent = ds + ' の予定';
                 
-                // 2. その日の予定をフィルターして表示
                 const dailyEvents = this.events.filter(e => {
                     const start = e.startDate;
                     const end = e.endDate || e.startDate;
@@ -1407,9 +1397,7 @@ const newEv = {
                     </div>
                 `).join('') || '<p class="text-xs text-slate-400 font-bold">予定はありません</p>';
 
-                // 3. ボトムシートを開く（スッと上に！）
                 this.toggleBottomSheet(true);
-                
                 this.renderCalendar();
             },
 
