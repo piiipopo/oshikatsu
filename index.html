@@ -29,7 +29,6 @@
         
         .day-cell { position: relative; overflow: visible; }
 
-        /* ✨ ペンライトのアニメーション（フワフワを削除し、原点のみ指定） */
         .penlight-wrapper {
             transform-origin: bottom center;
         }
@@ -37,6 +36,7 @@
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
+    <!-- ヘッダー -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
@@ -54,13 +54,16 @@
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
+        <!-- カウントダウン -->
         <div id="countdown-container"></div>
 
+        <!-- 推しフィルター ＆ 予定一覧 -->
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
         </div>
 
+        <!-- カレンダー本体 -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
@@ -75,6 +78,7 @@
             <div id="calendar-container" class="space-y-8"></div>
         </section>
 
+        <!-- Eventsリスト -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="selected-date-title" class="text-sm font-bold text-slate-500">Events</h3>
@@ -112,7 +116,7 @@
             oshis: JSON.parse(localStorage.getItem('oshi_list')) || [{ id: 'o1', name: '推し', color: '#7dd3fc', birthday: '', imagePos: 50 }],
             categories: JSON.parse(localStorage.getItem('cat_list')) || [{ id: 'c1', name: 'LIVE' }, { id: 'c2', name: 'チケット発売日' }, { id: 'c3', name: '当落発表' }],
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
-            hotels: JSON.parse(localStorage.getItem('hotel_list')) || [], // 🌟 ホテルマスタ用のデータを追加
+            hotels: JSON.parse(localStorage.getItem('hotel_list')) || [],
             holidays: {},
             mapInstance: null,
             
@@ -230,7 +234,7 @@
                 localStorage.setItem('oshi_events', JSON.stringify(this.events)); 
                 localStorage.setItem('pl_size', this.penlightSize);
                 localStorage.setItem('pl_stroke', this.penlightStroke);
-                localStorage.setItem('hotel_list', JSON.stringify(this.hotels)); // 🌟 ホテル保存追加
+                localStorage.setItem('hotel_list', JSON.stringify(this.hotels)); 
             },
 
             editTitle: function() {
@@ -675,7 +679,6 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                         const o = this.oshis.find(x => String(x.id) == String(uniqueOshis[0]));
                         const c = o?.color || '#3b82f6';
                         
-                        // 🌟 透明にならないよう、1s infinite linear で色を固定
                         keyframes = `0%, 100% { fill: ${c}; }`;
                         animSetting = '1s infinite linear'; 
                     } else {
@@ -728,6 +731,40 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                 });
             },
 
+            // 🌟 予定画面用の新しいホテル検索表示切替
+            toggleNewHotelInput: function() {
+                const val = document.getElementById('ev-hotel-id').value;
+                const area = document.getElementById('new-hotel-area');
+                if (val === 'new') area.classList.remove('hidden');
+                else area.classList.add('hidden');
+            },
+
+            // 🌟 予定画面内での新しいホテル検索処理
+            searchNewHotelForEvent: async function(btn) {
+                const name = document.getElementById('ev-new-hotel-name').value.trim();
+                if (!name) return alert('ホテル名を入力してください');
+                
+                btn.textContent = '検索中...';
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=1`);
+                    const data = await res.json();
+                    
+                    if (data && data.length > 0) {
+                        document.getElementById('ev-new-hotel-lat').value = data[0].lat;
+                        document.getElementById('ev-new-hotel-lng').value = data[0].lon;
+                        document.getElementById('new-hotel-success').classList.remove('hidden');
+                        btn.textContent = '再検索';
+                    } else {
+                        alert('見つかりませんでした🙅‍♀️別の名前で試してください');
+                        btn.textContent = '検索';
+                        document.getElementById('new-hotel-success').classList.add('hidden');
+                    }
+                } catch (err) {
+                    alert('エラーが発生しました😵‍💫');
+                    btn.textContent = '検索';
+                }
+            },
+
             openEventModal: function(id = null) {
                 const ev = this.events.find(e => String(e.id) === String(id)) || { 
                     name: '', startDate: this.selectedDateStr, endDate: '', startTime: '', endTime: '', 
@@ -771,13 +808,29 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
 
                         <input type="text" id="ev-loc" value="${ev.location || ''}" placeholder="📍 場所・住所 (例: 横浜アリーナ / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold mb-1">
 
-                        <div class="bg-sky-50/50 p-2 rounded-xl border border-sky-100 mb-2">
-                            <select id="ev-hotel-id" class="w-full bg-white p-3 rounded-lg text-xs border border-slate-200 font-bold text-slate-600 outline-none">
+                        <!-- 🌟 さらに進化したホテル設定エリア -->
+                        <div class="bg-sky-50/50 p-2.5 rounded-xl border border-sky-100 mb-2">
+                            <select id="ev-hotel-id" class="w-full bg-white p-3 rounded-lg text-xs border border-slate-200 font-bold text-slate-600 outline-none" onchange="window.app.toggleNewHotelInput()">
                                 <option value="">🏨 宿泊なし / ホテル未選択</option>
                                 ${ev.hotel && !ev.hotelId ? `<option value="old_custom" selected>🏨 ${ev.hotel} (過去の直接入力)</option>` : ''}
                                 ${this.hotels.map(h => `<option value="${h.id}" ${String(h.id) === String(ev.hotelId) ? 'selected' : ''}>${h.name}</option>`).join('')}
+                                <option value="new">＋ 新しいホテルを検索して追加...</option>
                             </select>
-                            <p class="text-[9px] text-slate-400 mt-1.5 ml-1 font-bold">※ 定宿は⚙️設定の「ホテルマスタ」から追加できます</p>
+                            
+                            <!-- 新規追加用エリア（最初は隠れています） -->
+                            <div id="new-hotel-area" class="hidden mt-2 pt-2 border-t border-sky-200/50 space-y-2">
+                                <div class="flex gap-2">
+                                    <input type="text" id="ev-new-hotel-name" placeholder="新しいホテル名" class="flex-1 bg-white p-2.5 rounded-lg text-xs border border-slate-200 outline-none font-bold">
+                                    <button type="button" onclick="window.app.searchNewHotelForEvent(this)" class="bg-sky-500 text-white px-3 rounded-lg text-[10px] font-bold shadow-sm whitespace-nowrap">検索</button>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="checkbox" id="ev-save-hotel-master" class="w-4 h-4 text-sky-400 rounded" checked>
+                                    <label for="ev-save-hotel-master" class="text-[10px] font-bold text-slate-600">このホテルを「ホテルマスタ」にも登録する</label>
+                                </div>
+                                <input type="hidden" id="ev-new-hotel-lat">
+                                <input type="hidden" id="ev-new-hotel-lng">
+                                <p id="new-hotel-success" class="text-[10px] text-sky-500 font-extrabold hidden pl-1">✅ 場所を取得しました！</p>
+                            </div>
                         </div>
 
                         <input type="url" id="ev-url" value="${ev.url || ''}" placeholder="🔗 URL (動画やチケット等 / 任意)" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
@@ -835,11 +888,37 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                         } catch (err) { console.log('検索エラー'); }
                     }
 
-                    // 🌟 ホテル情報の紐付け
-                    const selectedHotelId = document.getElementById('ev-hotel-id').value;
+                    // 🌟 進化したホテル情報の保存処理
+                    let selectedHotelId = document.getElementById('ev-hotel-id').value;
                     let hName = ''; let hLat = null; let hLng = null;
 
-                    if (selectedHotelId === 'old_custom') {
+                    if (selectedHotelId === 'new') {
+                        const newName = document.getElementById('ev-new-hotel-name').value.trim();
+                        const nLat = parseFloat(document.getElementById('ev-new-hotel-lat').value);
+                        const nLng = parseFloat(document.getElementById('ev-new-hotel-lng').value);
+                        
+                        if (!newName || isNaN(nLat) || isNaN(nLng)) {
+                            alert('「新しいホテルを検索して追加」が選ばれています。\nホテル名を入力し「検索」ボタンを押して場所を取得してください。');
+                            btn.textContent = '保存する';
+                            return; // 処理をストップ
+                        }
+                        
+                        hName = newName; hLat = nLat; hLng = nLng;
+                        
+                        // マスタに登録するかチェック
+                        if (document.getElementById('ev-save-hotel-master').checked) {
+                            const newHotelId = 'h' + Date.now();
+                            this.hotels.push({
+                                id: newHotelId,
+                                name: hName,
+                                lat: hLat,
+                                lng: hLng
+                            });
+                            selectedHotelId = newHotelId;
+                        } else {
+                            selectedHotelId = ''; // マスタ登録しない場合は空にする
+                        }
+                    } else if (selectedHotelId === 'old_custom') {
                         // 過去の直接入力データを維持
                         hName = ev.hotel; hLat = ev.hotelLat; hLng = ev.hotelLng;
                     } else if (selectedHotelId) {
@@ -863,7 +942,7 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                         isMapPin: isMapPin, 
                         lat: lat, 
                         lng: lng,
-                        hotelId: selectedHotelId === 'old_custom' ? '' : selectedHotelId, // 🌟 ホテルの保存
+                        hotelId: selectedHotelId === 'old_custom' ? '' : selectedHotelId, 
                         hotel: hName,
                         hotelLat: hLat,
                         hotelLng: hLng,
@@ -931,7 +1010,6 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
             },
 
             openSettingModal: function() {
-                // 🌟 2x2のキレイなグリッドにホテルマスタを追加
                 this.showModal(`
                     <h3 class="font-bold mb-5 text-slate-700">⚙️ アプリ設定</h3>
                     
@@ -987,7 +1065,6 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                 this.updatePenlightPreview(); 
             },
 
-            // 🌟 新機能：ホテルマスタの管理画面
             openHotelModal: function() {
                 let html = `
                     <div class="flex justify-between items-center mb-4">
