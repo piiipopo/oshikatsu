@@ -695,58 +695,35 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
             },
 
             openMapModal: function() {
-        let html = `
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-extrabold text-slate-700 flex items-center gap-1.5">📍 Oshikatsu Map</h3>
-            </div>
-            
-            <div id="map-container" class="w-full h-80 rounded-2xl border border-slate-200 shadow-inner z-10"></div>
-            
-            <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
-        `;
-        this.showModal(html);
-        
-        setTimeout(() => {
-            if (!this.mapInstance) {
-                this.initMap();
-            } else {
-                this.mapInstance.invalidateSize();
-                this.drawPenlights();
-            }
-        }, 300);
-    },
+                let html = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-extrabold text-slate-700 flex items-center gap-1.5">📍 Oshikatsu Map</h3>
+                    </div>
+                    
+                    <div id="map-container" class="w-full h-80 rounded-2xl border border-slate-200 shadow-inner z-10"></div>
+                    
+                    <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
+                `;
+                this.showModal(html);
+                
+                setTimeout(() => { this.initMap(); }, 200);
+            },
 
-    initMap: function() {
-        if (this.mapInstance) this.mapInstance.remove();
+            initMap: function() {
+    this.mapInstance = L.map('map-container').setView([35.5, 137.5], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(this.mapInstance);
 
-        this.mapInstance = L.map('map-container').setView([35.5, 137.5], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(this.mapInstance);
-
-        if (!this.events || this.events.length === 0) {
-            setTimeout(() => { this.drawPenlights(); }, 500); 
-        } else {
-            this.drawPenlights();
+    const groups = {};
+    this.events.forEach(ev => {
+        if (ev.isMapPin && ev.lat && ev.lng) {
+            const key = `${ev.lat.toFixed(4)}_${ev.lng.toFixed(4)}`;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(ev);
         }
-    },
+    });
 
-    drawPenlights: function() {
-        if (!this.mapInstance) return;
-        
-        const groups = {};
-        this.events.forEach(ev => {
-            if (ev.isMapPin && ev.lat && ev.lng) {
-                const key = `${ev.lat.toFixed(4)}_${ev.lng.toFixed(4)}`;
-                if (!groups[key]) groups[key] = [];
-                groups[key].push(ev);
-            }
-        });
-
-        // ==========================================
-        // 1. ペンライトの処理
-        // ==========================================
-        Object.values(groups).forEach((group, gIdx) => {
-            
-group.sort((a,b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.startDate));
+    Object.values(groups).forEach((group, gIdx) => {
+        group.sort((a,b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.startDate));
         const w = this.penlightSize, h = Math.round(w * 1.35);
         const uniqueOshis = [...new Set(group.map(e => e.oshiId))];
         
@@ -793,11 +770,8 @@ group.sort((a,b) => this.parseSafeDate(a.startDate) - this.parseSafeDate(b.start
             </div>
         `);
     });
-
-        // ==========================================
-        // 2. ホテルピンの処理
-        // ==========================================
-        this.events.forEach(ev => {
+        // ホテルピンの処理を少しだけ改造
+    this.events.forEach(ev => {
         if (ev.hotelLat && ev.hotelLng) {
             L.marker([parseFloat(ev.hotelLat), parseFloat(ev.hotelLng)], {
                 icon: L.divIcon({
