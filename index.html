@@ -733,34 +733,34 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
         const w = this.penlightSize, h = Math.round(w * 1.35);
         const uniqueOshis = [...new Set(group.map(e => e.oshiId))];
         
-                        const animName = 'anim' + gIdx + Date.now();
-        const glowAnimName = 'glow' + gIdx + Date.now(); // ✨ 後ろに背負うオーラ用
+                const animName = 'anim' + gIdx + Date.now();
+        const glowAnimName = 'glow' + gIdx + Date.now();
         let keyframes = '';
         let glowKeyframes = '';
         let animSetting = '';
-        let glowDiv = ''; // ✨ オーラの正体
+        let glowDiv = ''; 
 
         if (uniqueOshis.length === 1) {
-            // 🌟 単色の場合：「キラキラ鼓動（3.5秒）」
+            // 🌟 単色の場合：「優しい鼓動（ゆったり4秒）」
             const o = this.oshis.find(x => String(x.id) == String(uniqueOshis[0]));
             const c = o?.color || '#3b82f6';
             
-            // ペンライト本体は、一瞬だけ「真っ白」になってフラッシュする
+            // 本体は白くせず、ほんの少しだけ明るくなる程度に
             keyframes = `
-                0%, 100% { fill: ${c}; }
-                15%, 45% { fill: #ffffff; }
-                30%, 60% { fill: ${c}; }
+                0%, 100% { fill: ${c}; filter: brightness(1); }
+                15%, 45% { fill: ${c}; filter: brightness(1.15); }
+                30%, 60% { fill: ${c}; filter: brightness(1); }
             `;
-            // 後ろに背負ったオーラが、大きく広がって発光する
+            // 後ろのオーラは、透明度を下げてふんわりと小さめに広がる
             glowKeyframes = `
-                0%, 100% { opacity: 0; transform: scale(0.8); }
-                15%, 45% { opacity: 1; transform: scale(1.8); }
-                30%, 60% { opacity: 0; transform: scale(0.8); }
+                0%, 100% { opacity: 0; transform: scale(0.9); }
+                15%, 45% { opacity: 0.5; transform: scale(1.3); }
+                30%, 60% { opacity: 0; transform: scale(0.9); }
             `;
-            animSetting = '3.5s infinite ease-in-out';
+            animSetting = '4s infinite ease-in-out';
             
-            // SVGの枠外にはみ出せるように、背後に専用の「光る玉」を置く
-            glowDiv = `<div style="position: absolute; top: 10%; left: 20%; width: 60%; height: 50%; background: ${c}; filter: blur(8px); border-radius: 50%; z-index: -1; animation: ${glowAnimName} ${animSetting}; pointer-events: none;"></div>`;
+            // ぼかし（blur）を強くして、さらに柔らかい光の玉にする
+            glowDiv = `<div style="position: absolute; top: 15%; left: 20%; width: 60%; height: 50%; background: ${c}; filter: blur(10px); border-radius: 50%; z-index: -1; animation: ${glowAnimName} ${animSetting}; pointer-events: none;"></div>`;
 
         } else {
             // 🌟 複数色の場合（ゆっくりオーロラ）
@@ -782,9 +782,8 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                     .heart-glow-${gIdx} { animation: ${animName} ${animSetting}; }
                 </style>
                 ${glowDiv}
-                <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 0px 4px rgba(0,0,0,0.3)); position: relative; z-index: 10;">
+                <svg width="${w}" height="${h}" viewBox="0 0 40 54" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.2)); position: relative; z-index: 10;">
                     <path class="heart-glow-${gIdx}" d="M13 6 L27 6 L36 14 L20 27 L4 14 Z" stroke="#ffffff" stroke-width="${this.penlightStroke}" stroke-linejoin="round" stroke-opacity="0.8"/>
-
                     <path d="M4 14 L36 14 M13 6 L16 14 L24 14 L27 6 M16 14 L20 27 L24 14" stroke="#ffffff" stroke-width="1" fill="none" opacity="0.6" stroke-linejoin="round"/>
                     <rect x="16" y="27" width="8" height="3" fill="#111111" stroke="#000000" stroke-width="1"/>
                     <path d="M16.5 30L15.5 46C15.5 48 16.5 49 20 49C23.5 49 24.5 48 24.5 46L23.5 30H16.5Z" fill="#333333" stroke="#000000" stroke-width="1"/>
