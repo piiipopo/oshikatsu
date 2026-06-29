@@ -789,7 +789,7 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
         if (ev.hotelLat && ev.hotelLng) {
             L.marker([parseFloat(ev.hotelLat), parseFloat(ev.hotelLng)], {
                 icon: L.divIcon({
-                    html: `<div style="background:white; color:black; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border:2px solid #9C9C9C; font-size:10px; box-shadow:0 2px 4px rgba(0,0,0,0.3);">🏨</div>`,
+                    html: `<div style="background:white; color:black; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:2px solid #9C9C9C; font-size:10px; box-shadow:0 2px 4px rgba(0,0,0,0.3);">🏨</div>`,
                     className: 'hotel-icon', iconSize: [24, 24]
                 })
             }).addTo(this.mapInstance).bindPopup(`<div class="text-[11px] font-bold">🏨 ${ev.hotel}</div>`);
