@@ -694,25 +694,39 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                 this.showModal(html);
             },
 
-            openMapModal: function() {
-                let html = `
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-extrabold text-slate-700 flex items-center gap-1.5">📍 Oshikatsu Map</h3>
-                    </div>
-                    
-                    <div id="map-container" class="w-full h-80 rounded-2xl border border-slate-200 shadow-inner z-10"></div>
-                    
-                    <button onclick="window.app.closeModal()" class="w-full bg-slate-100 py-3 rounded-2xl text-xs font-bold mt-4 text-slate-500">閉じる</button>
-                `;
-                this.showModal(html);
-                
-                setTimeout(() => { this.initMap(); }, 200);
-            },
+            // --- 1. モーダルを開く処理 ---
+openMapModal: function() {
+    let html = `...`; // htmlはそのまま
+    this.showModal(html);
+    
+    // 少し待ってから地図を作る
+    setTimeout(() => { this.initMap(); }, 200);
+},
 
-            initMap: function() {
+// --- 2. 地図を作る処理 ---
+initMap: function() {
+    // すでに地図が作られていたら重複しないようにガード
+    if (this.mapInstance) this.mapInstance.remove();
+
     this.mapInstance = L.map('map-container').setView([35.5, 137.5], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(this.mapInstance);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+        attribution: '&copy; OpenStreetMap' 
+    }).addTo(this.mapInstance);
 
+    // データがなければ待機、あれば描画
+    if (!this.events || this.events.length === 0) {
+        console.log("データがまだ届いてないみたい！0.5秒待つね");
+        setTimeout(() => { this.drawPenlights(); }, 500); 
+    } else {
+        this.drawPenlights();
+    }
+},
+
+// --- 3. ペンライトを描画する専用関数 ---
+drawPenlights: function() {
+    if (!this.mapInstance) return;
+    
+    // ここに groups を作る処理を移動！
     const groups = {};
     this.events.forEach(ev => {
         if (ev.isMapPin && ev.lat && ev.lng) {
