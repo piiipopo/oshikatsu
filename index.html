@@ -139,7 +139,7 @@
 
     <script>
     (function() {
-        const App = {
+                const App = {
             appTitle: localStorage.getItem('oshi_title') || 'Oshikatsu',
             baseYear: 0, baseMonth: 0, selectedDateStr: '', activeOshiFilter: 'all', 
             oshis: JSON.parse(localStorage.getItem('oshi_list')) || [{ id: 'o1', name: '推し', color: '#7dd3fc', birthday: '', imagePos: 50 }],
@@ -148,7 +148,11 @@
             holidays: {},
             mapInstance: null,
             
-    searchHotelLatLng: async function() {
+            // 🌟🌟🌟 ここに2行追加するだけ！ 🌟🌟🌟
+            penlightSize: parseInt(localStorage.getItem('pl_size')) || 40,
+            penlightStroke: parseInt(localStorage.getItem('pl_stroke')) || 2,
+            
+            searchHotelLatLng: async function() {
     const hotelName = document.getElementById('ev-hotel').value;
     if (!hotelName) return alert('ホテル名を入力してください');
 
