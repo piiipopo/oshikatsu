@@ -36,6 +36,7 @@
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
+    <!-- ヘッダー -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
@@ -54,13 +55,16 @@
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
+        <!-- カウントダウン -->
         <div id="countdown-container"></div>
 
+        <!-- 推しフィルター ＆ 予定一覧 -->
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
         </div>
 
+        <!-- カレンダー本体 -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
@@ -75,6 +79,7 @@
             <div id="calendar-container" class="space-y-8"></div>
         </section>
 
+        <!-- Eventsリスト -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="selected-date-title" class="text-sm font-bold text-slate-500">Events</h3>
@@ -113,7 +118,7 @@
             categories: JSON.parse(localStorage.getItem('cat_list')) || [{ id: 'c1', name: 'LIVE' }, { id: 'c2', name: 'チケット発売日' }, { id: 'c3', name: '当落発表' }],
             events: JSON.parse(localStorage.getItem('oshi_events')) || [],
             hotels: JSON.parse(localStorage.getItem('hotel_list')) || [],
-            links: JSON.parse(localStorage.getItem('link_list')) || [], // 🌟 リンク集のデータを追加
+            links: JSON.parse(localStorage.getItem('link_list')) || [], 
             holidays: {},
             mapInstance: null,
             
@@ -232,7 +237,7 @@
                 localStorage.setItem('pl_size', this.penlightSize);
                 localStorage.setItem('pl_stroke', this.penlightStroke);
                 localStorage.setItem('hotel_list', JSON.stringify(this.hotels)); 
-                localStorage.setItem('link_list', JSON.stringify(this.links)); // 🌟 リンク保存追加
+                localStorage.setItem('link_list', JSON.stringify(this.links)); 
             },
 
             editTitle: function() {
@@ -575,7 +580,6 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
             },
             closeModal: function() { document.getElementById('modal-layer').classList.add('hidden'); },
 
-            // 🌟 新機能：推しリンク集モーダル
             openLinkModal: function() {
                 let html = `
                     <div class="flex justify-between items-center mb-4">
@@ -847,14 +851,29 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                     <h3 class="font-bold mb-4 text-slate-700">${id ? '予定を編集' : '予定を追加'}</h3>
                     <form id="ev-form" class="space-y-3">
                         <input type="text" id="ev-name" value="${ev.name}" placeholder="タイトル" required class="w-full bg-slate-50 p-3 rounded-xl text-sm outline-none border border-slate-100 font-bold">
+                        
+                        <!-- 🌟 開始日・終了日、開始時間・終了時間のラベルを整えました！ -->
                         <div class="grid grid-cols-2 gap-2">
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">開始日</label><input type="date" id="ev-start" value="${ev.startDate}" required class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">終了日(任意)</label><input type="date" id="ev-end" value="${ev.endDate || ''}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-400 ml-1 mb-1">開始日</label>
+                                <input type="date" id="ev-start" value="${ev.startDate}" required class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-400 ml-1 mb-1">終了日(任意)</label>
+                                <input type="date" id="ev-end" value="${ev.endDate || ''}" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                            </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2">
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">開始時間</label><input type="time" id="ev-stime" value="${ev.startTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
-                            <div><label class="text-[9px] font-bold text-slate-400 ml-1">終了時間</label><input type="time" id="ev-etime" value="${ev.endTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold"></div>
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-400 ml-1 mb-1">開始時間</label>
+                                <input type="time" id="ev-stime" value="${ev.startTime}" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-400 ml-1 mb-1">終了時間</label>
+                                <input type="time" id="ev-etime" value="${ev.endTime}" class="w-full bg-slate-50 p-3 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                            </div>
                         </div>
+                        
                         <div class="grid grid-cols-2 gap-2">
                             <select id="ev-oshi" class="bg-slate-50 p-3 rounded-xl text-xs border border-slate-100 font-bold">
                                 ${this.oshis.map(o => `<option value="${o.id}" ${String(o.id) === String(ev.oshiId) ? 'selected' : ''}>${o.name}</option>`).join('')}
@@ -1507,7 +1526,7 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                     if (data.events) this.events = data.events;
                     if (data.cats) this.categories = data.cats;
                     if (data.hotels) this.hotels = data.hotels;
-                    if (data.links) this.links = data.links; // 🌟 リンク復元追加
+                    if (data.links) this.links = data.links; 
                     this.save(); location.reload();
                 } catch(e) { alert('データ形式が正しくありません'); }
             },
