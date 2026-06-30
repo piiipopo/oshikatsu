@@ -36,7 +36,6 @@
 </head>
 <body id="app-body" class="bg-sky-50 text-slate-700 antialiased pb-24">
 
-    <!-- ヘッダー -->
     <header id="main-header" class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-30 p-4 border-b border-white/50 flex justify-between items-center transition-colors duration-400">
         <h1 onclick="window.app.editTitle()" class="text-xl font-extrabold text-slate-700 flex items-center gap-1.5 opacity-90 cursor-pointer scale-active">
             📅 <span id="app-title-text"></span>
@@ -55,16 +54,13 @@
     </header>
 
     <main class="p-4 max-w-md mx-auto space-y-4">
-        <!-- カウントダウン -->
         <div id="countdown-container"></div>
 
-        <!-- 推しフィルター ＆ 予定一覧 -->
         <div class="flex items-center justify-between px-1 mb-1">
             <div id="oshi-filter-container" class="flex gap-2 overflow-x-auto flex-1 hide-in-shot pb-1"></div>
             <button onclick="window.app.openEventListModal()" class="shrink-0 bg-white text-sky-500 text-[10px] font-bold py-2 px-3 rounded-full ml-2 shadow-sm hide-in-shot border border-sky-100 scale-active">📋 一覧・編集</button>
         </div>
 
-        <!-- カレンダー本体 -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-4 px-1">
                 <button onclick="window.app.shiftMonth(-1)" class="text-xs text-slate-400 font-bold scale-active hide-in-shot">< Back</button>
@@ -79,7 +75,6 @@
             <div id="calendar-container" class="space-y-8"></div>
         </section>
 
-        <!-- Eventsリスト -->
         <section class="bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-sm border border-white">
             <div class="flex justify-between items-center mb-3">
                 <h3 id="selected-date-title" class="text-sm font-bold text-slate-500">Events</h3>
@@ -852,7 +847,6 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                     <form id="ev-form" class="space-y-3">
                         <input type="text" id="ev-name" value="${ev.name}" placeholder="タイトル" required class="w-full bg-slate-50 p-3 rounded-xl text-sm outline-none border border-slate-100 font-bold">
                         
-                        <!-- 🌟 開始日・終了日、開始時間・終了時間のラベルを整えました！ -->
                         <div class="flex gap-2">
                             <div class="flex-1 min-w-0">
                                 <label class="block text-[9px] font-bold text-slate-400 ml-1 mb-0.5">開始日</label>
@@ -1483,23 +1477,36 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                 this.openOshiModal();
             },
 
+            // 🌟 タグ（項目）の設定画面も推しと同じようにパワーアップさせました！
             openConfigModal: function() {
                 let html = `
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-slate-700">🏷️ タグの設定</h3>
                         <button onclick="window.app.openSettingModal()" class="text-[10px] text-slate-400 font-bold bg-slate-100 px-3 py-1.5 rounded-full">← 戻る</button>
                     </div>
-                    <form id="cat-form" class="space-y-3 mb-4">
-                        <input type="text" id="c-name" placeholder="タグ名 (例: ラジオ, 当選 etc)" required class="w-full bg-slate-50 p-3 rounded-xl text-sm border border-slate-100 outline-none font-bold">
-                        <button type="submit" class="w-full bg-slate-700 text-white font-bold py-3 rounded-2xl text-xs shadow-md">追加する</button>
+                    <form id="cat-form" class="space-y-3 mb-6 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm relative">
+                        <div class="absolute -top-3 left-4 bg-slate-100 text-slate-500 text-[10px] px-2 py-0.5 rounded-full font-extrabold border border-slate-200">タグを追加 / 編集</div>
+                        <input type="hidden" id="c-id" value="">
+                        <input type="text" id="c-name" placeholder="タグ名 (例: ラジオ, 当選 etc)" required class="w-full bg-slate-50 p-2.5 rounded-xl text-xs border border-slate-100 outline-none font-bold mt-2">
+                        <div class="flex gap-2 pt-1">
+                            <button type="button" onclick="window.app.cancelEditCat()" class="flex-1 bg-slate-100 py-2.5 rounded-xl text-xs font-bold text-slate-500 hidden" id="c-cancel-btn">キャンセル</button>
+                            <button type="submit" id="c-submit-btn" class="flex-1 bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">登録する</button>
+                        </div>
                     </form>
-                    <div class="space-y-2 max-h-40 overflow-y-auto">
+                    <p class="text-[10px] font-extrabold text-slate-400 mb-2 pl-1">登録済みのタグ</p>
+                    <div class="space-y-2 max-h-48 overflow-y-auto pr-1 pb-2">
                 `;
-                this.categories.forEach(c => {
+                
+                this.categories.forEach((c, index) => {
                     html += `
                         <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
                             <span class="text-xs font-extrabold text-slate-600 pl-2">${c.name}</span>
-                            <button onclick="window.app.deleteCat('${c.id}')" class="text-slate-300 text-xs px-3 font-bold">✕</button>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button onclick="window.app.moveCat(${index}, -1)" class="w-6 h-6 flex items-center justify-center text-slate-400 font-bold text-[10px] bg-slate-50 rounded-md active:bg-slate-200" ${index===0?'disabled style="opacity:0.3"':''}>▲</button>
+                                <button onclick="window.app.moveCat(${index}, 1)" class="w-6 h-6 flex items-center justify-center text-slate-400 font-bold text-[10px] bg-slate-50 rounded-md active:bg-slate-200" ${index===this.categories.length-1?'disabled style="opacity:0.3"':''}>▼</button>
+                                <button onclick="window.app.editCat('${c.id}')" class="text-sky-500 text-[10px] px-2.5 font-bold bg-sky-50 rounded-md h-6 ml-1 active:bg-sky-100">編集</button>
+                                <button onclick="window.app.deleteCat('${c.id}')" class="text-rose-400 text-[10px] px-2 font-bold bg-rose-50 rounded-md h-6 active:bg-rose-100">✕</button>
+                            </div>
                         </div>
                     `;
                 });
@@ -1508,10 +1515,51 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
 
                 document.getElementById('cat-form').onsubmit = (e) => {
                     e.preventDefault();
-                    this.categories.push({ id: 'c' + Date.now(), name: document.getElementById('c-name').value });
-                    this.save(); this.openConfigModal(); this.renderCalendar();
+                    const id = document.getElementById('c-id').value;
+                    const newCat = { 
+                        id: id || 'c' + Date.now(), 
+                        name: document.getElementById('c-name').value.trim() 
+                    };
+
+                    if (id) {
+                        this.categories = this.categories.map(x => String(x.id) === String(id) ? newCat : x);
+                    } else {
+                        this.categories.push(newCat);
+                    }
+
+                    this.save(); 
+                    this.openConfigModal(); 
+                    this.renderCalendar();
                 };
             },
+
+            // 🌟 タグの編集モードにする機能
+            editCat: function(id) {
+                const c = this.categories.find(x => String(x.id) === String(id));
+                if(!c) return;
+                document.getElementById('c-id').value = c.id;
+                document.getElementById('c-name').value = c.name;
+                
+                document.getElementById('c-submit-btn').textContent = '更新する';
+                document.getElementById('c-submit-btn').classList.replace('bg-slate-700', 'bg-sky-500');
+                document.getElementById('c-cancel-btn').classList.remove('hidden');
+            },
+
+            // 🌟 タグの編集をキャンセルする機能
+            cancelEditCat: function() { 
+                this.openConfigModal(); 
+            },
+
+            // 🌟 タグの順番を入れ替える機能
+            moveCat: function(index, dir) {
+                if(index + dir < 0 || index + dir >= this.categories.length) return;
+                const temp = this.categories[index];
+                this.categories[index] = this.categories[index + dir];
+                this.categories[index + dir] = temp;
+                this.save();
+                this.openConfigModal();
+            },
+
             deleteCat: function(id) { 
                 if (confirm('このタグを消去しますか？')) { 
                     this.categories = this.categories.filter(x => String(x.id) !== String(id)); 
