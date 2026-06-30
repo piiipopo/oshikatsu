@@ -853,25 +853,25 @@ indicators += `<div class="${shapeClass} h-[10px] mb-[2px] flex justify-start it
                         <input type="text" id="ev-name" value="${ev.name}" placeholder="タイトル" required class="w-full bg-slate-50 p-3 rounded-xl text-sm outline-none border border-slate-100 font-bold">
                         
                         <!-- 🌟 開始日・終了日、開始時間・終了時間のラベルを整えました！ -->
-                                                <div class="grid grid-cols-2 gap-3">
-                            <div class="min-w-0">
+                        <div class="flex gap-2">
+                            <div class="flex-1 min-w-0">
                                 <label class="block text-[9px] font-bold text-slate-400 ml-1 mb-0.5">開始日</label>
-                                <input type="date" id="ev-start" value="${ev.startDate}" required class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                                <input type="date" id="ev-start" value="${ev.startDate}" required class="w-full min-w-0 box-border bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                             </div>
-                            <div class="min-w-0">
+                            <div class="flex-1 min-w-0">
                                 <label class="block text-[9px] font-bold text-slate-400 ml-1 mb-0.5">終了日(任意)</label>
-                                <input type="date" id="ev-end" value="${ev.endDate || ''}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                                <input type="date" id="ev-end" value="${ev.endDate || ''}" class="w-full min-w-0 box-border bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="min-w-0">
+                        <div class="flex gap-2">
+                            <div class="flex-1 min-w-0">
                                 <label class="block text-[9px] font-bold text-slate-400 ml-1 mb-0.5">開始時間</label>
-                                <input type="time" id="ev-stime" value="${ev.startTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                                <input type="time" id="ev-stime" value="${ev.startTime}" class="w-full min-w-0 box-border bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                             </div>
-                            <div class="min-w-0">
+                            <div class="flex-1 min-w-0">
                                 <label class="block text-[9px] font-bold text-slate-400 ml-1 mb-0.5">終了時間</label>
-                                <input type="time" id="ev-etime" value="${ev.endTime}" class="w-full bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold">
+                                <input type="time" id="ev-etime" value="${ev.endTime}" class="w-full min-w-0 box-border bg-slate-50 p-2 rounded-xl text-xs outline-none border border-slate-100 font-bold">
                             </div>
                         </div>
                         
